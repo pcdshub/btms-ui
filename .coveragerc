@@ -1,0 +1,11 @@
+[run]
+source =
+    btms_ui
+[report]
+omit =
+    #versioning
+    .*version.*
+    *_version.py
+    #tests
+    *test*
+    btms_ui/tests/*
