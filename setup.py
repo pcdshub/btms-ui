@@ -1,8 +1,9 @@
 import sys
 from os import path
 
-import versioneer
 from setuptools import find_packages, setup
+
+import versioneer
 
 min_version = (3, 7)
 
@@ -53,7 +54,7 @@ setup(
     url='https://github.com/pcdshub/btms_ui',  # noqa
     entry_points={
         "console_scripts": [
-            "btms_ui=btms_ui.bin.main:main",
+            "btms-ui=btms_ui.bin.main:main",
         ],
     },
     include_package_data=True,
