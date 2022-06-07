@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from typing import ClassVar, Dict, Optional, Union
 
+import ophyd
+from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from qtpy import QtCore, QtGui, QtWidgets
+
+
+def pv_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
+    """PyDM-compatible PV name URIs from a given EpicsSignal."""
+    return f"ca://{signal.pvname}"
 
 
 def create_scene_rectangle(
@@ -212,6 +219,9 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
 
 
 class BtmsStatusView(QtWidgets.QGraphicsView):
+    device: BtpsStateDevice
+    system: TransportSystem
+
     def __init__(
         self,
         parent: Optional[QtWidgets.QWidget] = None,
@@ -224,7 +234,29 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         self.setMinimumSize(500, 500)
         self.setSceneRect(scene.itemsBoundingRect())
 
-        system = TransportSystem()
-        system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
-        scene.setSceneRect(system.boundingRect())
-        scene.addItem(system)
+        self.system = TransportSystem()
+        self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
+        scene.setSceneRect(self.system.boundingRect())
+        scene.addItem(self.system)
+        self.device = None
+
+    @QtCore.Property(str)
+    def device_prefix(self) -> str:
+        return self._device_prefix
+
+    @device_prefix.setter
+    def device_prefix(self, prefix: str) -> None:
+        self._device_prefix = prefix
+
+        if self.device is not None:
+            self.device.destroy()
+
+        self._device = self._create_device(prefix)
+
+    def _create_device(self, prefix: str):
+        device = BtpsStateDevice(
+            prefix,
+            name="las_btps"
+        )
+        # self.system.
+        print("PVName", device.dest1.source1.linear.value.pvname)
