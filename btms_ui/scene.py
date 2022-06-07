@@ -61,6 +61,8 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
 
     base: QtWidgets.QGraphicsRectItem
     assemblies: Dict[int, MotorizedMirrorAssembly]
+    sources: Dict[int, LaserSource]
+    destinations: Dict[int, Destination]
 
     def __init__(self):
         super().__init__()
@@ -105,6 +107,20 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
                     self.angle_step *= -1
                 direction_swap = True
             assembly.lens.linear_position += (-1) ** idx * self.angle_step
+
+
+class LaserSource(QtWidgets.QGraphicsItemGroup):
+    """
+    A graphical representation of a laser source.
+    """
+
+
+
+class Destination(QtWidgets.QGraphicsItemGroup):
+    """
+    A graphical representation of a destination hutch.
+    """
+
 
 
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
