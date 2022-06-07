@@ -8,8 +8,10 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat
+recursive-exclude btms_ui *.ui
 
 include versioneer.py
+include btms_ui/_version.py
 
 # If including data files in the package, add a single file/glob:
 #
@@ -17,4 +19,3 @@ include versioneer.py
 #
 # Or multiple recursively:
 # recursive-include path file*glob1* file*glob*2
-include btms_ui/_version.py

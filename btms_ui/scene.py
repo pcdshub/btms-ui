@@ -211,24 +211,20 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
         self.setPos(QtCore.QPointF(pos, 0.0))
 
 
-def main():
-    app = QtWidgets.QApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication([])
-    scene = QtWidgets.QGraphicsScene()
-    view = QtWidgets.QGraphicsView(scene)
+class BtmsStatusView(QtWidgets.QGraphicsView):
+    def __init__(
+        self,
+        parent: Optional[QtWidgets.QWidget] = None,
+        scene: Optional[QtWidgets.QGraphicsScene] = None,
+    ):
+        if scene is None:
+            scene = QtWidgets.QGraphicsScene()
+        super().__init__(scene, parent=parent)
 
-    view.setMinimumSize(500, 500)
-    view.setSceneRect(scene.itemsBoundingRect())
+        self.setMinimumSize(500, 500)
+        self.setSceneRect(scene.itemsBoundingRect())
 
-    system = TransportSystem()
-    system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
-    scene.setSceneRect(system.boundingRect())
-    scene.addItem(system)
-
-    view.show()
-    app.exec_()
-
-
-if __name__ == "__main__":
-    main()
+        system = TransportSystem()
+        system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
+        scene.setSceneRect(system.boundingRect())
+        scene.addItem(system)

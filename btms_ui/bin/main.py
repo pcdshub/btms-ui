@@ -11,7 +11,7 @@ import logging
 
 import btms_ui
 
-from ..scene import main as start_gui
+from ..main import main as start_gui
 
 DESCRIPTION = __doc__
 
