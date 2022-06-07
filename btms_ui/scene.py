@@ -115,12 +115,10 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     """
 
 
-
 class Destination(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a destination hutch.
     """
-
 
 
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
@@ -213,7 +211,7 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
         self.setPos(QtCore.QPointF(pos, 0.0))
 
 
-def test():
+def main():
     app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication([])
@@ -233,4 +231,4 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    main()

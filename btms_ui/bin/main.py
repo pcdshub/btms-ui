@@ -11,6 +11,8 @@ import logging
 
 import btms_ui
 
+from ..scene import main as start_gui
+
 DESCRIPTION = __doc__
 
 
@@ -86,12 +88,9 @@ def main():
     logger.setLevel(log_level)
     logging.basicConfig()
 
-    if hasattr(args, 'func'):
-        func = kwargs.pop('func')
-        logger.debug('%s(**%r)', func.__name__, kwargs)
-        func(**kwargs)
-    else:
-        top_parser.print_help()
+    func = kwargs.pop("func", start_gui)
+    logger.debug('%s(**%r)', func.__name__, kwargs)
+    func(**kwargs)
 
 
 if __name__ == '__main__':
