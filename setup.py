@@ -56,6 +56,9 @@ setup(
         "console_scripts": [
             "btms-ui=btms_ui.bin.main:main",
         ],
+        "pydm.widget": [
+            "BtmsStatusView=btms_ui.scene:BtmsStatusView",
+        ]
     },
     include_package_data=True,
     package_data={

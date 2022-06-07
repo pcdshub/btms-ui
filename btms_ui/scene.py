@@ -219,6 +219,9 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
 
 
 class BtmsStatusView(QtWidgets.QGraphicsView):
+    _qt_designer_ = {
+        "group": "Laser Transport System",
+    }
     device: BtpsStateDevice
     system: TransportSystem
 
@@ -238,6 +241,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
         scene.setSceneRect(self.system.boundingRect())
         scene.addItem(self.system)
+        self._device_prefix = ""
         self.device = None
 
     @QtCore.Property(str)
@@ -248,10 +252,14 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
     def device_prefix(self, prefix: str) -> None:
         self._device_prefix = prefix
 
+        if not prefix:
+            return
+
         if self.device is not None:
             self.device.destroy()
+            self.device = None
 
-        self._device = self._create_device(prefix)
+        self.device = self._create_device(prefix)
 
     def _create_device(self, prefix: str):
         device = BtpsStateDevice(
