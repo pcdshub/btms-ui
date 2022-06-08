@@ -186,7 +186,6 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
         super().__init__()
         self.helper = PositionHelper(channel_x, channel_y)
         self.helper.position_updated.connect(self._update_position)
-        self.addToGroup(create_scene_rectangle(cx=0, cy=0, width=10, height=10))
 
     @property
     def channel_x(self) -> Optional[str]:
@@ -214,7 +213,13 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
-    ...
+    def __init__(
+        self,
+        channel_x: Optional[str] = None,
+        channel_y: Optional[str] = None,
+    ):
+        super().__init__(channel_x=channel_x, channel_y=channel_y)
+        self.addToGroup(create_scene_rectangle(cx=0, cy=0, width=10, height=10))
 
 
 class TransportSystem(QtWidgets.QGraphicsItemGroup):
@@ -344,11 +349,13 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
             pen=self.base_pen,
             brush=self.base_brush,
         )
+        self.base.setZValue(0)
         self.addToGroup(self.base)
 
         self.lens = LensAssembly()
         self.addToGroup(self.lens)
 
+        self.lens.setZValue(2)
         self.dest_indicators = {
             idx: SourceDestinationIndicator()
             for idx in DESTINATIONS
@@ -356,6 +363,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         for indicator in self.dest_indicators.values():
             self.addToGroup(indicator)
+            indicator.setZValue(1)
 
     @property
     def linear_position(self) -> float:
