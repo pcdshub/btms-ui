@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, ClassVar, Dict, Optional, Union
+from typing import ClassVar, Dict, Optional, Union
 
-import numpy as np
 import ophyd
 import pydm
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
@@ -32,7 +31,7 @@ def create_scene_rectangle(
     brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
 ) -> QtWidgets.QGraphicsRectItem:
     """
-    Create a QGraphicsRectItem for a a QGraphicsScene.
+    Create a QGraphicsRectItem for a QGraphicsScene.
 
     The transform origin of the rectangle will be set to its center.
 
@@ -67,14 +66,85 @@ def create_scene_rectangle(
     return item
 
 
+def create_scene_cross(
+    cx: float,
+    cy: float,
+    width: float,
+    height: float,
+    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
+    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+) -> QtWidgets.QGraphicsPolygonItem:
+    """
+    Create a QGraphicsPolygonItem in the shape of a cross for a QGraphicsScene.
+
+    The transform origin of the cross will be set to its center.
+
+    Parameters
+    ----------
+    cx : float
+        The center X position.
+    cy : float
+        The center Y position.
+    width : float
+        The width.
+    height : float
+        The height.
+    pen : QColor or QPen, optional
+        The pen to draw the rectangle with.
+    brush : QColor or QBrush, optional
+        The brush to draw the rectangle with.
+
+    Returns
+    -------
+    QtWidgets.QGraphicsRectItem
+        The created rectangle.
+    """
+    item = QtWidgets.QGraphicsPolygonItem(
+        QtGui.QPolygonF(
+            [
+                QtCore.QPointF(0.0, 0.0),
+                QtCore.QPointF(-width / 2.0, 0.0),
+                QtCore.QPointF(width / 2.0, 0.0),
+                QtCore.QPointF(0.0, 0.0),
+                QtCore.QPointF(0.0, -height / 2.0),
+                QtCore.QPointF(0.0, height / 2.0),
+            ]
+        )
+
+    )
+    item.setTransformOriginPoint(QtCore.QPointF(0.0, 0.0))
+    if pen is not None:
+        item.setPen(pen)
+    if brush is not None:
+        item.setBrush(brush)
+    return item
+
+
 class PositionHelper(QtCore.QObject):
     """
+    A helper for monitoring positions via PyDM channels.
+
+    Emits ``position_updated`` whenever X or Y updates.
+
+    Parameters
+    ----------
+    x : float, optional
+        The starting X position.
+    y : float, optional
+        The starting Y position.
+    channel_x : PyDMChannel, optional
+        The PyDM channel for the X position.
+    channel_y : PyDMChannel, optional
+        The PyDM channel for the Y position.
     """
 
+    #: Emitted on every X or Y update.
     position_updated = QtCore.Signal(object, object)  # Optional[float]
 
     def __init__(
         self,
+        x: float = 0.0,
+        y: float = 0.0,
         channel_x: Optional[str] = None,
         channel_y: Optional[str] = None,
     ):
@@ -84,8 +154,8 @@ class PositionHelper(QtCore.QObject):
         self._channels = []
         self.channel_x = channel_x
         self.channel_y = channel_y
-        self.x = 0.0
-        self.y = 0.0
+        self.x = x
+        self.y = y
 
     def _remove_channel(self, channel: pydm.widgets.PyDMChannel):
         old_connections = [
@@ -134,10 +204,7 @@ class PositionHelper(QtCore.QObject):
 
     @QtCore.Slot(int)
     @QtCore.Slot(float)
-    @QtCore.Slot(str)
-    @QtCore.Slot(bool)
-    @QtCore.Slot(np.ndarray)
-    def _set_x(self, value: Any):
+    def _set_x(self, value: Union[float, int]):
         self._update_position(float(value), None)
 
     @QtCore.Property(str)
@@ -158,13 +225,20 @@ class PositionHelper(QtCore.QObject):
 
     @QtCore.Slot(int)
     @QtCore.Slot(float)
-    @QtCore.Slot(str)
-    @QtCore.Slot(bool)
-    @QtCore.Slot(np.ndarray)
-    def _set_y(self, value: Any):
+    def _set_y(self, value: Union[float, int]):
         self._update_position(None, float(value))
 
     def _update_position(self, x: Optional[float], y: Optional[float]):
+        """
+        Hook for when X or Y position updated - signal to be emitted.
+
+        Parameters
+        ----------
+        x : float, optional
+            The new X position.
+        y : float, optional
+            The new Y position.
+        """
         if x is not None:
             self.x = x
         if y is not None:
@@ -219,7 +293,7 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         channel_y: Optional[str] = None,
     ):
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(create_scene_rectangle(cx=0, cy=0, width=10, height=10))
+        self.addToGroup(create_scene_cross(cx=0, cy=0, width=10, height=10))
 
 
 class TransportSystem(QtWidgets.QGraphicsItemGroup):
@@ -280,7 +354,6 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
 
     @device.setter
     def device(self, device: Optional[BtpsStateDevice]) -> None:
-        print("device", device)
         self._device = device
         if device is None:
             return
