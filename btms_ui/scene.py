@@ -1,15 +1,26 @@
 from __future__ import annotations
 
-from typing import ClassVar, Dict, Optional, Union
+import logging
+from typing import Any, ClassVar, Dict, Optional, Union
 
+import numpy as np
 import ophyd
+import pydm
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
+from pcdsdevices.lasers.btps import SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
+logger = logging.getLogger(__name__)
 
-def pv_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
+
+def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
     """PyDM-compatible PV name URIs from a given EpicsSignal."""
     return f"ca://{signal.pvname}"
+
+
+SOURCES = (1, 2, 3, 4)
+DESTINATIONS = (1, 2, 3, 4, 5, 6, 7)
+INSTALLED_SOURCES = (1, 3, 4)
 
 
 def create_scene_rectangle(
@@ -56,6 +67,156 @@ def create_scene_rectangle(
     return item
 
 
+class PositionHelper(QtCore.QObject):
+    """
+    """
+
+    position_updated = QtCore.Signal(object, object)  # Optional[float]
+
+    def __init__(
+        self,
+        channel_x: Optional[str] = None,
+        channel_y: Optional[str] = None,
+    ):
+        super().__init__()
+        self._channel_x = None
+        self._channel_y = None
+        self._channels = []
+        self.channel_x = channel_x
+        self.channel_y = channel_y
+        self.x = 0.0
+        self.y = 0.0
+
+    def _remove_channel(self, channel: pydm.widgets.PyDMChannel):
+        old_connections = [
+            ch for ch in self._channels
+            if ch.address == channel.address
+        ]
+
+        for channel in old_connections:
+            channel.disconnect()
+            self._channels.remove(channel)
+
+    def _set_channel(
+        self,
+        old: Optional[pydm.widgets.PyDMChannel],
+        new: Optional[str],
+    ) -> Optional[pydm.widgets.PyDMChannel]:
+        """Update a channel setting."""
+        if old is None and new is None:
+            return None
+
+        if old is not None:
+            self._remove_channel(old)
+
+        if not new:
+            return None
+
+        channel = pydm.widgets.PyDMChannel(address=new)
+        self._channels.append(channel)
+        return channel
+
+    @QtCore.Property(str)
+    def channel_x(self) -> Optional[str]:
+        """The channel address for the X position."""
+        if self._channel_x is None:
+            return None
+        return self._channel_x.address
+
+    @channel_x.setter
+    def channel_x(self, value: Optional[str]):
+        self._channel_x = self._set_channel(self._channel_x, value)
+        if self._channel_x is None:
+            return
+
+        self._channel_x.value_slot = self._set_x
+        self._channel_x.connect()
+
+    @QtCore.Slot(int)
+    @QtCore.Slot(float)
+    @QtCore.Slot(str)
+    @QtCore.Slot(bool)
+    @QtCore.Slot(np.ndarray)
+    def _set_x(self, value: Any):
+        self._update_position(float(value), None)
+
+    @QtCore.Property(str)
+    def channel_y(self) -> Optional[str]:
+        """The channel address for the Y position."""
+        if self._channel_y is None:
+            return None
+        return self._channel_y.address
+
+    @channel_y.setter
+    def channel_y(self, value: Optional[str]):
+        self._channel_y = self._set_channel(self._channel_y, value)
+        if self._channel_y is None:
+            return
+
+        self._channel_y.value_slot = self._set_y
+        self._channel_y.connect()
+
+    @QtCore.Slot(int)
+    @QtCore.Slot(float)
+    @QtCore.Slot(str)
+    @QtCore.Slot(bool)
+    @QtCore.Slot(np.ndarray)
+    def _set_y(self, value: Any):
+        self._update_position(None, float(value))
+
+    def _update_position(self, x: Optional[float], y: Optional[float]):
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+
+        self.position_updated.emit(self.x, self.y)
+
+
+class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
+    """
+    A graphics item group that gets positioned based on a PyDM channel.
+    """
+
+    def __init__(
+        self,
+        channel_x: Optional[str] = None,
+        channel_y: Optional[str] = None,
+    ):
+        super().__init__()
+        self.helper = PositionHelper(channel_x, channel_y)
+        self.helper.position_updated.connect(self._update_position)
+        self.addToGroup(create_scene_rectangle(cx=0, cy=0, width=10, height=10))
+
+    @property
+    def channel_x(self) -> Optional[str]:
+        """The X channel for the position."""
+        return self.helper.channel_x
+
+    @channel_x.setter
+    def channel_x(self, value: Optional[str]):
+        self.helper.channel_x = value
+
+    @property
+    def channel_y(self) -> Optional[str]:
+        """The Y channel for the position."""
+        return self.helper.channel_y
+
+    @channel_y.setter
+    def channel_y(self, value: Optional[str]):
+        self.helper.channel_y = value
+
+    def _update_position(self, x: Optional[float], y: Optional[float]):
+        self.setPos(
+            self.x() if x is None else x,
+            self.y() if y is None else y,
+        )
+
+
+class SourceDestinationIndicator(PyDMPositionedGroup):
+    ...
+
+
 class TransportSystem(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of the full laser transport system.
@@ -85,8 +246,8 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
 
         self.addToGroup(self.base)
         self.assemblies = {}
-        for idx in range(1, 5):
-            assembly = MotorizedMirrorAssembly()
+        for idx in SOURCES:
+            assembly = MotorizedMirrorAssembly(source_index=idx)
             assembly.setPos(
                 0.0,
                 -self.base_height / 2.0
@@ -95,25 +256,52 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
             self.assemblies[idx] = assembly
             self.addToGroup(assembly)
 
-        self.assemblies[2].lens.setVisible(False)
+        for assembly in set(SOURCES) - set(INSTALLED_SOURCES):
+            self.assemblies[assembly].lens.setVisible(False)
+            for indicator in self.assemblies[assembly].dest_indicators.values():
+                indicator.setVisible(False)
 
+        # Just some testing code until we have PyDM channels hooked up:
         self.angle = 0
         self.angle_step = 1
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
-        self.timer.timeout.connect(self._rotate)
+        self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
 
-    def _rotate(self):
+    @property
+    def device(self) -> Optional[BtpsStateDevice]:
+        return self._device
+
+    @device.setter
+    def device(self, device: Optional[BtpsStateDevice]) -> None:
+        print("device", device)
+        self._device = device
+        if device is None:
+            return
+
+        for source_idx, assembly in self.assemblies.items():
+            for dest_idx, indicator in assembly.dest_indicators.items():
+                try:
+                    source: SourceConfig = getattr(device, f"dest{dest_idx}.source{source_idx}")
+                except AttributeError:
+                    if source_idx not in INSTALLED_SOURCES:
+                        continue
+                    raise
+                channel = channel_from_signal(source.linear.nominal)
+                indicator.helper.channel_x = channel
+
+    def _rotating_test(self):
+        """Testing the rotation mechanism."""
         self.angle += self.angle_step
         direction_swap = False
         for idx, assembly in self.assemblies.items():
-            assembly.lens.lens_angle = idx * self.angle
-            if abs(assembly.lens.linear_position) >= self.base_width / 3.0:
+            assembly.lens.angle = idx * self.angle
+            if abs(assembly.linear_position) >= self.base_width / 3.0:
                 if not direction_swap:
                     self.angle_step *= -1
                 direction_swap = True
-            assembly.lens.linear_position += (-1) ** idx * self.angle_step
+            assembly.linear_position += (-1) ** idx * self.angle_step
 
 
 class LaserSource(QtWidgets.QGraphicsItemGroup):
@@ -131,6 +319,8 @@ class Destination(QtWidgets.QGraphicsItemGroup):
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a single motorized mirror assembly.
+
+    It contains a LensAssembly which has
     """
 
     base_width: ClassVar[float] = 300.0
@@ -140,8 +330,10 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
     base: QtWidgets.QGraphicsRectItem
     lens: LensAssembly
+    source_index: int
+    source_device: SourceConfig
 
-    def __init__(self):
+    def __init__(self, source_index: int):
         super().__init__()
 
         self.base = create_scene_rectangle(
@@ -156,6 +348,23 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         self.lens = LensAssembly()
         self.addToGroup(self.lens)
+
+        self.dest_indicators = {
+            idx: SourceDestinationIndicator()
+            for idx in DESTINATIONS
+        }
+
+        for indicator in self.dest_indicators.values():
+            self.addToGroup(indicator)
+
+    @property
+    def linear_position(self) -> float:
+        """The position of the lens assembly on the linear stage."""
+        return self.lens.pos().x()
+
+    @linear_position.setter
+    def linear_position(self, pos: float) -> None:
+        self.lens.setPos(QtCore.QPointF(pos, 0.0))
 
 
 class LensAssembly(QtWidgets.QGraphicsItemGroup):
@@ -202,27 +411,20 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.lens)
 
     @property
-    def lens_angle(self) -> float:
+    def angle(self) -> float:
+        """The rotation angle in degrees of the lens assembly."""
         return self.lens.rotation()
 
-    @lens_angle.setter
-    def lens_angle(self, angle: float) -> None:
+    @angle.setter
+    def angle(self, angle: float) -> None:
         self.lens.setRotation(angle)
-
-    @property
-    def linear_position(self) -> float:
-        return self.pos().x()
-
-    @linear_position.setter
-    def linear_position(self, pos: float) -> None:
-        self.setPos(QtCore.QPointF(pos, 0.0))
 
 
 class BtmsStatusView(QtWidgets.QGraphicsView):
     _qt_designer_ = {
         "group": "Laser Transport System",
     }
-    device: BtpsStateDevice
+    device: Optional[BtpsStateDevice]
     system: TransportSystem
 
     def __init__(
@@ -246,6 +448,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
     @QtCore.Property(str)
     def device_prefix(self) -> str:
+        """The prefix for the ophyd Device ``BtpsStateDevice``."""
         return self._device_prefix
 
     @device_prefix.setter
@@ -261,10 +464,14 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
         self.device = self._create_device(prefix)
 
-    def _create_device(self, prefix: str):
+    def _create_device(self, prefix: str) -> BtpsStateDevice:
+        """
+        Create the BTPS State device given its prefix.
+        """
         device = BtpsStateDevice(
             prefix,
             name="las_btps"
         )
         # self.system.
-        print("PVName", device.dest1.source1.linear.value.pvname)
+        self.system.device = device
+        return device
