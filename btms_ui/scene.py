@@ -255,7 +255,7 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
         channel_y: Optional[str] = None,
     ):
         super().__init__()
-        self.helper = PositionHelper(channel_x, channel_y)
+        self.helper = PositionHelper(channel_x=channel_x, channel_y=channel_y)
         self.helper.position_updated.connect(self._update_position)
 
     @property
@@ -411,6 +411,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     def __init__(self, source_index: int):
         super().__init__()
 
+        self.source_index = source_index
         self.base = create_scene_rectangle(
             cx=0,
             cy=0,
