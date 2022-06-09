@@ -67,8 +67,6 @@ def create_scene_rectangle(
 
 
 def create_scene_cross(
-    cx: float,
-    cy: float,
     width: float,
     height: float,
     pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
@@ -110,7 +108,6 @@ def create_scene_cross(
                 QtCore.QPointF(0.0, height / 2.0),
             ]
         )
-
     )
     item.setTransformOriginPoint(QtCore.QPointF(0.0, 0.0))
     if pen is not None:
@@ -293,7 +290,7 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         channel_y: Optional[str] = None,
     ):
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(create_scene_cross(cx=0, cy=0, width=10, height=10))
+        self.addToGroup(create_scene_cross(width=10, height=10))
 
 
 class TransportSystem(QtWidgets.QGraphicsItemGroup):
