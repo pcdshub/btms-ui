@@ -9,6 +9,9 @@ from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from pcdsdevices.lasers.btps import SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
+# from .vacuum import EntryGateValve, ExitGateValve
+
+
 logger = logging.getLogger(__name__)
 
 
