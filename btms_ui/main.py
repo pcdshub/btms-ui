@@ -15,10 +15,6 @@ def main():
         app = QtWidgets.QApplication([])
     widget = BtmsMain()
     widget.show()
-    from .vacuum import GateValve
-    valve = GateValve()
-    valve.channelsPrefix = "ca://SIM:VALVES:"
-    valve.show()
     app.exec_()
 
 

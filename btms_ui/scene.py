@@ -6,13 +6,20 @@ from typing import ClassVar, Dict, Optional, Union
 import ophyd
 import pydm
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
-from pcdsdevices.lasers.btps import SourceConfig
+from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
-# from .vacuum import EntryGateValve, ExitGateValve
+from .vacuum import LaserShutter
+
+# from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 
 logger = logging.getLogger(__name__)
+
+
+def channel_from_device(device: ophyd.Device) -> str:
+    """PyDM-compatible PV name URIs from a given ophyd Device."""
+    return f"ca://{device.prefix}"
 
 
 def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
@@ -23,6 +30,11 @@ def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
 SOURCES = (1, 2, 3, 4)
 DESTINATIONS = (1, 2, 3, 4, 5, 6, 7)
 INSTALLED_SOURCES = (1, 3, 4)
+
+
+def center_transform_origin(obj: QtWidgets.QGraphicsItem):
+    """Put the object's transform origin at its center position."""
+    obj.setTransformOriginPoint(obj.rect().center())
 
 
 def create_scene_rectangle(
@@ -324,21 +336,8 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         )
 
         self.addToGroup(self.base)
-        self.assemblies = {}
-        for idx in SOURCES:
-            assembly = MotorizedMirrorAssembly(source_index=idx)
-            assembly.setPos(
-                0.0,
-                -self.base_height / 2.0
-                + MotorizedMirrorAssembly.base_height * 1.5 * idx,
-            )
-            self.assemblies[idx] = assembly
-            self.addToGroup(assembly)
-
-        for assembly in set(SOURCES) - set(INSTALLED_SOURCES):
-            self.assemblies[assembly].lens.setVisible(False)
-            for indicator in self.assemblies[assembly].dest_indicators.values():
-                indicator.setVisible(False)
+        self.assemblies = self._create_assemblies()
+        self.sources = self._create_sources()
 
         # Just some testing code until we have PyDM channels hooked up:
         self.angle = 0
@@ -347,6 +346,40 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
+
+    def _create_source(self, idx: int) -> LaserSource:
+        source = LaserSource(source_index=idx)
+        return source
+
+    def _create_sources(self) -> Dict[int, LaserSource]:
+        sources = {}
+        for idx in INSTALLED_SOURCES:
+            sources[idx] = self._create_source(idx)
+            self.addToGroup(sources[idx])
+
+        return sources
+
+    def _create_assembly(self, idx: int) -> MotorizedMirrorAssembly:
+        assembly = MotorizedMirrorAssembly(source_index=idx)
+        assembly.setPos(
+            0.0,
+            -self.base_height / 2.0
+            + MotorizedMirrorAssembly.base_height * 1.5 * idx,
+        )
+
+        if idx not in INSTALLED_SOURCES:
+            assembly.lens.setVisible(False)
+            for indicator in assembly.dest_indicators.values():
+                indicator.setVisible(False)
+        return assembly
+
+    def _create_assemblies(self) -> Dict[int, MotorizedMirrorAssembly]:
+        assemblies = {}
+        for idx in SOURCES:
+            assemblies[idx] = self._create_assembly(idx)
+            self.addToGroup(assemblies[idx])
+
+        return assemblies
 
     @property
     def device(self) -> Optional[BtpsStateDevice]:
@@ -359,15 +392,29 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
             return
 
         for source_idx, assembly in self.assemblies.items():
+            if source_idx not in INSTALLED_SOURCES:
+                continue
+
             for dest_idx, indicator in assembly.dest_indicators.items():
-                try:
-                    source: SourceConfig = getattr(device, f"dest{dest_idx}.source{source_idx}")
-                except AttributeError:
-                    if source_idx not in INSTALLED_SOURCES:
-                        continue
-                    raise
-                channel = channel_from_signal(source.linear.nominal)
+                source_conf: SourceConfig = getattr(
+                    device, f"dest{dest_idx}.source{source_idx}"
+                )
+                channel = channel_from_signal(source_conf.linear.nominal)
                 indicator.helper.channel_x = channel
+
+            shutter_safety: ShutterSafety = getattr(device, f"shutter{source_idx}")
+            source = self.sources[source_idx]
+            source.shutter.controlsLocation = source.shutter.ContentLocation.Hidden
+            source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
+            source.shutter.setFixedSize(source.shutter.minimumSizeHint())
+            source.setTransformOriginPoint(source.boundingRect().center())
+            source.setPos(
+                assembly.boundingRect().x() - source.shutter.width(),
+                assembly.pos().y() - source.shutter.height() / 2
+            )
+            for attr in dir(source.shutter):
+                if attr.endswith("channel"):
+                    print(attr, getattr(source.shutter, attr).address)
 
     def _rotating_test(self):
         """Testing the rotation mechanism."""
@@ -386,6 +433,19 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a laser source.
     """
+
+    shutter_proxy: QtWidgets.QGraphicsProxyWidget
+    shutter: LaserShutter
+
+    def __init__(self, source_index: int):
+        super().__init__()
+
+        self.source_index = source_index
+
+        self.shutter = LaserShutter()
+        self.shutter_proxy = QtWidgets.QGraphicsProxyWidget()
+        self.shutter_proxy.setWidget(self.shutter)
+        self.addToGroup(self.shutter_proxy)
 
 
 class Destination(QtWidgets.QGraphicsItemGroup):
@@ -415,6 +475,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
         super().__init__()
 
         self.source_index = source_index
+
         self.base = create_scene_rectangle(
             cx=0,
             cy=0,
@@ -554,6 +615,5 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
             prefix,
             name="las_btps"
         )
-        # self.system.
         self.system.device = device
         return device
