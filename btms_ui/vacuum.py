@@ -1,8 +1,9 @@
 import textwrap
 
-from pcdswidgets.icons.valves import BaseSymbolIcon, PneumaticValveSymbolIcon
+from pcdswidgets.icons.valves import BaseSymbolIcon
 from pcdswidgets.vacuum.base import PCDSSymbolBase
 from pcdswidgets.vacuum.mixins import InterlockMixin, OpenCloseStateMixin
+from pcdswidgets.vacuum.valves import PneumaticValve
 from qtpy import QtCore, QtGui
 
 
@@ -100,10 +101,9 @@ class LaserShutter(InterlockMixin, OpenCloseStateMixin, PCDSSymbolBase):
         return self.minimumSizeHint()
 
 
-class GateValve(OpenCloseStateMixin, PCDSSymbolBase):
+class GateValve(PneumaticValve):
     """
-    A Symbol Widget representing a Pneumatic Valve with the proper icon and
-    controls.
+    A Symbol Widget representing a BTS gate valve.
 
     Parameters
     ----------
@@ -118,23 +118,16 @@ class GateValve(OpenCloseStateMixin, PCDSSymbolBase):
     selectors when writing your stylesheet to be used with this widget.
     Properties are also available to offer wider customization possibilities.
     """
-    _interlock_suffix = ":LSS_RBV"
-    _open_suffix = ":OPN_RBV"
-    _close_suffix = ":CLS_RBV"
-    _command_suffix = ":REQ_RBV"
+    # _interlock_suffix = ":LSS_RBV"
+    # _open_suffix = ":OPN_RBV"
+    # _close_suffix = ":CLS_RBV"
+    # _command_suffix = ":REQ_RBV"
 
     NAME = "Gate Valve"
     EXPERT_OPHYD_CLASS = "pcdsdevices.valve.VGC"
 
     def __init__(self, parent=None, **kwargs):
-        super().__init__(
-            parent=parent,
-            interlock_suffix=self._interlock_suffix,
-            open_suffix=self._open_suffix,
-            close_suffix=self._close_suffix,
-            command_suffix=self._command_suffix,
-            **kwargs)
-        self.icon = PneumaticValveSymbolIcon(parent=self)
+        super().__init__(parent=parent, **kwargs)
         self.setStyleSheet(
             textwrap.dedent(
                 """\
@@ -166,8 +159,11 @@ class GateValve(OpenCloseStateMixin, PCDSSymbolBase):
         self.setAutoFillBackground(False)
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
 
+    def minimumSizeHint(self):
+        return QtCore.QSize(60, 60)
+
     def sizeHint(self):
-        return QtCore.QSize(180, 70)
+        return self.minimumSizeHint()
 
 
 EntryGateValve = GateValve

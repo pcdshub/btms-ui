@@ -9,10 +9,7 @@ from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
-from .vacuum import LaserShutter
-
-# from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
-
+from .vacuum import EntryGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +70,7 @@ def create_scene_rectangle(
     item = QtWidgets.QGraphicsRectItem(
         QtCore.QRectF(cx - width / 2.0, cy - height / 2.0, width, height)
     )
-    item.setTransformOriginPoint(item.rect().center())
+    center_transform_origin(item)
     if pen is not None:
         item.setPen(pen)
     if brush is not None:
@@ -130,6 +127,28 @@ def create_scene_cross(
     if brush is not None:
         item.setBrush(brush)
     return item
+
+
+def align_vertically(
+    align_with: QtWidgets.QGraphicsItem,
+    *items: QtWidgets.QGraphicsItem
+) -> None:
+    """
+    Align ``items`` vertically with ``align_with``.
+
+    Parameters
+    ----------
+    align_with : QtWidgets.QGraphicsItem
+        The item to align others with.
+
+    *items : QtWidgets.QGraphicsItem
+        The items to align vertically.
+    """
+    target_center = align_with.sceneBoundingRect().center()
+    for item in items:
+        item_center = item.sceneBoundingRect().center()
+        delta_to_center = target_center - item_center
+        item.setPos(item.pos().x(), item.pos().y() + delta_to_center.y())
 
 
 class PositionHelper(QtCore.QObject):
@@ -338,6 +357,7 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.base)
         self.assemblies = self._create_assemblies()
         self.sources = self._create_sources()
+        self._align_source_and_assembly()
 
         # Just some testing code until we have PyDM channels hooked up:
         self.angle = 0
@@ -346,6 +366,11 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
+
+    def _align_source_and_assembly(self) -> None:
+        ...
+        # for source, assembly in zip(self.sources.values(), self.assemblies.values()):
+        #     align_vertically(assembly, source)
 
     def _create_source(self, idx: int) -> LaserSource:
         source = LaserSource(source_index=idx)
@@ -404,17 +429,12 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
 
             shutter_safety: ShutterSafety = getattr(device, f"shutter{source_idx}")
             source = self.sources[source_idx]
-            source.shutter.controlsLocation = source.shutter.ContentLocation.Hidden
             source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
-            source.shutter.setFixedSize(source.shutter.minimumSizeHint())
-            source.setTransformOriginPoint(source.boundingRect().center())
             source.setPos(
-                assembly.boundingRect().x() - source.shutter.width(),
-                assembly.pos().y() - source.shutter.height() / 2
+                assembly.boundingRect().x() - source.boundingRect().width(),
+                0.0,
             )
-            for attr in dir(source.shutter):
-                if attr.endswith("channel"):
-                    print(attr, getattr(source.shutter, attr).address)
+            align_vertically(assembly, source)
 
     def _rotating_test(self):
         """Testing the rotation mechanism."""
@@ -436,16 +456,38 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
 
     shutter_proxy: QtWidgets.QGraphicsProxyWidget
     shutter: LaserShutter
+    entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
+    entry_valve: EntryGateValve
 
     def __init__(self, source_index: int):
         super().__init__()
 
         self.source_index = source_index
 
+        self.entry_valve = EntryGateValve()
+        self.entry_valve.controlsLocation = self.entry_valve.ContentLocation.Hidden
+        self.entry_valve.setFixedSize(self.entry_valve.minimumSizeHint())
+        self.entry_valve_proxy = QtWidgets.QGraphicsProxyWidget()
+        self.entry_valve_proxy.setWidget(self.entry_valve)
+        self.addToGroup(self.entry_valve_proxy)
+        center_transform_origin(self.entry_valve_proxy)
+
         self.shutter = LaserShutter()
+        self.shutter.controlsLocation = self.shutter.ContentLocation.Hidden
+        self.shutter.setFixedSize(self.shutter.minimumSizeHint())
         self.shutter_proxy = QtWidgets.QGraphicsProxyWidget()
         self.shutter_proxy.setWidget(self.shutter)
         self.addToGroup(self.shutter_proxy)
+        center_transform_origin(self.shutter_proxy)
+
+        shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
+            self.shutter.width(),
+            0.0
+        )
+        self.shutter_proxy.setPos(shutter_pos)
+        align_vertically(self.shutter_proxy, self.entry_valve_proxy)
+
+        self.setTransformOriginPoint(self.boundingRect().center())
 
 
 class Destination(QtWidgets.QGraphicsItemGroup):
@@ -580,11 +622,13 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         super().__init__(scene, parent=parent)
 
         self.setMinimumSize(500, 500)
-        self.setSceneRect(scene.itemsBoundingRect())
+        self.setSceneRect(
+            scene.itemsBoundingRect().marginsAdded(QtCore.QMarginsF(10, 10, 10, 10))
+        )
 
         self.system = TransportSystem()
-        self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
-        scene.setSceneRect(self.system.boundingRect())
+        # self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
+        # scene.setSceneRect(self.system.boundingRect())
         scene.addItem(self.system)
         self._device_prefix = ""
         self.device = None
