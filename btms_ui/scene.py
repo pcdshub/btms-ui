@@ -34,6 +34,11 @@ def center_transform_origin(obj: QtWidgets.QGraphicsItem):
     obj.setTransformOriginPoint(obj.rect().center())
 
 
+def center_transform_top_left(obj: QtWidgets.QGraphicsItem):
+    """Put the object's transform origin at its top-left position."""
+    obj.setTransformOriginPoint(obj.rect().topLeft())
+
+
 def create_scene_rectangle(
     cx: float,
     cy: float,
@@ -41,6 +46,7 @@ def create_scene_rectangle(
     height: float,
     pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
     brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    zvalue: Optional[int] = None,
 ) -> QtWidgets.QGraphicsRectItem:
     """
     Create a QGraphicsRectItem for a QGraphicsScene.
@@ -61,6 +67,8 @@ def create_scene_rectangle(
         The pen to draw the rectangle with.
     brush : QColor or QBrush, optional
         The brush to draw the rectangle with.
+    zvalue : int, optional
+        The z index for the rectangle.
 
     Returns
     -------
@@ -75,6 +83,8 @@ def create_scene_rectangle(
         item.setPen(pen)
     if brush is not None:
         item.setBrush(brush)
+    if zvalue is not None:
+        item.setZValue(zvalue)
     return item
 
 
@@ -310,21 +320,34 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
     def channel_y(self, value: Optional[str]):
         self.helper.channel_y = value
 
+    def get_offset_position(self, x: float, y: float):
+        """Optionally add a position offset."""
+        return QtCore.QPointF(x, y)
+
     def _update_position(self, x: Optional[float], y: Optional[float]):
-        self.setPos(
+        offset_position = self.get_offset_position(
             self.x() if x is None else x,
             self.y() if y is None else y,
         )
+        self.setPos(offset_position)
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
     def __init__(
         self,
+        base_item: QtWidgets.QGraphicsRectItem,
         channel_x: Optional[str] = None,
         channel_y: Optional[str] = None,
     ):
+        self.base_item = base_item
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(create_scene_cross(width=10, height=10))
+        self.addToGroup(create_scene_cross(width=20, height=20))
+
+    def get_offset_position(self, x: float, y: float):
+        """Optionally add a position offset."""
+        base_rect = self.base_item.rect()
+        left_center = QtCore.QPointF(base_rect.left(), base_rect.center().y())
+        return left_center + QtCore.QPointF(x, y)
 
 
 class TransportSystem(QtWidgets.QGraphicsItemGroup):
@@ -332,10 +355,10 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
     A graphical representation of the full laser transport system.
     """
 
-    base_width: ClassVar[float] = 400.0
-    base_height: ClassVar[float] = 400.0
+    base_padding_multiplier: ClassVar[float] = 1.1
     base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(217, 217, 217)
+    source_margin: ClassVar[float] = 10.0
 
     base: QtWidgets.QGraphicsRectItem
     assemblies: Dict[int, MotorizedMirrorAssembly]
@@ -345,19 +368,22 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
     def __init__(self):
         super().__init__()
 
+        self.assemblies = self._create_assemblies()
+
+        assembly_bounds = self.boundingRect()
+
         self.base = create_scene_rectangle(
-            cx=0,
-            cy=0,
-            width=self.base_width,
-            height=self.base_height,
+            cx=assembly_bounds.center().x(),
+            cy=assembly_bounds.center().y(),
+            width=assembly_bounds.width() * self.base_padding_multiplier,
+            height=assembly_bounds.height() * self.base_padding_multiplier,
             pen=self.base_pen,
             brush=self.base_brush,
+            zvalue=-1,
         )
-
         self.addToGroup(self.base)
-        self.assemblies = self._create_assemblies()
+
         self.sources = self._create_sources()
-        self._align_source_and_assembly()
 
         # Just some testing code until we have PyDM channels hooked up:
         self.angle = 0
@@ -366,11 +392,6 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
-
-    def _align_source_and_assembly(self) -> None:
-        ...
-        # for source, assembly in zip(self.sources.values(), self.assemblies.values()):
-        #     align_vertically(assembly, source)
 
     def _create_source(self, idx: int) -> LaserSource:
         source = LaserSource(source_index=idx)
@@ -388,8 +409,7 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         assembly = MotorizedMirrorAssembly(source_index=idx)
         assembly.setPos(
             0.0,
-            -self.base_height / 2.0
-            + MotorizedMirrorAssembly.base_height * 1.5 * idx,
+            MotorizedMirrorAssembly.base_height * 1.5 * idx,
         )
 
         if idx not in INSTALLED_SOURCES:
@@ -431,7 +451,8 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
             source = self.sources[source_idx]
             source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
             source.setPos(
-                assembly.boundingRect().x() - source.boundingRect().width(),
+                assembly.boundingRect().x()
+                - (source.boundingRect().width() + self.source_margin),
                 0.0,
             )
             align_vertically(assembly, source)
@@ -442,7 +463,7 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         direction_swap = False
         for idx, assembly in self.assemblies.items():
             assembly.lens.angle = idx * self.angle
-            if abs(assembly.linear_position) >= self.base_width / 3.0:
+            if abs(assembly.linear_position) >= 200:
                 if not direction_swap:
                     self.angle_step *= -1
                 direction_swap = True
@@ -458,6 +479,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     shutter: LaserShutter
     entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
     entry_valve: EntryGateValve
+    icon_size: ClassVar[int] = 64
 
     def __init__(self, source_index: int):
         super().__init__()
@@ -466,6 +488,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
 
         self.entry_valve = EntryGateValve()
         self.entry_valve.controlsLocation = self.entry_valve.ContentLocation.Hidden
+        self.entry_valve.iconSize = self.icon_size
         self.entry_valve.setFixedSize(self.entry_valve.minimumSizeHint())
         self.entry_valve_proxy = QtWidgets.QGraphicsProxyWidget()
         self.entry_valve_proxy.setWidget(self.entry_valve)
@@ -474,6 +497,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
 
         self.shutter = LaserShutter()
         self.shutter.controlsLocation = self.shutter.ContentLocation.Hidden
+        self.shutter.iconSize = self.icon_size
         self.shutter.setFixedSize(self.shutter.minimumSizeHint())
         self.shutter_proxy = QtWidgets.QGraphicsProxyWidget()
         self.shutter_proxy.setWidget(self.shutter)
@@ -481,7 +505,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         center_transform_origin(self.shutter_proxy)
 
         shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
-            self.shutter.width(),
+            2. * self.shutter.width(),
             0.0
         )
         self.shutter_proxy.setPos(shutter_pos)
@@ -503,8 +527,8 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     It contains a LensAssembly which has
     """
 
-    base_width: ClassVar[float] = 300.0
-    base_height: ClassVar[float] = 40.0
+    base_width: ClassVar[float] = 1450.0
+    base_height: ClassVar[float] = 80.0
     base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(239, 239, 239)
 
@@ -534,7 +558,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         self.lens.setZValue(2)
         self.dest_indicators = {
-            idx: SourceDestinationIndicator()
+            idx: SourceDestinationIndicator(self.base)
             for idx in DESTINATIONS
         }
 
@@ -557,13 +581,13 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
     A graphical representation of a single lens assembly.
     """
 
-    base_width: ClassVar[float] = 50.0
-    base_height: ClassVar[float] = 50.0
+    base_width: ClassVar[float] = 100.0
+    base_height: ClassVar[float] = 100.0
     base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(217, 217, 217)
 
-    lens_width: ClassVar[float] = 1.0
-    lens_height: ClassVar[float] = 50.0
+    lens_width: ClassVar[float] = 2.0
+    lens_height: ClassVar[float] = 100.0
     lens_pen: ClassVar[QtGui.QColor] = QtGui.QColor("red")
     lens_brush: ClassVar[QtGui.QColor] = QtGui.QColor("red")
 
@@ -574,8 +598,8 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
         super().__init__()
 
         self.base = create_scene_rectangle(
-            cx=0,
-            cy=0,
+            cx=0.0,
+            cy=0.0,
             width=self.base_width,
             height=self.base_height,
             pen=self.base_pen,
@@ -621,17 +645,27 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
             scene = QtWidgets.QGraphicsScene()
         super().__init__(scene, parent=parent)
 
-        self.setMinimumSize(500, 500)
-        self.setSceneRect(
-            scene.itemsBoundingRect().marginsAdded(QtCore.QMarginsF(10, 10, 10, 10))
-        )
+        self.setMinimumSize(750, 500)
+        self.scale(0.4, 0.4)
 
         self.system = TransportSystem()
         # self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
         # scene.setSceneRect(self.system.boundingRect())
         scene.addItem(self.system)
+
+        self.recenter()
+
         self._device_prefix = ""
         self.device = None
+
+    def recenter(self) -> None:
+        """"Recenter the view on the scene contents."""
+        scene = self.scene()
+        margin = QtCore.QMarginsF(10, 10, 10, 10)
+        self.setSceneRect(
+            scene.itemsBoundingRect().marginsAdded(margin)
+        )
+        self.centerOn(scene.itemsBoundingRect().center())
 
     @QtCore.Property(str)
     def device_prefix(self) -> str:
