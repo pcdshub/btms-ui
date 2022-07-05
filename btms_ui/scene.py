@@ -56,6 +56,29 @@ class Position(str, enum.Enum):
     ld6 = "ld6"
     ld7 = "ld7"
 
+    @property
+    def is_left_source(self) -> bool:
+        """Is the laser source coming from the left (as in the diagram)?"""
+        return self in (
+            Position.ls1,
+            Position.ls2,
+            Position.ls3,
+            Position.ls4,
+        )
+
+    @property
+    def is_top_port(self) -> bool:
+        """Is the laser destination a top port?"""
+        return self in (
+            Position.ld8,
+            Position.ld9,
+            Position.ld10,
+            Position.ld11,
+            Position.ld12,
+            Position.ld13,
+            Position.ld14,
+        )
+
 
 DESTINATIONS = (1, 2, 3, 4, 5, 6, 7)
 PORT_SPACING_MM = 215.9  # 8.5 in
@@ -241,9 +264,9 @@ def create_scene_polygon(
     brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
 ) -> QtWidgets.QGraphicsPolygonItem:
     """
-    Create a QGraphicsPolygonItem in the shape of a cross for a QGraphicsScene.
+    Create a QGraphicsPolygonItem in the provided shape for a QGraphicsScene.
 
-    The transform origin of the cross will be set to its center.
+    The transform origin of the polygon will be set to its center.
 
     Parameters
     ----------
@@ -509,6 +532,9 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
+    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 10.0)
+    brush: ClassVar[QtGui.QColor] = QtGui.QColor("black")
+
     def __init__(
         self,
         base_item: QtWidgets.QGraphicsRectItem,
@@ -517,7 +543,9 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
     ):
         self.base_item = base_item
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(create_scene_cross(width=30, height=30))
+        self.addToGroup(
+            create_scene_cross(width=50, height=50, pen=self.pen, brush=self.brush)
+        )
 
     def get_offset_position(self, x: float, y: float):
         """Optionally add a position offset."""
@@ -614,11 +642,19 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             shutter_safety: ShutterSafety = getattr(device, f"shutter{source_idx}")
             source = self.sources[source_idx]
             source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
-            source.setPos(
-                assembly.boundingRect().x()
-                - (source.boundingRect().width() + self.source_margin),
-                0.0,
-            )
+
+            if source.ls_position.is_left_source:
+                source.setPos(
+                    assembly.boundingRect().x()
+                    - (source.boundingRect().width() + self.source_margin),
+                    0.0,
+                )
+            else:
+                source.setPos(
+                    self.base.sceneBoundingRect().right() + self.source_margin * 2,
+                    0.0,
+                )
+
             align_vertically(assembly, source)
 
     def _rotating_test(self):
@@ -742,10 +778,19 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.shutter_proxy)
         center_transform_origin(self.shutter_proxy)
 
-        shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
-            2. * self.shutter.width(),
-            0.0
-        )
+        if ls_position.is_left_source:
+            # (Shutter) (Valve)
+            shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
+                2. * self.shutter_proxy.boundingRect().width(),
+                0.0
+            )
+        else:
+            # (Valve) (Shutter)
+            shutter_pos = self.entry_valve_proxy.pos() + QtCore.QPointF(
+                self.entry_valve_proxy.boundingRect().width() * 1.1,
+                0.0
+            )
+
         self.shutter_proxy.setPos(shutter_pos)
         align_vertically(self.shutter_proxy, self.entry_valve_proxy)
 
