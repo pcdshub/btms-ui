@@ -8,7 +8,7 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat
-recursive-exclude btms_ui *.ui
+recursive-exclude btms_ui *.ui *.png
 
 include versioneer.py
 include btms_ui/_version.py

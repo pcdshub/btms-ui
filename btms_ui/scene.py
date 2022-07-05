@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import enum
 import logging
-from typing import ClassVar, Dict, Optional, Union
+import pathlib
+from typing import ClassVar, Dict, Optional, Tuple, Union
 
 import ophyd
 import pydm
@@ -9,6 +11,7 @@ from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
+from . import util
 from .vacuum import EntryGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -24,9 +27,99 @@ def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
     return f"ca://{signal.pvname}"
 
 
-SOURCES = (1, 2, 3, 4)
+class Position(str, enum.Enum):
+    # Top-bottom sources by where the linear stages are
+    ls5 = "ls5"
+    ls1 = "ls1"
+    ls6 = "ls6"
+    ls2 = "ls2"
+    ls7 = "ls7"
+    ls3 = "ls3"
+    ls8 = "ls8"
+    ls4 = "ls4"
+
+    # Left-right destination ports (top)
+    ld8 = "ld8"
+    ld9 = "ld9"
+    ld10 = "ld10"
+    ld11 = "ld11"
+    ld12 = "ld12"
+    ld13 = "ld13"
+    ld14 = "ld14"
+
+    # Left-right destination ports (bottom)
+    ld1 = "ld1"
+    ld2 = "ld2"
+    ld3 = "ld3"
+    ld4 = "ld4"
+    ld5 = "ld5"
+    ld6 = "ld6"
+    ld7 = "ld7"
+
+
 DESTINATIONS = (1, 2, 3, 4, 5, 6, 7)
-INSTALLED_SOURCES = (1, 3, 4)
+PORT_SPACING_MM = 215.9  # 8.5 in
+
+# PV source index (bay) to installed LS port
+source_to_ls_position: Dict[int, Position] = {
+    1: Position.ls1,
+    3: Position.ls5,
+    4: Position.ls8,
+}
+
+
+IMAGES = {
+    "switchbox.png": {
+        "pixels_to_mm": 1900. / 855.,
+        # width: 970px - 115px = 855px is 78.0in or 1900m
+        "origin": (0, 0),  # (144, 94),  # inner chamber top-left position (px)
+        "positions": {
+            # Sources (left side of rail, centered around axis of rotation)
+            Position.ls5: (225, 138),
+            Position.ls1: (225, 199),
+            Position.ls6: (225, 271),
+            Position.ls2: (225, 335),
+            Position.ls7: (225, 402),
+            Position.ls3: (225, 466),
+            Position.ls8: (225, 534),
+            Position.ls4: (225, 596),
+
+            # Top destinations (rough bottom centers, inside chamber)
+            Position.ld8: (238, 94),
+            Position.ld9: (332, 94),
+            Position.ld10: (425, 94),
+            Position.ld11: (518, 94),
+            Position.ld12: (612, 94),
+            Position.ld13: (705, 94),
+            Position.ld14: (799, 94),
+
+            # Bottom destinations (rough top centers, inside chamber)
+            # Position.ld0: (191, 636),
+            Position.ld1: (285, 636),
+            Position.ld2: (379, 636),
+            Position.ld3: (473, 636),
+            Position.ld4: (567, 636),
+            Position.ld5: (661, 636),
+            Position.ld6: (752, 636),
+            Position.ld7: (842, 636),
+        }
+    }
+}
+
+
+def get_left_center(rect: QtCore.QRectF) -> QtCore.QPointF:
+    """
+    Get the left-center position of the rectangle.
+
+    Parameters
+    ----------
+    rect : QtCore.QRectF
+
+    Returns
+    -------
+    QtCore.QPointF
+    """
+    return QtCore.QPointF(rect.left(), rect.center().y())
 
 
 def center_transform_origin(obj: QtWidgets.QGraphicsItem):
@@ -34,9 +127,63 @@ def center_transform_origin(obj: QtWidgets.QGraphicsItem):
     obj.setTransformOriginPoint(obj.rect().center())
 
 
-def center_transform_top_left(obj: QtWidgets.QGraphicsItem):
+def center_transform_top_left(obj: Union[QtWidgets.QGraphicsItem, QtWidgets.QGraphicsItemGroup]):
     """Put the object's transform origin at its top-left position."""
-    obj.setTransformOriginPoint(obj.rect().topLeft())
+    if isinstance(obj, QtWidgets.QGraphicsItemGroup):
+        rect = obj.boundingRect()
+    else:
+        rect = obj.rect()
+
+    obj.setTransformOriginPoint(rect.topLeft())
+
+
+def create_scene_rectangle_topleft(
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
+    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    zvalue: Optional[int] = None,
+) -> QtWidgets.QGraphicsRectItem:
+    """
+    Create a QGraphicsRectItem for a QGraphicsScene.
+
+    The transform origin of the rectangle will be set to its top left.
+
+    Parameters
+    ----------
+    left : float
+        The left X position.
+    top : float
+        The top Y position.
+    width : float
+        The width.
+    height : float
+        The height.
+    pen : QColor or QPen, optional
+        The pen to draw the rectangle with.
+    brush : QColor or QBrush, optional
+        The brush to draw the rectangle with.
+    zvalue : int, optional
+        The z index for the rectangle.
+
+    Returns
+    -------
+    QtWidgets.QGraphicsRectItem
+        The created rectangle.
+    """
+    item = QtWidgets.QGraphicsRectItem(
+        QtCore.QRectF(left, top, width, height)
+    )
+    center_transform_origin(item)
+    if pen is not None:
+        item.setPen(pen)
+    if brush is not None:
+        item.setBrush(brush)
+    if zvalue is not None:
+        item.setZValue(zvalue)
+    return item
 
 
 def create_scene_rectangle(
@@ -88,6 +235,39 @@ def create_scene_rectangle(
     return item
 
 
+def create_scene_polygon(
+    polygon: QtGui.QPolygonF,
+    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
+    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+) -> QtWidgets.QGraphicsPolygonItem:
+    """
+    Create a QGraphicsPolygonItem in the shape of a cross for a QGraphicsScene.
+
+    The transform origin of the cross will be set to its center.
+
+    Parameters
+    ----------
+    polygon : QPolygonF
+        The polygon shape.
+    pen : QColor or QPen, optional
+        The pen to draw the rectangle with.
+    brush : QColor or QBrush, optional
+        The brush to draw the rectangle with.
+
+    Returns
+    -------
+    QtWidgets.QGraphicsPolygonItem
+        The created polygon.
+    """
+    item = QtWidgets.QGraphicsPolygonItem(polygon)
+    item.setTransformOriginPoint(QtCore.QPointF(0.0, 0.0))
+    if pen is not None:
+        item.setPen(pen)
+    if brush is not None:
+        item.setBrush(brush)
+    return item
+
+
 def create_scene_cross(
     width: float,
     height: float,
@@ -116,10 +296,10 @@ def create_scene_cross(
 
     Returns
     -------
-    QtWidgets.QGraphicsRectItem
-        The created rectangle.
+    QtWidgets.QGraphicsPolygonItem
+        The created polygon (cross).
     """
-    item = QtWidgets.QGraphicsPolygonItem(
+    return create_scene_polygon(
         QtGui.QPolygonF(
             [
                 QtCore.QPointF(0.0, 0.0),
@@ -129,14 +309,10 @@ def create_scene_cross(
                 QtCore.QPointF(0.0, -height / 2.0),
                 QtCore.QPointF(0.0, height / 2.0),
             ]
-        )
+        ),
+        brush=brush,
+        pen=pen,
     )
-    item.setTransformOriginPoint(QtCore.QPointF(0.0, 0.0))
-    if pen is not None:
-        item.setPen(pen)
-    if brush is not None:
-        item.setBrush(brush)
-    return item
 
 
 def align_vertically(
@@ -341,7 +517,7 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
     ):
         self.base_item = base_item
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(create_scene_cross(width=20, height=20))
+        self.addToGroup(create_scene_cross(width=30, height=30))
 
     def get_offset_position(self, x: float, y: float):
         """Optionally add a position offset."""
@@ -350,9 +526,9 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         return left_center + QtCore.QPointF(x, y)
 
 
-class TransportSystem(QtWidgets.QGraphicsItemGroup):
+class SwitchBox(QtWidgets.QGraphicsItemGroup):
     """
-    A graphical representation of the full laser transport system.
+    A graphical representation of the full laser transport system switch box.
     """
 
     base_padding_multiplier: ClassVar[float] = 1.1
@@ -360,7 +536,7 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(217, 217, 217)
     source_margin: ClassVar[float] = 10.0
 
-    base: QtWidgets.QGraphicsRectItem
+    base: PackagedPixmap
     assemblies: Dict[int, MotorizedMirrorAssembly]
     sources: Dict[int, LaserSource]
     destinations: Dict[int, Destination]
@@ -368,19 +544,11 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
     def __init__(self):
         super().__init__()
 
+        self.base = PackagedPixmap("switchbox.png")
+        self.base.setPos(0, 0)
+        self.base.setZValue(-1)
+
         self.assemblies = self._create_assemblies()
-
-        assembly_bounds = self.boundingRect()
-
-        self.base = create_scene_rectangle(
-            cx=assembly_bounds.center().x(),
-            cy=assembly_bounds.center().y(),
-            width=assembly_bounds.width() * self.base_padding_multiplier,
-            height=assembly_bounds.height() * self.base_padding_multiplier,
-            pen=self.base_pen,
-            brush=self.base_brush,
-            zvalue=-1,
-        )
         self.addToGroup(self.base)
 
         self.sources = self._create_sources()
@@ -394,35 +562,34 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
         self.timer.start()
 
     def _create_source(self, idx: int) -> LaserSource:
-        source = LaserSource(source_index=idx)
+        ls_position = source_to_ls_position[idx]
+        source = LaserSource(source_index=idx, ls_position=ls_position)
         return source
 
     def _create_sources(self) -> Dict[int, LaserSource]:
         sources = {}
-        for idx in INSTALLED_SOURCES:
+        for idx in source_to_ls_position:
             sources[idx] = self._create_source(idx)
             self.addToGroup(sources[idx])
 
         return sources
 
     def _create_assembly(self, idx: int) -> MotorizedMirrorAssembly:
-        assembly = MotorizedMirrorAssembly(source_index=idx)
-        assembly.setPos(
-            0.0,
-            MotorizedMirrorAssembly.base_height * 1.5 * idx,
+        assembly = MotorizedMirrorAssembly(
+            source_index=idx,
+            ls_position=source_to_ls_position[idx],
         )
-
-        if idx not in INSTALLED_SOURCES:
-            assembly.lens.setVisible(False)
-            for indicator in assembly.dest_indicators.values():
-                indicator.setVisible(False)
         return assembly
 
     def _create_assemblies(self) -> Dict[int, MotorizedMirrorAssembly]:
         assemblies = {}
-        for idx in SOURCES:
-            assemblies[idx] = self._create_assembly(idx)
+        for idx in source_to_ls_position:
+            assembly = self._create_assembly(idx)
+            assemblies[idx] = assembly
             self.addToGroup(assemblies[idx])
+
+            pos = self.base.positions[assembly.ls_position]
+            assembly.setPos(*pos)
 
         return assemblies
 
@@ -437,9 +604,6 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
             return
 
         for source_idx, assembly in self.assemblies.items():
-            if source_idx not in INSTALLED_SOURCES:
-                continue
-
             for dest_idx, indicator in assembly.dest_indicators.items():
                 source_conf: SourceConfig = getattr(
                     device, f"dest{dest_idx}.source{source_idx}"
@@ -470,6 +634,81 @@ class TransportSystem(QtWidgets.QGraphicsItemGroup):
             assembly.linear_position += (-1) ** idx * self.angle_step
 
 
+class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
+    """
+    A pixmap that represents a to-scale drawing or physical object.
+
+    Parameters
+    ----------
+    filename : str
+
+    pixels_to_mm : float, optional
+
+    origin : Tuple[float, float], optional
+
+    """
+    filename: pathlib.Path
+    pixels_to_mm: float
+    origin: Tuple[float, float]
+
+    def __init__(
+        self,
+        filename: str,
+        pixels_to_mm: float = 1.0,
+        origin: Optional[Tuple[float, float]] = None,
+    ):
+        self.filename = util.BTMS_SOURCE_PATH / "ui" / filename
+        self.pixels_to_mm = pixels_to_mm
+        super().__init__(QtGui.QPixmap(str(self.filename.resolve())))
+
+        self.origin = origin or (0, 0)
+        self.setScale(pixels_to_mm)
+        self.setTransformOriginPoint(self.boundingRect().topLeft())
+
+    def position_from_pixels(
+        self, pixel_pos: Tuple[float, float]
+    ) -> Tuple[float, float]:
+        """
+        Get an item position from the provided pixel position.
+
+        Parameters
+        ----------
+        pixel_pos : Tuple[float, float]
+
+
+        Returns
+        -------
+        Tuple[float, float]
+
+        """
+        px, py = pixel_pos
+        return (px * self.pixels_to_mm, py * self.pixels_to_mm)
+
+
+class PackagedPixmap(ScaledPixmapItem):
+    """
+    A scaled pixmap packaged with btms-ui.
+
+    Parameters
+    ----------
+    filename : str
+        The packaged pixmap filename (in ``ui/``).
+    """
+    filename: pathlib.Path
+    positions: Dict[Position, Tuple[float, float]]
+
+    def __init__(
+        self,
+        filename: str,
+    ):
+        info = dict(IMAGES[filename])
+        self.positions = dict(info.pop("positions", {}))
+        super().__init__(filename=filename, **info)
+
+        for key, pos in list(self.positions.items()):
+            self.positions[key] = self.position_from_pixels(pos)
+
+
 class LaserSource(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a laser source.
@@ -481,10 +720,11 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     entry_valve: EntryGateValve
     icon_size: ClassVar[int] = 64
 
-    def __init__(self, source_index: int):
+    def __init__(self, source_index: int, ls_position: Position):
         super().__init__()
 
         self.source_index = source_index
+        self.ls_position = ls_position
 
         self.entry_valve = EntryGateValve()
         self.entry_valve.controlsLocation = self.entry_valve.ContentLocation.Hidden
@@ -528,7 +768,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     """
 
     base_width: ClassVar[float] = 1450.0
-    base_height: ClassVar[float] = 80.0
+    base_height: ClassVar[float] = 50.0
     base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(239, 239, 239)
 
@@ -537,14 +777,15 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     source_index: int
     source_device: SourceConfig
 
-    def __init__(self, source_index: int):
+    def __init__(self, source_index: int, ls_position: Position):
         super().__init__()
 
         self.source_index = source_index
+        self.ls_position = ls_position
 
-        self.base = create_scene_rectangle(
-            cx=0,
-            cy=0,
+        self.base = create_scene_rectangle_topleft(
+            left=0,
+            top=-self.base_height / 2.0,
             width=self.base_width,
             height=self.base_height,
             pen=self.base_pen,
@@ -566,6 +807,8 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
             self.addToGroup(indicator)
             indicator.setZValue(1)
 
+        self.setTransformOriginPoint(get_left_center(self.base.rect()))
+
     @property
     def linear_position(self) -> float:
         """The position of the lens assembly on the linear stage."""
@@ -581,13 +824,13 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
     A graphical representation of a single lens assembly.
     """
 
-    base_width: ClassVar[float] = 100.0
-    base_height: ClassVar[float] = 100.0
+    base_width: ClassVar[float] = 50.0
+    base_height: ClassVar[float] = 50.0
     base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(217, 217, 217)
 
-    lens_width: ClassVar[float] = 2.0
-    lens_height: ClassVar[float] = 100.0
+    lens_width: ClassVar[float] = 8.0
+    lens_height: ClassVar[float] = 50.0
     lens_pen: ClassVar[QtGui.QColor] = QtGui.QColor("red")
     lens_brush: ClassVar[QtGui.QColor] = QtGui.QColor("red")
 
@@ -634,7 +877,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         "group": "Laser Transport System",
     }
     device: Optional[BtpsStateDevice]
-    system: TransportSystem
+    switch_box: SwitchBox
 
     def __init__(
         self,
@@ -646,12 +889,12 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         super().__init__(scene, parent=parent)
 
         self.setMinimumSize(750, 500)
-        self.scale(0.4, 0.4)
+        self.scale(0.3, 0.3)
 
-        self.system = TransportSystem()
-        # self.system.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
-        # scene.setSceneRect(self.system.boundingRect())
-        scene.addItem(self.system)
+        self.switch_box = SwitchBox()
+        # self.switch_box.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
+        # scene.setSceneRect(self.switch_box.boundingRect())
+        scene.addItem(self.switch_box)
 
         self.recenter()
 
@@ -693,5 +936,5 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
             prefix,
             name="las_btps"
         )
-        self.system.device = device
+        self.switch_box.device = device
         return device
