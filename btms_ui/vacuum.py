@@ -95,7 +95,7 @@ class LaserShutter(InterlockMixin, OpenCloseStateMixin, PCDSSymbolBase):
         )
 
     def minimumSizeHint(self):
-        return QtCore.QSize(10, 50)
+        return QtCore.QSize(self.iconSize / 4, self.iconSize)
 
     def sizeHint(self):
         return self.minimumSizeHint()
@@ -160,7 +160,7 @@ class GateValve(PneumaticValve):
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
 
     def minimumSizeHint(self):
-        return QtCore.QSize(60, 60)
+        return QtCore.QSize(self.iconSize, self.iconSize)
 
     def sizeHint(self):
         return self.minimumSizeHint()

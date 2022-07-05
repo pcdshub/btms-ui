@@ -554,8 +554,8 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.sources = self._create_sources()
 
         # Just some testing code until we have PyDM channels hooked up:
-        self.angle = 0
-        self.angle_step = 1
+        self.angle = {idx: 0 for idx in source_to_ls_position}
+        self.angle_step = {idx: 1 for idx in source_to_ls_position}
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
@@ -623,15 +623,12 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
     def _rotating_test(self):
         """Testing the rotation mechanism."""
-        self.angle += self.angle_step
-        direction_swap = False
         for idx, assembly in self.assemblies.items():
-            assembly.lens.angle = idx * self.angle
-            if abs(assembly.linear_position) >= 200:
-                if not direction_swap:
-                    self.angle_step *= -1
-                direction_swap = True
-            assembly.linear_position += (-1) ** idx * self.angle_step
+            self.angle[idx] += 1
+            assembly.lens.angle = self.angle[idx]
+            if assembly.linear_position < 0 or assembly.linear_position >= 1400:
+                self.angle_step[idx] *= -1
+            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[idx])
 
 
 class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -706,6 +703,7 @@ class PackagedPixmap(ScaledPixmapItem):
         super().__init__(filename=filename, **info)
 
         for key, pos in list(self.positions.items()):
+            # Scale all positions into millimeters
             self.positions[key] = self.position_from_pixels(pos)
 
 
@@ -718,7 +716,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     shutter: LaserShutter
     entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
     entry_valve: EntryGateValve
-    icon_size: ClassVar[int] = 64
+    icon_size: ClassVar[int] = 128
 
     def __init__(self, source_index: int, ls_position: Position):
         super().__init__()
@@ -769,8 +767,8 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
     base_width: ClassVar[float] = 1450.0
     base_height: ClassVar[float] = 50.0
-    base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
-    base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(239, 239, 239)
+    base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("green")
+    base_brush: ClassVar[QtGui.QColor] = QtGui.QColor("transparent")
 
     base: QtWidgets.QGraphicsRectItem
     lens: LensAssembly
@@ -889,7 +887,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         super().__init__(scene, parent=parent)
 
         self.setMinimumSize(750, 500)
-        self.scale(0.3, 0.3)
+        self.scale(0.25, 0.25)
 
         self.switch_box = SwitchBox()
         # self.switch_box.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)
