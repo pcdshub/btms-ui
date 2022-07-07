@@ -293,8 +293,8 @@ class PositionHelper(QtCore.QObject):
         self._channel_x = None
         self._channel_y = None
         self._channels = []
-        self.channel_x = channel_x
-        self.channel_y = channel_y
+        self.channel_x = channel_x   # pyright: ignore
+        self.channel_y = channel_y   # pyright: ignore
         self.x = x
         self.y = y
 
@@ -328,7 +328,7 @@ class PositionHelper(QtCore.QObject):
         return channel
 
     @QtCore.Property(str)
-    def channel_x(self) -> Optional[str]:
+    def channel_x(self) -> Optional[str]:   # pyright: ignore
         """The channel address for the X position."""
         if self._channel_x is None:
             return None
@@ -349,7 +349,7 @@ class PositionHelper(QtCore.QObject):
         self._update_position(float(value), None)
 
     @QtCore.Property(str)
-    def channel_y(self) -> Optional[str]:
+    def channel_y(self) -> Optional[str]:   # pyright: ignore
         """The channel address for the Y position."""
         if self._channel_y is None:
             return None
@@ -1055,7 +1055,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         self.centerOn(scene.itemsBoundingRect().center())
 
     @QtCore.Property(str)
-    def device_prefix(self) -> str:
+    def device_prefix(self) -> str:   # pyright: ignore
         """The prefix for the ophyd Device ``BtpsStateDevice``."""
         return self._device_prefix
 
