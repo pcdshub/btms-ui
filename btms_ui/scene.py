@@ -1,142 +1,19 @@
 from __future__ import annotations
 
-import enum
 import logging
 import pathlib
 from typing import ClassVar, Dict, Optional, Tuple, Union
 
-import ophyd
 import pydm
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
-from . import util
+from . import config, util
+from .config import Position
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
-
-
-def channel_from_device(device: ophyd.Device) -> str:
-    """PyDM-compatible PV name URIs from a given ophyd Device."""
-    return f"ca://{device.prefix}"
-
-
-def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
-    """PyDM-compatible PV name URIs from a given EpicsSignal."""
-    return f"ca://{signal.pvname}"
-
-
-class Position(str, enum.Enum):
-    # Top-bottom sources by where the linear stages are
-    ls5 = "ls5"
-    ls1 = "ls1"
-    ls6 = "ls6"
-    ls2 = "ls2"
-    ls7 = "ls7"
-    ls3 = "ls3"
-    ls8 = "ls8"
-    ls4 = "ls4"
-
-    # Left-right destination ports (top)
-    ld8 = "ld8"
-    ld9 = "ld9"
-    ld10 = "ld10"
-    ld11 = "ld11"
-    ld12 = "ld12"
-    ld13 = "ld13"
-    ld14 = "ld14"
-
-    # Left-right destination ports (bottom)
-    ld1 = "ld1"
-    ld2 = "ld2"
-    ld3 = "ld3"
-    ld4 = "ld4"
-    ld5 = "ld5"
-    ld6 = "ld6"
-    ld7 = "ld7"
-
-    @property
-    def is_left_source(self) -> bool:
-        """Is the laser source coming from the left (as in the diagram)?"""
-        return self in (
-            Position.ls1,
-            Position.ls2,
-            Position.ls3,
-            Position.ls4,
-        )
-
-    @property
-    def is_top_port(self) -> bool:
-        """Is the laser destination a top port?"""
-        return self in (
-            Position.ld8,
-            Position.ld9,
-            Position.ld10,
-            Position.ld11,
-            Position.ld12,
-            Position.ld13,
-            Position.ld14,
-        )
-
-
-PORT_SPACING_MM = 215.9  # 8.5 in
-
-# PV source index (bay) to installed LS port
-source_to_ls_position: Dict[int, Position] = {
-    1: Position.ls1,
-    3: Position.ls5,
-    4: Position.ls8,
-}
-# PV destination index (bay) to installed LD port
-destination_to_ld_position: Dict[int, Position] = {
-    1: Position.ld8,   # TMO IP1
-    2: Position.ld10,  # TMO IP2
-    3: Position.ld2,   # TMO IP3
-    4: Position.ld6,   # RIX QRIXS
-    5: Position.ld4,   # RIX ChemRIXS
-    6: Position.ld14,  # XPP
-    7: Position.ld9,   # Laser Lab
-}
-
-
-IMAGES = {
-    "switchbox.png": {
-        "pixels_to_mm": 1900. / 855.,
-        # width: 970px - 115px = 855px is 78.0in or 1900m
-        "origin": (0, 0),  # (144, 94),  # inner chamber top-left position (px)
-        "positions": {
-            # Sources (left side of rail, centered around axis of rotation)
-            Position.ls5: (225, 138),
-            Position.ls1: (225, 199),
-            Position.ls6: (225, 271),
-            Position.ls2: (225, 335),
-            Position.ls7: (225, 402),
-            Position.ls3: (225, 466),
-            Position.ls8: (225, 534),
-            Position.ls4: (225, 596),
-
-            # Top destinations (rough bottom centers, inside chamber)
-            Position.ld8: (238, 94),
-            Position.ld9: (332, 94),
-            Position.ld10: (425, 94),
-            Position.ld11: (518, 94),
-            Position.ld12: (612, 94),
-            Position.ld13: (705, 94),
-            Position.ld14: (799, 94),
-
-            # Bottom destinations (rough top centers, inside chamber)
-            # Position.ld0: (191, 636),
-            Position.ld1: (285, 636),
-            Position.ld2: (379, 636),
-            Position.ld3: (473, 636),
-            Position.ld4: (567, 636),
-            Position.ld5: (661, 636),
-            Position.ld6: (752, 636),
-            Position.ld7: (842, 636),
-        }
-    }
-}
 
 
 def get_left_center(rect: QtCore.QRectF) -> QtCore.QPointF:
@@ -610,8 +487,8 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self._align_items()
 
         # Just some testing code until we have PyDM channels hooked up:
-        self.angle = {idx: 0 for idx in source_to_ls_position}
-        self.angle_step = {idx: 1 for idx in source_to_ls_position}
+        self.angle = {idx: 0 for idx in config.source_to_ls_position}
+        self.angle_step = {idx: 1 for idx in config.source_to_ls_position}
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
@@ -619,14 +496,14 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
     def _create_source(self, idx: int) -> LaserSource:
         """Create a single LaserSource for index ``idx``."""
-        ls_position = source_to_ls_position[idx]
+        ls_position = config.source_to_ls_position[idx]
         source = LaserSource(source_index=idx, ls_position=ls_position)
         return source
 
     def _create_sources(self) -> Dict[int, LaserSource]:
         """Create all laser sources."""
         sources = {}
-        for idx in source_to_ls_position:
+        for idx in config.source_to_ls_position:
             sources[idx] = self._create_source(idx)
             self.addToGroup(sources[idx])
 
@@ -636,13 +513,13 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         """Create a single Destination for index ``idx``."""
         return Destination(
             destination_index=idx,
-            ld_position=destination_to_ld_position[idx]
+            ld_position=config.destination_to_ld_position[idx]
         )
 
     def _create_destinations(self) -> Dict[int, Destination]:
         """Create all laser destinations."""
         destinations = {}
-        for idx in destination_to_ld_position:
+        for idx in config.destination_to_ld_position:
             dest = self._create_destination(idx)
             destinations[idx] = dest
             self.addToGroup(dest)
@@ -661,14 +538,14 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         """Create a single MotorizedMirrorAssembly for index ``idx``."""
         assembly = MotorizedMirrorAssembly(
             source_index=idx,
-            ls_position=source_to_ls_position[idx],
+            ls_position=config.source_to_ls_position[idx],
         )
         return assembly
 
     def _create_assemblies(self) -> Dict[int, MotorizedMirrorAssembly]:
         """Create all laser assemblies."""
         assemblies = {}
-        for idx in source_to_ls_position:
+        for idx in config.source_to_ls_position:
             assembly = self._create_assembly(idx)
             assemblies[idx] = assembly
             self.addToGroup(assemblies[idx])
@@ -722,7 +599,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
     def _create_beam_indicators(self) -> Dict[int, BeamIndicator]:
         """Create all laser beam indicators."""
         indicators = {}
-        for idx in source_to_ls_position:
+        for idx in config.source_to_ls_position:
             indicators[idx] = self._create_beam_indicator(idx)
             self.addToGroup(indicators[idx])
 
@@ -763,12 +640,12 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
                 source_conf: SourceConfig = getattr(
                     device, f"dest{dest_idx}.source{source_idx}"
                 )
-                channel = channel_from_signal(source_conf.linear.nominal)
+                channel = util.channel_from_signal(source_conf.linear.nominal)
                 indicator.helper.channel_x = channel
 
             shutter_safety: ShutterSafety = getattr(device, f"shutter{source_idx}")
             source = self.sources[source_idx]
-            source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
+            source.shutter.channelsPrefix = util.channel_from_device(shutter_safety.lss).rstrip(":")
 
     def _rotating_test(self):
         """Testing the rotation mechanism."""
@@ -851,7 +728,7 @@ class PackagedPixmap(ScaledPixmapItem):
         self,
         filename: str,
     ):
-        info = dict(IMAGES[filename])
+        info = dict(config.IMAGES[filename])
         self.positions = dict(info.pop("positions", {}))
         super().__init__(filename=filename, **info)
 
@@ -938,7 +815,7 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
         return self._destination
 
     @destination.setter
-    def destination(self, destination: Destination):
+    def destination(self, destination: Optional[Destination]):
         self._destination = destination
         self.assembly_to_destination.setVisible(destination is not None)
 
@@ -1067,7 +944,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
         self.lens.setZValue(2)
         self.dest_indicators = {
             idx: SourceDestinationIndicator(self.base)
-            for idx in destination_to_ld_position
+            for idx in config.destination_to_ld_position
         }
 
         for indicator in self.dest_indicators.values():
