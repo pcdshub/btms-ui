@@ -12,7 +12,7 @@ from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
 from . import util
-from .vacuum import EntryGateValve, LaserShutter
+from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,6 @@ class Position(str, enum.Enum):
         )
 
 
-DESTINATIONS = (1, 2, 3, 4, 5, 6, 7)
 PORT_SPACING_MM = 215.9  # 8.5 in
 
 # PV source index (bay) to installed LS port
@@ -88,6 +87,16 @@ source_to_ls_position: Dict[int, Position] = {
     1: Position.ls1,
     3: Position.ls5,
     4: Position.ls8,
+}
+# PV destination index (bay) to installed LD port
+destination_to_ld_position: Dict[int, Position] = {
+    1: Position.ld8,   # TMO IP1
+    2: Position.ld10,  # TMO IP2
+    3: Position.ld2,   # TMO IP3
+    4: Position.ld6,   # RIX QRIXS
+    5: Position.ld4,   # RIX ChemRIXS
+    6: Position.ld14,  # XPP
+    7: Position.ld9,   # Laser Lab
 }
 
 
@@ -143,6 +152,21 @@ def get_left_center(rect: QtCore.QRectF) -> QtCore.QPointF:
     QtCore.QPointF
     """
     return QtCore.QPointF(rect.left(), rect.center().y())
+
+
+def get_right_center(rect: QtCore.QRectF) -> QtCore.QPointF:
+    """
+    Get the right-center position of the rectangle.
+
+    Parameters
+    ----------
+    rect : QtCore.QRectF
+
+    Returns
+    -------
+    QtCore.QPointF
+    """
+    return QtCore.QPointF(rect.right(), rect.center().y())
 
 
 def center_transform_origin(obj: QtWidgets.QGraphicsItem):
@@ -580,6 +604,10 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.base)
 
         self.sources = self._create_sources()
+        self.destinations = self._create_destinations()
+        self.beams = self._create_beam_indicators()
+
+        self._align_items()
 
         # Just some testing code until we have PyDM channels hooked up:
         self.angle = {idx: 0 for idx in source_to_ls_position}
@@ -590,11 +618,13 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.timer.start()
 
     def _create_source(self, idx: int) -> LaserSource:
+        """Create a single LaserSource for index ``idx``."""
         ls_position = source_to_ls_position[idx]
         source = LaserSource(source_index=idx, ls_position=ls_position)
         return source
 
     def _create_sources(self) -> Dict[int, LaserSource]:
+        """Create all laser sources."""
         sources = {}
         for idx in source_to_ls_position:
             sources[idx] = self._create_source(idx)
@@ -602,7 +632,33 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         return sources
 
+    def _create_destination(self, idx: int) -> Destination:
+        """Create a single Destination for index ``idx``."""
+        return Destination(
+            destination_index=idx,
+            ld_position=destination_to_ld_position[idx]
+        )
+
+    def _create_destinations(self) -> Dict[int, Destination]:
+        """Create all laser destinations."""
+        destinations = {}
+        for idx in destination_to_ld_position:
+            dest = self._create_destination(idx)
+            destinations[idx] = dest
+            self.addToGroup(dest)
+
+            pos = QtCore.QPointF(*self.base.positions[dest.ld_position])
+            multiplier = -1.6 if dest.ld_position.is_top_port else 1.1
+            pos += QtCore.QPointF(
+                -dest.boundingRect().width() / 2.,
+                multiplier * dest.boundingRect().height()
+            )
+            dest.setPos(pos)
+
+        return destinations
+
     def _create_assembly(self, idx: int) -> MotorizedMirrorAssembly:
+        """Create a single MotorizedMirrorAssembly for index ``idx``."""
         assembly = MotorizedMirrorAssembly(
             source_index=idx,
             ls_position=source_to_ls_position[idx],
@@ -610,6 +666,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         return assembly
 
     def _create_assemblies(self) -> Dict[int, MotorizedMirrorAssembly]:
+        """Create all laser assemblies."""
         assemblies = {}
         for idx in source_to_ls_position:
             assembly = self._create_assembly(idx)
@@ -621,9 +678,78 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         return assemblies
 
+    def _align_items(self) -> None:
+        """Reposition/align graphics items as necessary."""
+        for idx, source in self.sources.items():
+            assembly = self.assemblies[idx]
+            self._align_source_and_assembly(source, assembly)
+            self.beams[idx].update_lines()
+
+    def _align_source_and_assembly(
+        self, source: LaserSource, assembly: MotorizedMirrorAssembly
+    ) -> None:
+        """
+        Align the source and assembly in the diagram
+
+        Parameters
+        ----------
+        source : LaserSource
+            The source.
+        assembly : MotorizedMirrorAssembly
+            The assembly.
+        """
+        if source.ls_position.is_left_source:
+            source.setPos(
+                assembly.boundingRect().x()
+                - (source.boundingRect().width() + self.source_margin),
+                0.0,
+            )
+        else:
+            source.setPos(
+                self.base.sceneBoundingRect().right() + self.source_margin * 2,
+                0.0,
+            )
+
+        align_vertically(assembly, source)
+
+    def _create_beam_indicator(self, idx: int) -> BeamIndicator:
+        """Create a single BeamIndicator for index ``idx``."""
+        return BeamIndicator(
+            source=self.sources[idx],
+            assembly=self.assemblies[idx],
+        )
+
+    def _create_beam_indicators(self) -> Dict[int, BeamIndicator]:
+        """Create all laser beam indicators."""
+        indicators = {}
+        for idx in source_to_ls_position:
+            indicators[idx] = self._create_beam_indicator(idx)
+            self.addToGroup(indicators[idx])
+
+        return indicators
+
     @property
     def device(self) -> Optional[BtpsStateDevice]:
+        """
+        The ophyd device - BtpsStateDevice - associated with the SwitchBox.
+
+        Returns
+        -------
+        BtpsStateDevice or None
+        """
         return self._device
+
+    def get_closest_destination(self, pos: float) -> Optional[Destination]:
+        """Get the closest Destination to the given position."""
+        distances = {
+            abs(dest.pos().x() - pos): dest
+            for dest in self.destinations.values()
+        }
+        if min(distances) >= 100.:
+            return None
+
+        dest = distances[min(distances)]
+        return dest
 
     @device.setter
     def device(self, device: Optional[BtpsStateDevice]) -> None:
@@ -643,20 +769,6 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             source = self.sources[source_idx]
             source.shutter.channelsPrefix = channel_from_device(shutter_safety.lss).rstrip(":")
 
-            if source.ls_position.is_left_source:
-                source.setPos(
-                    assembly.boundingRect().x()
-                    - (source.boundingRect().width() + self.source_margin),
-                    0.0,
-                )
-            else:
-                source.setPos(
-                    self.base.sceneBoundingRect().right() + self.source_margin * 2,
-                    0.0,
-                )
-
-            align_vertically(assembly, source)
-
     def _rotating_test(self):
         """Testing the rotation mechanism."""
         for idx, assembly in self.assemblies.items():
@@ -665,6 +777,10 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             if assembly.linear_position < 0 or assembly.linear_position >= 1400:
                 self.angle_step[idx] *= -1
             assembly.linear_position += (-1) ** idx * (10 * self.angle_step[idx])
+            self.beams[idx].destination = self.get_closest_destination(
+                assembly.linear_position
+            )
+            self.beams[idx].update_lines()
 
 
 class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -743,6 +859,89 @@ class PackagedPixmap(ScaledPixmapItem):
             self.positions[key] = self.position_from_pixels(pos)
 
 
+class BeamIndicator(QtWidgets.QGraphicsItemGroup):
+    """Active laser beam indicator."""
+    source: LaserSource
+    assembly: MotorizedMirrorAssembly
+    _destination: Optional[Destination]
+    source_to_assembly: QtWidgets.QGraphicsLineItem
+    assembly_to_destination: QtWidgets.QGraphicsLineItem
+    lines: Tuple[QtWidgets.QGraphicsLineItem, ...]
+
+    pen_width: ClassVar[int] = 10
+    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("green"), pen_width)
+
+    def __init__(self, source: LaserSource, assembly: MotorizedMirrorAssembly):
+        super().__init__()
+        self.source = source
+        self.assembly = assembly
+        self._destination = None
+
+        self.source_to_assembly = QtWidgets.QGraphicsLineItem(0, 0, 0, 0)
+        self.assembly_to_destination = QtWidgets.QGraphicsLineItem(0, 0, 0, 0)
+        self.lines = (self.source_to_assembly, self.assembly_to_destination)
+
+        for line in self.lines:
+            self.addToGroup(line)
+            line.setPen(self.pen)
+
+    def update_lines(self):
+        """
+        Update the source-assembly and assembly-destination lines based on
+        the updated positions of the other widgets.
+        """
+        entry_valve_rect = self.source.entry_valve_proxy.sceneBoundingRect()
+        lens_center = self.assembly.lens.sceneBoundingRect().center()
+        if self.source.ls_position.is_left_source:
+            source_pos = get_right_center(entry_valve_rect)
+        else:
+            source_pos = get_left_center(entry_valve_rect)
+
+        source_to_assembly_y = (source_pos.y() + lens_center.y()) / 2.
+        self.source_to_assembly.setLine(
+            source_pos.x(),
+            source_to_assembly_y,
+            lens_center.x(),
+            source_to_assembly_y,
+        )
+
+        if self.source.ls_position.is_left_source:
+            source_pos = get_right_center(entry_valve_rect)
+        else:
+            source_pos = get_left_center(entry_valve_rect)
+
+        self.source_to_assembly.setLine(
+            source_pos.x(),
+            lens_center.y(),
+            lens_center.x(),
+            lens_center.y(),
+        )
+
+        dest = self._destination
+        if dest is None:
+            return
+
+        exit_valve_rect = dest.exit_valve_proxy.sceneBoundingRect()
+        dest_y = exit_valve_rect.center().y()
+
+        self.assembly_to_destination.setLine(
+            lens_center.x(),
+            lens_center.y(),
+            lens_center.x(),
+            dest_y,
+        )
+
+    @property
+    def destination(self) -> Optional[Destination]:
+        """The destination hutch."""
+        return self._destination
+
+    @destination.setter
+    def destination(self, destination: Destination):
+        self._destination = destination
+        self.assembly_to_destination.setVisible(destination is not None)
+
+
 class LaserSource(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a laser source.
@@ -753,6 +952,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
     entry_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
+    ls_position: Position
 
     def __init__(self, source_index: int, ls_position: Position):
         super().__init__()
@@ -799,8 +999,31 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
 
 class Destination(QtWidgets.QGraphicsItemGroup):
     """
-    A graphical representation of a destination hutch.
+    A graphical representation of a destination hutch (LDx).
     """
+
+    exit_valve_proxy: QtWidgets.QGraphicsProxyWidget
+    exit_valve: EntryGateValve
+    icon_size: ClassVar[int] = 128
+    ld_position: Position
+    destination_index: int
+
+    def __init__(self, destination_index: int, ld_position: Position):
+        super().__init__()
+
+        self.destination_index = destination_index
+        self.ld_position = ld_position
+
+        self.exit_valve = ExitGateValve()
+        self.exit_valve.controlsLocation = self.exit_valve.ContentLocation.Hidden
+        self.exit_valve.iconSize = self.icon_size
+        self.exit_valve.setFixedSize(self.exit_valve.minimumSizeHint())
+        self.exit_valve_proxy = QtWidgets.QGraphicsProxyWidget()
+        self.exit_valve_proxy.setWidget(self.exit_valve)
+        self.addToGroup(self.exit_valve_proxy)
+        center_transform_origin(self.exit_valve_proxy)
+
+        self.exit_valve_proxy.setRotation(90.)
 
 
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
@@ -843,7 +1066,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
         self.lens.setZValue(2)
         self.dest_indicators = {
             idx: SourceDestinationIndicator(self.base)
-            for idx in DESTINATIONS
+            for idx in destination_to_ld_position
         }
 
         for indicator in self.dest_indicators.values():
