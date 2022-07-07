@@ -11,6 +11,7 @@ from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
 from . import util
+from .config import PACKAGED_IMAGES
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -728,7 +729,7 @@ class PackagedPixmap(ScaledPixmapItem):
         self,
         filename: str,
     ):
-        info = dict(config.IMAGES[filename])
+        info = dict(PACKAGED_IMAGES[filename])
         self.positions = dict(info.pop("positions", {}))
         super().__init__(filename=filename, **info)
 
