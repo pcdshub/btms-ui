@@ -741,8 +741,9 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
     def get_closest_destination(self, pos: float) -> Optional[Destination]:
         """Get the closest Destination to the given position."""
+        zeropos = self.assemblies[1].base.sceneBoundingRect().left()
         distances = {
-            abs(dest.pos().x() - pos): dest
+            abs(dest.sceneBoundingRect().center().x() - zeropos - pos): dest
             for dest in self.destinations.values()
         }
         if min(distances) >= 100.:
