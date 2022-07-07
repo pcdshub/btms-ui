@@ -4,13 +4,13 @@ import logging
 import pathlib
 from typing import ClassVar, Dict, Optional, Tuple, Union
 
+import pcdsdevices.lasers.btms_config as config
 import pydm
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
 from qtpy import QtCore, QtGui, QtWidgets
 
-from . import config, util
-from .config import Position
+from . import util
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -525,7 +525,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             self.addToGroup(dest)
 
             pos = QtCore.QPointF(*self.base.positions[dest.ld_position])
-            multiplier = -1.6 if dest.ld_position.is_top_port else 1.1
+            multiplier = -1.6 if dest.ld_position.is_top else 1.1
             pos += QtCore.QPointF(
                 -dest.boundingRect().width() / 2.,
                 multiplier * dest.boundingRect().height()
@@ -575,7 +575,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         assembly : MotorizedMirrorAssembly
             The assembly.
         """
-        if source.ls_position.is_left_source:
+        if source.ls_position.is_left:
             source.setPos(
                 assembly.boundingRect().x()
                 - (source.boundingRect().width() + self.source_margin),
@@ -722,7 +722,7 @@ class PackagedPixmap(ScaledPixmapItem):
         The packaged pixmap filename (in ``ui/``).
     """
     filename: pathlib.Path
-    positions: Dict[Position, Tuple[float, float]]
+    positions: Dict[config.AnyPosition, Tuple[float, float]]
 
     def __init__(
         self,
@@ -770,7 +770,7 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
         """
         entry_valve_rect = self.source.entry_valve_proxy.sceneBoundingRect()
         lens_center = self.assembly.lens.sceneBoundingRect().center()
-        if self.source.ls_position.is_left_source:
+        if self.source.ls_position.is_left:
             source_pos = get_right_center(entry_valve_rect)
         else:
             source_pos = get_left_center(entry_valve_rect)
@@ -783,7 +783,7 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
             source_to_assembly_y,
         )
 
-        if self.source.ls_position.is_left_source:
+        if self.source.ls_position.is_left:
             source_pos = get_right_center(entry_valve_rect)
         else:
             source_pos = get_left_center(entry_valve_rect)
@@ -830,9 +830,9 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
     entry_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
-    ls_position: Position
+    ls_position: config.SourcePosition
 
-    def __init__(self, source_index: int, ls_position: Position):
+    def __init__(self, source_index: int, ls_position: config.SourcePosition):
         super().__init__()
 
         self.source_index = source_index
@@ -856,7 +856,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.shutter_proxy)
         center_transform_origin(self.shutter_proxy)
 
-        if ls_position.is_left_source:
+        if ls_position.is_left:
             # (Shutter) (Valve)
             shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
                 2. * self.shutter_proxy.boundingRect().width(),
@@ -883,10 +883,10 @@ class Destination(QtWidgets.QGraphicsItemGroup):
     exit_valve_proxy: QtWidgets.QGraphicsProxyWidget
     exit_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
-    ld_position: Position
+    ld_position: config.DestinationPosition
     destination_index: int
 
-    def __init__(self, destination_index: int, ld_position: Position):
+    def __init__(self, destination_index: int, ld_position: config.DestinationPosition):
         super().__init__()
 
         self.destination_index = destination_index
@@ -921,7 +921,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     source_index: int
     source_device: SourceConfig
 
-    def __init__(self, source_index: int, ls_position: Position):
+    def __init__(self, source_index: int, ls_position: config.SourcePosition):
         super().__init__()
 
         self.source_index = source_index
