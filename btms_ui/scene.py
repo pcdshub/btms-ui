@@ -6,8 +6,10 @@ from typing import ClassVar, Dict, Optional, Tuple, Union
 
 import pcdsdevices.lasers.btms_config as config
 import pydm
+from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
-from pcdsdevices.lasers.btps import ShutterSafety, SourceConfig
+from pcdsdevices.lasers.btps import (DestinationConfig, ShutterSafety,
+                                     SourceConfig)
 from qtpy import QtCore, QtGui, QtWidgets
 
 from . import util
@@ -467,9 +469,10 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
     source_margin: ClassVar[float] = 10.0
 
     base: PackagedPixmap
-    assemblies: Dict[int, MotorizedMirrorAssembly]
-    sources: Dict[int, LaserSource]
-    destinations: Dict[int, Destination]
+    assemblies: Dict[SourcePosition, MotorizedMirrorAssembly]
+    sources: Dict[SourcePosition, LaserSource]
+    destinations: Dict[DestinationPosition, Destination]
+    beams: Dict[SourcePosition, BeamIndicator]
 
     def __init__(self):
         super().__init__()
@@ -487,42 +490,46 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         self._align_items()
 
+        self._start_test()
+
+    def _start_test(self):
         # Just some testing code until we have PyDM channels hooked up:
-        self.angle = {idx: 0 for idx in config.source_to_ls_position}
-        self.angle_step = {idx: 1 for idx in config.source_to_ls_position}
+        for idx, assembly in enumerate(self.assemblies.values()):
+            assembly.linear_position = idx * 100.0
+
+        self.angle = {idx: 0 for idx in config.valid_sources}
+        self.angle_step = {idx: 1 for idx in config.valid_sources}
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
 
-    def _create_source(self, idx: int) -> LaserSource:
-        """Create a single LaserSource for index ``idx``."""
-        ls_position = config.source_to_ls_position[idx]
-        source = LaserSource(source_index=idx, ls_position=ls_position)
+    def _create_source(self, source: SourcePosition) -> LaserSource:
+        """Create a single LaserSource for LS ``source``."""
+        source = LaserSource(ls_position=source)
         return source
 
-    def _create_sources(self) -> Dict[int, LaserSource]:
+    def _create_sources(self) -> Dict[SourcePosition, LaserSource]:
         """Create all laser sources."""
         sources = {}
-        for idx in config.source_to_ls_position:
-            sources[idx] = self._create_source(idx)
-            self.addToGroup(sources[idx])
+        for pos in config.valid_sources:
+            sources[pos] = self._create_source(pos)
+            self.addToGroup(sources[pos])
 
         return sources
 
-    def _create_destination(self, idx: int) -> Destination:
-        """Create a single Destination for index ``idx``."""
+    def _create_destination(self, dest: DestinationPosition) -> Destination:
+        """Create a single Destination for LD ``pos``."""
         return Destination(
-            destination_index=idx,
-            ld_position=config.destination_to_ld_position[idx]
+            ld_position=dest,
         )
 
-    def _create_destinations(self) -> Dict[int, Destination]:
+    def _create_destinations(self) -> Dict[DestinationPosition, Destination]:
         """Create all laser destinations."""
         destinations = {}
-        for idx in config.destination_to_ld_position:
-            dest = self._create_destination(idx)
-            destinations[idx] = dest
+        for pos in config.valid_destinations:
+            dest = self._create_destination(pos)
+            destinations[pos] = dest
             self.addToGroup(dest)
 
             pos = QtCore.QPointF(*self.base.positions[dest.ld_position])
@@ -535,21 +542,20 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         return destinations
 
-    def _create_assembly(self, idx: int) -> MotorizedMirrorAssembly:
-        """Create a single MotorizedMirrorAssembly for index ``idx``."""
+    def _create_assembly(self, source: SourcePosition) -> MotorizedMirrorAssembly:
+        """Create a single MotorizedMirrorAssembly for LS ``pos``."""
         assembly = MotorizedMirrorAssembly(
-            source_index=idx,
-            ls_position=config.source_to_ls_position[idx],
+            ls_position=source,
         )
         return assembly
 
-    def _create_assemblies(self) -> Dict[int, MotorizedMirrorAssembly]:
+    def _create_assemblies(self) -> Dict[SourcePosition, MotorizedMirrorAssembly]:
         """Create all laser assemblies."""
         assemblies = {}
-        for idx in config.source_to_ls_position:
-            assembly = self._create_assembly(idx)
-            assemblies[idx] = assembly
-            self.addToGroup(assemblies[idx])
+        for pos in config.valid_sources:
+            assembly = self._create_assembly(pos)
+            assemblies[pos] = assembly
+            self.addToGroup(assemblies[pos])
 
             pos = self.base.positions[assembly.ls_position]
             assembly.setPos(*pos)
@@ -558,10 +564,10 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
     def _align_items(self) -> None:
         """Reposition/align graphics items as necessary."""
-        for idx, source in self.sources.items():
-            assembly = self.assemblies[idx]
+        for pos, source in self.sources.items():
+            assembly = self.assemblies[pos]
             self._align_source_and_assembly(source, assembly)
-            self.beams[idx].update_lines()
+            self.beams[pos].update_lines()
 
     def _align_source_and_assembly(
         self, source: LaserSource, assembly: MotorizedMirrorAssembly
@@ -590,19 +596,19 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         align_vertically(assembly, source)
 
-    def _create_beam_indicator(self, idx: int) -> BeamIndicator:
-        """Create a single BeamIndicator for index ``idx``."""
+    def _create_beam_indicator(self, source: SourcePosition) -> BeamIndicator:
+        """Create a single BeamIndicator for LS ``pos``."""
         return BeamIndicator(
-            source=self.sources[idx],
-            assembly=self.assemblies[idx],
+            source=self.sources[source],
+            assembly=self.assemblies[source],
         )
 
-    def _create_beam_indicators(self) -> Dict[int, BeamIndicator]:
+    def _create_beam_indicators(self) -> Dict[SourcePosition, BeamIndicator]:
         """Create all laser beam indicators."""
         indicators = {}
-        for idx in config.source_to_ls_position:
-            indicators[idx] = self._create_beam_indicator(idx)
-            self.addToGroup(indicators[idx])
+        for pos in config.valid_sources:
+            indicators[pos] = self._create_beam_indicator(pos)
+            self.addToGroup(indicators[pos])
 
         return indicators
 
@@ -617,9 +623,9 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         """
         return self._device
 
-    def get_closest_destination(self, pos: float) -> Optional[Destination]:
+    def get_closest_destination(self, source: SourcePosition, pos: float) -> Optional[Destination]:
         """Get the closest Destination to the given position."""
-        zeropos = self.assemblies[1].base.sceneBoundingRect().left()
+        zeropos = self.assemblies[source].base.sceneBoundingRect().left()
         distances = {
             abs(dest.sceneBoundingRect().center().x() - zeropos - pos): dest
             for dest in self.destinations.values()
@@ -636,30 +642,40 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         if device is None:
             return
 
-        for source_idx, assembly in self.assemblies.items():
-            for dest_idx, indicator in assembly.dest_indicators.items():
+        for source, assembly in self.assemblies.items():
+            for dest, indicator in assembly.dest_indicators.items():
                 source_conf: SourceConfig = getattr(
-                    device, f"dest{dest_idx}.source{source_idx}"
+                    device, f"{dest.name}.{source.name}"
                 )
                 channel = util.channel_from_signal(source_conf.linear.nominal)
                 indicator.helper.channel_x = channel
 
-            shutter_safety: ShutterSafety = getattr(device, f"shutter{source_idx}")
-            source = self.sources[source_idx]
+            shutter_safety: ShutterSafety = getattr(device, source.name)
+            source = self.sources[source]
             source.shutter.channelsPrefix = util.channel_from_device(shutter_safety.lss).rstrip(":")
+            source.shutter.device = shutter_safety.lss
+
+            source.entry_valve.channelsPrefix = util.channel_from_device(shutter_safety).rstrip(":")
+            source.entry_valve.device = shutter_safety.entry_valve
+
+        for dest in self.destinations.values():
+            dest_conf: DestinationConfig = getattr(device, f"{dest.ld_position.name}")
+            dest.device = dest_conf
+            dest.exit_valve.channelsPrefix = util.channel_from_device(dest_conf.exit_valve)
+            dest.exit_valve.device = dest_conf.exit_valve
 
     def _rotating_test(self):
         """Testing the rotation mechanism."""
-        for idx, assembly in self.assemblies.items():
-            self.angle[idx] += 1
-            assembly.lens.angle = self.angle[idx]
+        for idx, (source, assembly) in enumerate(self.assemblies.items()):
+            self.angle[source] += 1
+            assembly.lens.angle = self.angle[source]
             if assembly.linear_position < 0 or assembly.linear_position >= 1400:
-                self.angle_step[idx] *= -1
-            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[idx])
-            self.beams[idx].destination = self.get_closest_destination(
-                assembly.linear_position
+                self.angle_step[source] *= -1
+            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[source])
+            self.beams[source].destination = self.get_closest_destination(
+                source, assembly.linear_position
             )
-            self.beams[idx].update_lines()
+            self.beams[source].update_lines()
 
 
 class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -831,12 +847,11 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
     entry_valve_proxy: QtWidgets.QGraphicsProxyWidget
     entry_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
-    ls_position: config.SourcePosition
+    ls_position: SourcePosition
 
-    def __init__(self, source_index: int, ls_position: config.SourcePosition):
+    def __init__(self, ls_position: SourcePosition):
         super().__init__()
 
-        self.source_index = source_index
         self.ls_position = ls_position
 
         self.entry_valve = EntryGateValve()
@@ -885,12 +900,10 @@ class Destination(QtWidgets.QGraphicsItemGroup):
     exit_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
     ld_position: config.DestinationPosition
-    destination_index: int
 
-    def __init__(self, destination_index: int, ld_position: config.DestinationPosition):
+    def __init__(self, ld_position: config.DestinationPosition):
         super().__init__()
 
-        self.destination_index = destination_index
         self.ld_position = ld_position
 
         self.exit_valve = ExitGateValve()
@@ -919,13 +932,11 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
     base: QtWidgets.QGraphicsRectItem
     lens: LensAssembly
-    source_index: int
     source_device: SourceConfig
 
-    def __init__(self, source_index: int, ls_position: config.SourcePosition):
+    def __init__(self, ls_position: SourcePosition):
         super().__init__()
 
-        self.source_index = source_index
         self.ls_position = ls_position
 
         self.base = create_scene_rectangle_topleft(
@@ -944,8 +955,8 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         self.lens.setZValue(2)
         self.dest_indicators = {
-            idx: SourceDestinationIndicator(self.base)
-            for idx in config.destination_to_ld_position
+            dest: SourceDestinationIndicator(self.base)
+            for dest in config.valid_destinations
         }
 
         for indicator in self.dest_indicators.values():
@@ -1045,6 +1056,18 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
         self._device_prefix = ""
         self.device = None
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        item = self.itemAt(event.pos())
+        if isinstance(item, QtWidgets.QGraphicsProxyWidget):
+            # Forward mouse events to proxy widgets
+            # TODO: I feel like this shouldn't be necessary and I messed something
+            # up; but it works for now...
+            event.accept()
+            widget = item.widget()
+            widget.mousePressEvent(event)
+            return
+        return super().mousePressEvent(event)
 
     def recenter(self) -> None:
         """"Recenter the view on the scene contents."""

@@ -61,17 +61,26 @@ def main():
     )
 
     top_parser.add_argument(
-        '--version', '-V',
-        action='version',
+        "--version",
+        "-V",
+        action="version",
         version=btms_ui.__version__,
-        help="Show the btms_ui version number and exit."
+        help="Show the btms_ui version number and exit.",
     )
 
     top_parser.add_argument(
-        '--log', '-l', dest='log_level',
-        default='INFO',
+        "--prefix",
         type=str,
-        help='Python logging level (e.g. DEBUG, INFO, WARNING)'
+        help="Set the device prefix manually (for debugging)",
+    )
+
+    top_parser.add_argument(
+        "--log",
+        "-l",
+        dest="log_level",
+        default="INFO",
+        type=str,
+        help="Python logging level (e.g. DEBUG, INFO, WARNING)",
     )
 
     subparsers = top_parser.add_subparsers(help='Possible subcommands')
