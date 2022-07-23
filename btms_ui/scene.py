@@ -652,11 +652,15 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
             shutter_safety: ShutterSafety = getattr(device, source.name)
             source = self.sources[source]
-            source.shutter.channelsPrefix = util.channel_from_device(shutter_safety.lss).rstrip(":")
             source.shutter.device = shutter_safety.lss
+            source.shutter.channelsPrefix = util.channel_from_device(
+                source.shutter.device
+            ).rstrip(":")
 
-            source.entry_valve.channelsPrefix = util.channel_from_device(shutter_safety).rstrip(":")
             source.entry_valve.device = shutter_safety.entry_valve
+            source.entry_valve.channelsPrefix = util.channel_from_device(
+                source.entry_valve.device
+            ).rstrip(":")
 
         for dest in self.destinations.values():
             dest_conf: DestinationConfig = getattr(device, f"{dest.ld_position.name}")
