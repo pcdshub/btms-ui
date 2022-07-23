@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import textwrap
 from typing import Optional
 
 import ophyd
@@ -21,10 +20,10 @@ class LaserShutterIcon(BaseSymbolIcon):
     def __init__(self, parent=None, **kwargs):
         super().__init__(parent, **kwargs)
         self._interlock_brush = QtGui.QBrush(
-            QtGui.QColor(0, 255, 0), QtCore.Qt.SolidPattern
+            QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern
         )
         self._shutter_brush = QtGui.QBrush(
-            QtGui.QColor(0, 255, 0), QtCore.Qt.SolidPattern
+            QtGui.QColor(0, 0, 0), QtCore.Qt.SolidPattern
         )
 
     @QtCore.Property(QtGui.QBrush)
@@ -49,7 +48,7 @@ class LaserShutterIcon(BaseSymbolIcon):
 
     def draw_icon(self, painter: QtGui.QPainter):
         # The rectangle at the top indicates the shutter status:
-        painter.setBrush(self._shutter_brush)
+        painter.setBrush(self._brush)
         painter.drawRect(QtCore.QRectF(0.0, 0, 0.2, 0.8))
         painter.setBrush(self._interlock_brush)
         # The little triangle at the bottom indicates interlock status:
@@ -105,10 +104,11 @@ class TyphosDeviceMixin:
             display.show()
 
 
-class LaserShutter(TyphosDeviceMixin, InterlockMixin, OpenCloseStateMixin, PCDSSymbolBase):
+class LaserShutter(
+    TyphosDeviceMixin, InterlockMixin, OpenCloseStateMixin, PCDSSymbolBase
+):
     """
-    A Symbol Widget representing with the proper icon and
-    controls.
+    A simplified symbol for the LSS Laser shutter.
 
     Parameters
     ----------
@@ -149,40 +149,8 @@ class LaserShutter(TyphosDeviceMixin, InterlockMixin, OpenCloseStateMixin, PCDSS
             **kwargs
         )
         self.icon = LaserShutterIcon(parent=self)
-        self.icon.clicked.connect(self._handle_icon_click)
         self.setAutoFillBackground(False)
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
-
-        self.setStyleSheet(
-            textwrap.dedent(
-                """\
-                LaserShutter[interlocked="true"] #interlock {
-                    border: 1px solid red;
-                }
-                LaserShutter[interlocked="false"] #interlock {
-                    border: 0px;
-                }
-                LaserShutter[interlocked="true"] #icon {
-                    qproperty-interlockBrush: #FF0000;
-                }
-                LaserShutter[interlocked="false"] #icon {
-                    qproperty-interlockBrush: #00FF00;
-                }
-                LaserShutter[state="Close"] #icon {
-                    qproperty-penColor: black;
-                    qproperty-brush: black;
-                }
-                LaserShutter[state="Open"] #icon {
-                    qproperty-penColor: black;
-                    qproperty-brush: #00FF00;
-                }
-                LaserShutter[connected="false"] #icon {
-                    qproperty-shutterBrush: white;
-                    qproperty-interlockBrush: white;
-                }
-                """
-            )
-        )
 
     def minimumSizeHint(self):
         return QtCore.QSize(self.iconSize / 4, self.iconSize)
@@ -245,37 +213,6 @@ class GateValve(TyphosDeviceMixin, PneumaticValve):
         super().__init__(parent=parent, **kwargs)
         self.setAutoFillBackground(False)
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
-        self.setStyleSheet(
-            textwrap.dedent(
-                """\
-                GateValve[interlocked="true"] #interlock {
-                    border: 5px solid red;
-                }
-                GateValve[interlocked="false"] #interlock {
-                    border: 0px;
-                }
-                GateValve[interlocked="true"] #icon {
-                    qproperty-interlockBrush: #FF0000;
-                }
-                GateValve[interlocked="false"] #icon {
-                    qproperty-interlockBrush: #00FF00;
-                }
-                GateValve[error="Close"] #icon {
-                    qproperty-penStyle: "Qt::DotLine";
-                    qproperty-penWidth: 2;
-                    qproperty-brush: red;
-                }
-                GateValve[state="Open"] #icon {
-                    qproperty-penColor: green;
-                    qproperty-penWidth: 2;
-                }
-                GateValve[connected="false"] #icon {
-                    qproperty-interlockBrush: white;
-                    qproperty-brush: white;
-                }
-            """
-            )
-        )
 
     @QtCore.Property(bool)
     def connected(self) -> bool:

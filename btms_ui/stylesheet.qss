@@ -1,0 +1,91 @@
+/*
+  vi: syntax=css
+*/
+
+LaserShutter #icon {
+    qproperty-penStyle: "Qt::SolidLine";
+    qproperty-penColor: black;
+    qproperty-penWidth: 2;
+}
+LaserShutter[interlocked="true"] #icon {
+    border: 2px solid black;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+    qproperty-interlockBrush: black;
+}
+LaserShutter[interlocked="false"] #icon {
+    border: 0px;
+    qproperty-interlockBrush: lightgreen;
+}
+LaserShutter[state="Open"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: lightgreen;
+}
+LaserShutter[state="Close"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: black;
+}
+LaserShutter[state="INVALID"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: red;
+}
+LaserShutter[connected="false"] #icon {
+    qproperty-interlockBrush: white;
+    qproperty-brush: white;
+}
+
+PneumaticValve #icon {
+    qproperty-penStyle: "Qt::SolidLine";
+    qproperty-penColor: black;
+    qproperty-penWidth: 2;
+    qproperty-interlockBrush: #00FF00;
+}
+PneumaticValve[interlocked="true"] #icon{
+    border: 2px solid black;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+PneumaticValve[interlocked="false"] #icon{
+    border: 0px;
+    qproperty-brush: #00FF00;
+}
+PneumaticValve[state="OPEN"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: #00FF00;
+}
+PneumaticValve[state="MOVING"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: yellow;
+}
+PneumaticValve[state="CLOSED"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: black;
+}
+PneumaticValve[state="INVALID"] #icon {
+    qproperty-penColor: black;
+    qproperty-brush: red;
+}
+PneumaticValve[state="OPEN_F"] #icon {
+    qproperty-penColor: red;
+    qproperty-brush: #00FF00;
+}
+PneumaticValve[error="Vented"] #icon {
+    qproperty-interlockBrush: red;
+}
+PneumaticValve[error="Lost Vacuum"] #icon {
+   qproperty-interlockBrush: red;
+}
+PneumaticValve[error="At Vacuum"] #icon {
+   qproperty-interlockBrush: #00FF00;
+}
+PneumaticValve[error="Ext Fault"] #icon {
+    qproperty-interlockBrush: red;
+}
+PneumaticValve[connected="false"] #icon {
+    qproperty-interlockBrush: white;
+    qproperty-brush: white;
+}
