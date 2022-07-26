@@ -6,28 +6,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>823</width>
-    <height>617</height>
+    <width>774</width>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="BtmsDiagramWidget" name="diagram_widget" native="true"/>
-   </item>
-   <item>
-    <widget class="QWidget" name="sources_widget" native="true"/>
+    <widget class="BtmsStatusView" name="view"/>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BtmsDiagramWidget</class>
-   <extends>QWidget</extends>
-   <header>btms_ui.widgets</header>
-   <container>1</container>
+   <class>BtmsStatusView</class>
+   <extends>QGraphicsView</extends>
+   <header>btms_ui.scene</header>
   </customwidget>
  </customwidgets>
  <resources/>

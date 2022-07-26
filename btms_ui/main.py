@@ -1,21 +1,15 @@
 import logging
 import signal
 import sys
-from typing import ClassVar, Optional
+from typing import Optional
 
 import typhos
 from qtpy import QtWidgets
 
 from . import util
-from .core import DesignerDisplay
-from .scene import BtmsStatusView
+from .widgets import BtmsMain
 
 logger = logging.getLogger(__name__)
-
-
-class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
-    filename: ClassVar[str] = "btms.ui"
-    view: BtmsStatusView
 
 
 def _sigint_handler(signal, frame):
@@ -52,7 +46,7 @@ def main(prefix: str = "", stylesheet: Optional[str] = None):
         logger.exception("Failed to load stylesheet; things may look odd...")
 
     widget = BtmsMain()
-    widget.view.device_prefix = prefix
+    widget.prefix = prefix
     widget.show()
     app.exec_()
 

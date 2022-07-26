@@ -1089,15 +1089,16 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
     @device_prefix.setter
     def device_prefix(self, prefix: str) -> None:
-        self._device_prefix = prefix
-
-        if not prefix:
+        if prefix is None:
             return
 
         if self.device is not None:
+            if prefix == self._device_prefix:
+                return
             self.device.destroy()
             self.device = None
 
+        self._device_prefix = prefix
         self.device = self._create_device(prefix)
 
     def _create_device(self, prefix: str) -> BtpsStateDevice:
