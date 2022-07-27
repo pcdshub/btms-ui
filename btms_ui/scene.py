@@ -7,13 +7,14 @@ from typing import ClassVar, Dict, Optional, Tuple, Union
 import pcdsdevices.lasers.btms_config as config
 import pydm
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
+from pcdsdevices.lasers.btps import BtpsSourceStatus
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
-from pcdsdevices.lasers.btps import (DestinationConfig, ShutterSafety,
-                                     SourceConfig)
+from pcdsdevices.lasers.btps import (DestinationConfig,
+                                     SourceToDestinationConfig)
 from qtpy import QtCore, QtGui, QtWidgets
 
+from . import config as btms_config
 from . import util
-from .config import PACKAGED_IMAGES
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -208,10 +209,6 @@ def create_scene_cross(
 
     Parameters
     ----------
-    cx : float
-        The center X position.
-    cy : float
-        The center Y position.
     width : float
         The width.
     height : float
@@ -454,7 +451,10 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
     def get_offset_position(self, x: float, y: float):
         """Optionally add a position offset."""
         base_rect = self.base_item.rect()
-        left_center = QtCore.QPointF(base_rect.left(), base_rect.center().y())
+        left_center = QtCore.QPointF(
+            base_rect.left(),
+            base_rect.center().y(),
+        )
         return left_center + QtCore.QPointF(x, y)
 
 
@@ -532,13 +532,14 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             destinations[pos] = dest
             self.addToGroup(dest)
 
-            pos = QtCore.QPointF(*self.base.positions[dest.ld_position])
-            multiplier = -1.6 if dest.ld_position.is_top else 1.1
-            pos += QtCore.QPointF(
-                -dest.boundingRect().width() / 2.,
-                multiplier * dest.boundingRect().height()
-            )
-            dest.setPos(pos)
+            pos_x, _ = self.base.positions[pos]
+            if pos.is_top:
+                pos_y = self.base.sceneBoundingRect().top() - dest.sceneBoundingRect().height()
+            else:
+                pos_y = self.base.sceneBoundingRect().bottom()
+
+            pos_x -= dest.exit_valve_proxy.sceneBoundingRect().width() / 2.
+            dest.setPos(pos_x, pos_y)
 
         return destinations
 
@@ -644,20 +645,20 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         for source, assembly in self.assemblies.items():
             for dest, indicator in assembly.dest_indicators.items():
-                source_conf: SourceConfig = getattr(
+                source_conf: SourceToDestinationConfig = getattr(
                     device, f"{dest.name}.{source.name}"
                 )
                 channel = util.channel_from_signal(source_conf.linear.nominal)
                 indicator.helper.channel_x = channel
 
-            shutter_safety: ShutterSafety = getattr(device, source.name)
+            source_device: BtpsSourceStatus = getattr(device, source.name)
             source = self.sources[source]
-            source.shutter.device = shutter_safety.lss
+            source.shutter.device = source_device.lss
             source.shutter.channelsPrefix = util.channel_from_device(
                 source.shutter.device
             ).rstrip(":")
 
-            source.entry_valve.device = shutter_safety.entry_valve
+            source.entry_valve.device = source_device.entry_valve
             source.entry_valve.channelsPrefix = util.channel_from_device(
                 source.entry_valve.device
             ).rstrip(":")
@@ -749,7 +750,7 @@ class PackagedPixmap(ScaledPixmapItem):
         self,
         filename: str,
     ):
-        info = dict(PACKAGED_IMAGES[filename])
+        info = dict(btms_config.PACKAGED_IMAGES[filename])
         self.positions = dict(info.pop("positions", {}))
         super().__init__(filename=filename, **info)
 
@@ -876,6 +877,14 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self.shutter_proxy)
         center_transform_origin(self.shutter_proxy)
 
+        self.name_label = QtWidgets.QLabel(
+            f"{self.ls_position}:\n{self.ls_position.description}"
+        )
+        self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
+        self.name_label_proxy.setWidget(self.name_label)
+        self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
+        self.addToGroup(self.name_label_proxy)
+
         if ls_position.is_left:
             # (Shutter) (Valve)
             shutter_pos = self.entry_valve_proxy.pos() - QtCore.QPointF(
@@ -892,6 +901,10 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.shutter_proxy.setPos(shutter_pos)
         align_vertically(self.shutter_proxy, self.entry_valve_proxy)
 
+        self.name_label_proxy.setPos(
+            self.entry_valve_proxy.sceneBoundingRect().bottomLeft()
+        )
+
         self.setTransformOriginPoint(self.boundingRect().center())
 
 
@@ -900,6 +913,8 @@ class Destination(QtWidgets.QGraphicsItemGroup):
     A graphical representation of a destination hutch (LDx).
     """
 
+    name_label_proxy: QtWidgets.QGraphicsProxyWidget
+    name_label: QtWidgets.QLabel
     exit_valve_proxy: QtWidgets.QGraphicsProxyWidget
     exit_valve: EntryGateValve
     icon_size: ClassVar[int] = 128
@@ -921,6 +936,18 @@ class Destination(QtWidgets.QGraphicsItemGroup):
 
         self.exit_valve_proxy.setRotation(90.)
 
+        self.name_label = QtWidgets.QLabel(
+            f"{self.ld_position}:\n{self.ld_position.description}"
+        )
+        self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
+        self.name_label_proxy.setWidget(self.name_label)
+        self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
+        self.addToGroup(self.name_label_proxy)
+
+        self.name_label_proxy.setPos(
+            self.exit_valve_proxy.boundingRect().bottomLeft()
+        )
+
 
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     """
@@ -936,7 +963,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
     base: QtWidgets.QGraphicsRectItem
     lens: LensAssembly
-    source_device: SourceConfig
+    source_device: SourceToDestinationConfig
 
     def __init__(self, ls_position: SourcePosition):
         super().__init__()
@@ -1049,7 +1076,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         super().__init__(scene, parent=parent)
 
         self.setMinimumSize(750, 500)
-        self.scale(0.25, 0.25)
+        self.scale(btms_config.VIEW_SCALE, btms_config.VIEW_SCALE)
 
         self.switch_box = SwitchBox()
         # self.switch_box.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)

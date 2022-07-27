@@ -18,13 +18,37 @@
     <widget class="BtmsDiagramWidget" name="diagram_widget" native="true"/>
    </item>
    <item>
-    <widget class="QWidget" name="sources_widget" native="true"/>
+    <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
+     <property name="source_index" stdset="0">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
+     <property name="source_index" stdset="0">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
+     <property name="source_index" stdset="0">
+      <number>8</number>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
    <class>BtmsDiagramWidget</class>
+   <extends>QWidget</extends>
+   <header>btms_ui.widgets</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BtmsSourceOverviewWidget</class>
    <extends>QWidget</extends>
    <header>btms_ui.widgets</header>
    <container>1</container>

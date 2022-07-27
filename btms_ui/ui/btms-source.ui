@@ -15,34 +15,9 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="source_name_label">
      <property name="text">
       <string>Source</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="PyDMLabel" name="PyDMLabel">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="precision" stdset="0">
-      <number>0</number>
-     </property>
-     <property name="showUnits" stdset="0">
-      <bool>false</bool>
-     </property>
-     <property name="precisionFromPV" stdset="0">
-      <bool>true</bool>
-     </property>
-     <property name="alarmSensitiveContent" stdset="0">
-      <bool>false</bool>
-     </property>
-     <property name="alarmSensitiveBorder" stdset="0">
-      <bool>true</bool>
-     </property>
-     <property name="channel" stdset="0">
-      <string>${SOURCE}BTPS:Name_RBV</string>
      </property>
     </widget>
    </item>
@@ -62,13 +37,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>PyDMLabel</class>
-   <extends>QLabel</extends>
-   <header>pydm.widgets.label</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

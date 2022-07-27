@@ -1,5 +1,12 @@
+import os
+
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 
+#: The scale for the entire BTMS status view.
+VIEW_SCALE = float(os.environ.get("BTMS_VIEW_SCALE", 0.25))
+#: The scale for QLabels when shown in the scene.
+LABEL_SCALE = float(os.environ.get("BTMS_LABEL_SCALE", 3.0))
+#: Images that are packaged with btms-ui.
 PACKAGED_IMAGES = {
     "switchbox.png": {
         "pixels_to_mm": 1900. / 855.,
