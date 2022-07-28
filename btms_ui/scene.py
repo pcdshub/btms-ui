@@ -281,6 +281,8 @@ class PositionHelper(QtCore.QObject):
 
     #: Emitted on every X or Y update.
     position_updated = QtCore.Signal(object, object)  # Optional[float]
+    #: Emitted on every X or Y update, including the offsets.
+    position_set = QtCore.Signal(QtCore.QPointF)
 
     def __init__(
         self,
@@ -430,6 +432,7 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
             self.y() if y is None else y,
         )
         self.setPos(offset_position)
+        self.helper.position_set.emit(offset_position)
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
@@ -490,7 +493,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         self._align_items()
 
-        self._start_test()
+        # self._start_test()
 
     def _start_test(self):
         # Just some testing code until we have PyDM channels hooked up:
@@ -503,6 +506,19 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self._rotating_test)
         self.timer.start()
+
+    def _rotating_test(self):
+        """Testing the rotation mechanism."""
+        for idx, (source, assembly) in enumerate(self.assemblies.items()):
+            self.angle[source] += 1
+            assembly.lens.angle = self.angle[source]
+            if assembly.linear_position < 0 or assembly.linear_position >= 1400:
+                self.angle_step[source] *= -1
+            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[source])
+            self.beams[source].destination = self.get_closest_destination(
+                source, assembly.linear_position
+            )
+            self.beams[source].update_lines()
 
     def _create_source(self, source: SourcePosition) -> LaserSource:
         """Create a single LaserSource for LS ``source``."""
@@ -548,6 +564,12 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         assembly = MotorizedMirrorAssembly(
             ls_position=source,
         )
+
+        def assembly_moved(_):
+            self.beams[source].update_lines()
+
+        assembly.lens.helper.position_set.connect(assembly_moved)
+
         return assembly
 
     def _create_assemblies(self) -> Dict[SourcePosition, MotorizedMirrorAssembly]:
@@ -663,24 +685,15 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
                 source.entry_valve.device
             ).rstrip(":")
 
+            assembly.lens.helper.channel_x = util.channel_from_signal(
+                source_device.linear.user_readback
+            ).rstrip(":)")
+
         for dest in self.destinations.values():
             dest_conf: DestinationConfig = getattr(device, f"{dest.ld_position.name}")
             dest.device = dest_conf
             dest.exit_valve.channelsPrefix = util.channel_from_device(dest_conf.exit_valve)
             dest.exit_valve.device = dest_conf.exit_valve
-
-    def _rotating_test(self):
-        """Testing the rotation mechanism."""
-        for idx, (source, assembly) in enumerate(self.assemblies.items()):
-            self.angle[source] += 1
-            assembly.lens.angle = self.angle[source]
-            if assembly.linear_position < 0 or assembly.linear_position >= 1400:
-                self.angle_step[source] *= -1
-            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[source])
-            self.beams[source].destination = self.get_closest_destination(
-                source, assembly.linear_position
-            )
-            self.beams[source].update_lines()
 
 
 class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -953,7 +966,11 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
     """
     A graphical representation of a single motorized mirror assembly.
 
-    It contains a LensAssembly which has
+    It contains:
+    * One LensAssembly (the moving assembly with lens and goniometer installed)
+    * One Base: an outline of the rail on which the lens assembly moves
+    * One SourceDestinationIndicator per destination - a marker where
+      destination nominal positions are
     """
 
     base_width: ClassVar[float] = 1450.0
@@ -1006,7 +1023,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
         self.lens.setPos(QtCore.QPointF(pos, 0.0))
 
 
-class LensAssembly(QtWidgets.QGraphicsItemGroup):
+class LensAssembly(PyDMPositionedGroup):
     """
     A graphical representation of a single lens assembly.
     """
@@ -1057,6 +1074,10 @@ class LensAssembly(QtWidgets.QGraphicsItemGroup):
     @angle.setter
     def angle(self, angle: float) -> None:
         self.lens.setRotation(angle)
+
+    def get_offset_position(self, x: float, y: float):
+        """Optionally add a position offset."""
+        return QtCore.QPointF(x, y)
 
 
 class BtmsStatusView(QtWidgets.QGraphicsView):
