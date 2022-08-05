@@ -1,7 +1,7 @@
 import logging
 import signal
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import typhos
 from qtpy import QtWidgets
@@ -17,17 +17,37 @@ def _sigint_handler(signal, frame):
     sys.exit(1)
 
 
-def _configure_stylesheet(path: Optional[str] = None) -> str:
+def _configure_stylesheet(paths: Optional[List[str]] = None) -> str:
+    """
+    Configure stylesheets for btms-ui.
+
+    Parameters
+    ----------
+    paths : List[str], optional
+        A list of paths to stylesheets to load.
+        Defaults to those packaged in btms-ui.
+
+    Returns
+    -------
+    str
+        The full stylesheet.
+    """
     app = QtWidgets.QApplication.instance()
     typhos.use_stylesheet()
 
-    if not path:
-        path = str(util.BTMS_SOURCE_PATH / "stylesheet.qss")
+    if paths is None:
+        paths = [
+            str(util.BTMS_SOURCE_PATH / "stylesheet.qss"),
+            str(util.BTMS_SOURCE_PATH / "pydm.qss"),
+        ]
 
-    with open(path, "rt") as fp:
-        btms_stylesheet = fp.read()
+    stylesheets = [app.styleSheet()]
 
-    full_stylesheet = "\n".join((app.styleSheet(), btms_stylesheet))
+    for path in paths:
+        with open(path, "rt") as fp:
+            stylesheets.append(fp.read())
+
+    full_stylesheet = "\n\n".join(stylesheets)
 
     app.setStyleSheet(full_stylesheet)
     return full_stylesheet
@@ -41,7 +61,7 @@ def main(prefix: str = "", stylesheet: Optional[str] = None):
         app = QtWidgets.QApplication([])
 
     try:
-        _configure_stylesheet(stylesheet)
+        _configure_stylesheet(paths=[stylesheet] if stylesheet else None)
     except Exception:
         logger.exception("Failed to load stylesheet; things may look odd...")
 

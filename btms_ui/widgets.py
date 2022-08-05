@@ -1,7 +1,7 @@
 from typing import ClassVar, Optional
 
 from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
-# from pydm import widgets as pydm_widgets
+from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
 
@@ -13,6 +13,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QWidget):
     filename: ClassVar[str] = "btms-source.ui"
     # source_name_label: pydm_widgets.PyDMLabel
     source_name_label: QtWidgets.QLabel
+    current_dest_label: pydm_widgets.PyDMLabel
     source: Optional[BtpsSourceStatus]
 
     def __init__(self, *args, prefix: str = "", source_index: int = 1, **kwargs):
@@ -21,7 +22,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QWidget):
         self._widget_to_suffix = {}
         super().__init__(*args, **kwargs)
         self.pydm_widgets_to_suffix = {
-            # self.source_name_label: "{}BTPS:Name_RBV",
+            self.current_dest_label: "BTPS:CurrentLD_RBV",
         }
 
     @QtCore.Property(str)

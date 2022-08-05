@@ -22,9 +22,12 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Current destination</string>
+    <widget class="PyDMLabel" name="current_dest_label">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="alarmSensitiveContent" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -37,6 +40,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
