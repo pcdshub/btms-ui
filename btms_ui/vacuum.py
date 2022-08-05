@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import ClassVar, Optional
 
 import ophyd
 from pcdsdevices.lasers.btps import VGC, LssShutterStatus
@@ -129,6 +129,8 @@ class LaserShutter(
     _close_suffix = ":CLS_RBV"
     _command_suffix = ":REQ_RBV"
 
+    state_update: ClassVar[QtCore.Signal] = QtCore.Signal()
+
     NAME = "Laser Shutter"
     EXPERT_OPHYD_CLASS = "pcdsdevices.lasers.btps.LssShutterStatus"
     device: Optional[LssShutterStatus]
@@ -175,6 +177,41 @@ class LaserShutter(
             )
         )
 
+    def state_connection_changed(self, which: str, conn: bool):
+        """
+        Callback invoked when the connection status changes for one of the
+        channels in this mixin.
+
+        Parameters
+        ----------
+        which : str
+            String defining which channel is sending the information. It must
+            be either "OPEN" or "CLOSE".
+        conn : bool
+            True if connected, False otherwise.
+        """
+        res = super().state_connection_changed(which, conn)
+        self.state_update.emit()
+        return res
+
+    def state_value_changed(self, which: str, value: int):
+        """
+        Callback invoked when the value changes for one of the channels in this
+        mixin.
+
+        Parameters
+        ----------
+        which : str
+            String defining which channel is sending the information. It must
+            be either "OPEN" or "CLOSE".
+        value : int
+            The value from the channel which will be either 0 or 1 with 1
+            meaning that a certain state is active.
+        """
+        res = super().state_value_changed(which, value)
+        self.state_update.emit()
+        return res
+
 
 class GateValve(TyphosDeviceMixin, PneumaticValve):
     """
@@ -198,6 +235,7 @@ class GateValve(TyphosDeviceMixin, PneumaticValve):
     # _open_suffix = ":OPN_RBV"
     # _close_suffix = ":CLS_RBV"
     # _command_suffix = ":REQ_RBV"
+    state_update: ClassVar[QtCore.Signal] = QtCore.Signal()
 
     NAME = "Gate Valve"
     EXPERT_OPHYD_CLASS = "pcdsdevices.valve.VGC"
@@ -232,6 +270,37 @@ class GateValve(TyphosDeviceMixin, PneumaticValve):
 
     def sizeHint(self):
         return self.minimumSizeHint()
+
+    def state_connection_changed(self, conn: bool):
+        """
+        Callback invoked when the connection status changes for the State
+        Channel.
+
+        Parameters
+        ----------
+        conn : bool
+            True if connected, False otherwise.
+        """
+        res = super().state_connection_changed(conn)
+        self.state_update.emit()
+        return res
+
+    def state_value_changed(self, value: int):
+        """
+        Callback invoked when the value change for the State Channel.
+        This callback triggers the update of the state message and also a
+        repaint of the widget with the new stylesheet guidelines for the
+        current state value.
+
+        Parameters
+        ----------
+        value : int
+            The value from the channel which will be either 0 or 1 with 1
+            meaning that a certain state is active.
+        """
+        res = super().state_value_changed(value)
+        self.state_update.emit()
+        return res
 
 
 EntryGateValve = GateValve

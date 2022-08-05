@@ -659,6 +659,17 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         dest = distances[min(distances)]
         return dest
 
+    def _update_all_lines(self):
+        """Update all beam indicator lines as a shutter/valve was opened/closed."""
+        # TODO: not quite right just yet; we want destination info from
+        # the PLC not the widget location
+        for source, beam in self.beams.items():
+            assembly = self.assemblies[source]
+            beam.destination = self.get_closest_destination(
+                source, assembly.linear_position
+            )
+            beam.update_lines()
+
     @device.setter
     def device(self, device: Optional[BtpsStateDevice]) -> None:
         self._device = device
@@ -685,6 +696,8 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
                 source.entry_valve.device
             ).rstrip(":")
 
+            source.shutter.state_update.connect(self._update_all_lines)
+            source.entry_valve.state_update.connect(self._update_all_lines)
             assembly.lens.helper.channel_x = util.channel_from_signal(
                 source_device.linear.user_readback
             ).rstrip(":)")
@@ -694,6 +707,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             dest.device = dest_conf
             dest.exit_valve.channelsPrefix = util.channel_from_device(dest_conf.exit_valve)
             dest.exit_valve.device = dest_conf.exit_valve
+            dest.exit_valve.state_update.connect(self._update_all_lines)
 
 
 class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
@@ -818,6 +832,14 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
             source_to_assembly_y,
         )
 
+        source_shutter = self.source.shutter
+        entry_valve = self.source.entry_valve
+
+        self.source_to_assembly.setVisible(
+            source_shutter.state.lower() == "open" and
+            entry_valve.state.lower() == "open"
+        )
+
         if self.source.ls_position.is_left:
             source_pos = get_right_center(entry_valve_rect)
         else:
@@ -832,8 +854,13 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
 
         dest = self._destination
         if dest is None:
+            self.assembly_to_destination.setVisible(False)
             return
 
+        self.assembly_to_destination.setVisible(
+            self.source_to_assembly.isVisible() and
+            dest.exit_valve.state.lower() == "open"
+        )
         exit_valve_rect = dest.exit_valve_proxy.sceneBoundingRect()
         dest_y = exit_valve_rect.center().y()
 
@@ -852,7 +879,6 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
     @destination.setter
     def destination(self, destination: Optional[Destination]):
         self._destination = destination
-        self.assembly_to_destination.setVisible(destination is not None)
 
 
 class LaserSource(QtWidgets.QGraphicsItemGroup):
@@ -929,7 +955,7 @@ class Destination(QtWidgets.QGraphicsItemGroup):
     name_label_proxy: QtWidgets.QGraphicsProxyWidget
     name_label: QtWidgets.QLabel
     exit_valve_proxy: QtWidgets.QGraphicsProxyWidget
-    exit_valve: EntryGateValve
+    exit_valve: ExitGateValve
     icon_size: ClassVar[int] = 128
     ld_position: config.DestinationPosition
 
