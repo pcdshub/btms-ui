@@ -89,3 +89,7 @@ PneumaticValve[connected="false"] #icon {
     qproperty-interlockBrush: white;
     qproperty-brush: white;
 }
+
+QLabel#NameLabel {
+    background: transparent;
+}

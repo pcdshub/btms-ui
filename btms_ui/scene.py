@@ -661,7 +661,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             abs(dest.sceneBoundingRect().center().x() - zeropos - pos): dest
             for dest in self.destinations.values()
         }
-        if min(distances) >= 100.:
+        if min(distances) >= 75.:
             return None
 
         dest = distances[min(distances)]
@@ -927,6 +927,8 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.name_label = QtWidgets.QLabel(
             f"{self.ls_position}:\n{self.ls_position.description}"
         )
+        self.name_label.setObjectName("NameLabel")
+
         self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
         self.name_label_proxy.setWidget(self.name_label)
         self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
@@ -986,14 +988,21 @@ class Destination(QtWidgets.QGraphicsItemGroup):
         self.name_label = QtWidgets.QLabel(
             f"{self.ld_position}:\n{self.ld_position.description}"
         )
+        self.name_label.setObjectName("NameLabel")
+
         self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
         self.name_label_proxy.setWidget(self.name_label)
         self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
         self.addToGroup(self.name_label_proxy)
 
-        self.name_label_proxy.setPos(
-            self.exit_valve_proxy.boundingRect().bottomLeft()
-        )
+        if self.ld_position.is_top:
+            self.exit_valve_proxy.setPos(
+                self.name_label_proxy.sceneBoundingRect().bottomLeft()
+            )
+        else:
+            self.name_label_proxy.setPos(
+                self.exit_valve_proxy.sceneBoundingRect().bottomLeft()
+            )
 
 
 class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
