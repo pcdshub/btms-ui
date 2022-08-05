@@ -438,14 +438,20 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
 class SourceDestinationIndicator(PyDMPositionedGroup):
     pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 10.0)
     brush: ClassVar[QtGui.QColor] = QtGui.QColor("black")
+    source: SourcePosition
+    dest: DestinationPosition
 
     def __init__(
         self,
         base_item: QtWidgets.QGraphicsRectItem,
+        source: SourcePosition,
+        dest: DestinationPosition,
         channel_x: Optional[str] = None,
         channel_y: Optional[str] = None,
     ):
         self.base_item = base_item
+        self.source = source
+        self.dest = dest
         super().__init__(channel_x=channel_x, channel_y=channel_y)
         self.addToGroup(
             create_scene_cross(width=50, height=50, pen=self.pen, brush=self.brush)
@@ -566,7 +572,9 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         )
 
         def assembly_moved(_):
-            self.beams[source].update_lines()
+            # TODO
+            self._update_all_lines()
+            # self.beams[source].update_lines()
 
         assembly.lens.helper.position_set.connect(assembly_moved)
 
@@ -1029,7 +1037,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         self.lens.setZValue(2)
         self.dest_indicators = {
-            dest: SourceDestinationIndicator(self.base)
+            dest: SourceDestinationIndicator(self.base, ls_position, dest)
             for dest in config.valid_destinations
         }
 
@@ -1135,8 +1143,19 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         self._device_prefix = ""
         self.device = None
 
+    def move_request(self, source: SourcePosition, dest: DestinationPosition):
+        device = self.device
+        if device is None:
+            return
+
+        self._move_status = device.set_source_to_destination(source, dest)
+
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         item = self.itemAt(event.pos())
+        if item is not None:
+            group = item.group()
+            if isinstance(group, SourceDestinationIndicator):
+                self.move_request(group.source, group.dest)
         if isinstance(item, QtWidgets.QGraphicsProxyWidget):
             # Forward mouse events to proxy widgets
             # TODO: I feel like this shouldn't be necessary and I messed something
