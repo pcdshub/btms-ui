@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import ClassVar, Optional, cast
+from typing import ClassVar, Optional
 
+from ophyd.status import MoveStatus
 from pcdsdevices.lasers import btms_config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
@@ -18,7 +19,7 @@ class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
         try:
             ld = int(text)
         except ValueError:
-            return super().setText(text)
+            return super().setText(f"(Unknown: {text})")
 
         if ld == 0:
             text = "Unknown"
@@ -40,9 +41,33 @@ class BtmsDestinationComboBox(QtWidgets.QComboBox):
                 self.addItem(f"{dest.description} ({dest.value})", dest)
 
 
+class QMoveStatus(QtCore.QObject):
+    percent_changed = QtCore.Signal(float)
+    finished_moving = QtCore.Signal()
+
+    def __init__(self, move_status: MoveStatus):
+        super().__init__()
+        self.move_status = move_status
+        move_status.watch(self._watch_callback)
+        move_status.callbacks.append(self._finished_callback)
+
+    def _watch_callback(self, fraction: Optional[float] = None, **kwargs):
+        if fraction is not None:
+            percent = 1.0 - fraction
+            self.percent_changed.emit(percent)
+            if percent >= (1.0 - 1e-6):
+                # TODO: this might not be necessary
+                self.finished_moving.emit()
+
+    def _finished_callback(self, fraction: Optional[float] = None, **kwargs):
+        self.percent_changed.emit(1.0)
+        self.finished_moving.emit()
+
+
 class BtmsLaserDestinationChoice(QtWidgets.QFrame):
     target_dest_combo: BtmsDestinationComboBox
     _device: Optional[BtpsSourceStatus]
+    move_requested = QtCore.Signal(object)
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None, **kwargs):
         super().__init__(parent, **kwargs)
@@ -68,12 +93,7 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
         self.setLayout(layout)
 
     def _move_request(self):
-        target = cast(DestinationPosition, self.target_dest_combo.currentData())
-        device = self.device
-        if device is None:
-            return
-
-        self._move_status = device.set_destination(target)
+        self.move_requested.emit(self.target_dest_combo.currentData())
 
     @property
     def device(self) -> Optional[BtpsSourceStatus]:
@@ -89,6 +109,7 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
     source_name_label: QtWidgets.QLabel
     current_dest_label: BtmsLaserDestinationLabel
     target_dest_widget: BtmsLaserDestinationChoice
+    motion_progress_widget: QtWidgets.QProgressBar
     source: Optional[BtpsSourceStatus]
 
     def __init__(
@@ -114,14 +135,38 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         self.current_dest_label = BtmsLaserDestinationLabel()
         self.current_dest_label.setObjectName("current_dest_label")
         self.target_dest_widget = BtmsLaserDestinationChoice()
+        self.target_dest_widget.move_requested.connect(self.move_request)
+        self.motion_progress_widget = QtWidgets.QProgressBar()
+        self.motion_progress_widget.setMaximumWidth(150)
+        self.motion_progress_widget.setVisible(False)
         for widget in (
             self.source_name_label,
             self.current_dest_label,
             self.target_dest_widget,
+            self.motion_progress_widget,
         ):
             layout.addWidget(widget)
 
         self.setLayout(layout)
+
+    def move_request(self, target: DestinationPosition):
+        device = self.device
+
+        if device is None:
+            return
+
+        def finished_moving():
+            self.motion_progress_widget.setVisible(False)
+
+        def update(percent: float):
+            self.motion_progress_widget.setValue(percent * 100.0)
+
+        self.motion_progress_widget.setValue(0.0)
+
+        self._move_status = QMoveStatus(device.set_destination(target))
+        self._move_status.percent_changed.connect(update)
+        self._move_status.finished_moving.connect(finished_moving)
+        self.motion_progress_widget.setVisible(not self._move_status.move_status.done)
 
     @QtCore.Property(str)
     def prefix(self) -> str:
