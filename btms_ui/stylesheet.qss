@@ -93,3 +93,7 @@ PneumaticValve[connected="false"] #icon {
 QLabel#NameLabel {
     background: transparent;
 }
+
+BtmsSourceOverviewWidget > QLabel#source_name_label {
+    font: bold underline;
+}
