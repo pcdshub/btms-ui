@@ -12,6 +12,7 @@ from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
+from typhos.suite import TyphosSuite
 
 from btms_ui.util import channel_from_signal
 
@@ -441,6 +442,9 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     ls1_widget: BtmsSourceOverviewWidget
     ls5_widget: BtmsSourceOverviewWidget
     ls8_widget: BtmsSourceOverviewWidget
+    # open_btps_config_button: QtWidgets.QPushButton
+    open_btps_overview_button: QtWidgets.QPushButton
+    _btps_overview: Optional[QtWidgets.QWidget]
 
     def __init__(self, *args, prefix: str = "", **kwargs):
         self._prefix = prefix
@@ -450,6 +454,8 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             self.ls5_widget,
             self.ls8_widget,
         ]
+        self.open_btps_overview_button.clicked.connect(self.open_btps_overview)
+        self._btps_overview = None
 
     @property
     def device(self) -> Optional[BtpsState]:
@@ -472,3 +478,16 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
 
         for source in self.source_widgets:
             source.device = device.sources[source.source_position]
+
+    def open_btps_overview(self):
+        overview = self._btps_overview
+        if overview is not None:
+            overview.setVisible(True)
+            overview.raise_()
+            return
+
+        if self.device is None:
+            return
+
+        self._btps_overview = TyphosSuite.from_device(self.device)
+        self._btps_overview.show()
