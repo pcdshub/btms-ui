@@ -4,6 +4,7 @@ import sys
 from typing import List, Optional
 
 import typhos
+from pydm.exception import install as install_exception_handler
 from qtpy import QtWidgets
 
 from . import util
@@ -60,6 +61,7 @@ def main(prefix: str = "", stylesheet: Optional[str] = None):
     if app is None:
         app = QtWidgets.QApplication([])
 
+    install_exception_handler()
     try:
         _configure_stylesheet(paths=[stylesheet] if stylesheet else None)
     except Exception:

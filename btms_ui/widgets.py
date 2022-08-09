@@ -10,7 +10,6 @@ from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
-from pydm.exception import raise_to_operator
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
 
@@ -221,18 +220,12 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         if device is None:
             return
 
-        try:
-            details = BtmsStateDetails(
-                None,
-                state=device.parent,
-                source=source,
-                dest=dest,
-            )
-        except Exception as ex:
-            raise_to_operator(ex)
-            self.setVisible(False)
-            return
-
+        details = BtmsStateDetails(
+            None,
+            state=device.parent,
+            source=source,
+            dest=dest,
+        )
         details.show()
         self._details[source] = details
 
