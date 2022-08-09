@@ -499,33 +499,6 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         self._align_items()
 
-        # self._start_test()
-
-    def _start_test(self):
-        # Just some testing code until we have PyDM channels hooked up:
-        for idx, assembly in enumerate(self.assemblies.values()):
-            assembly.linear_position = idx * 100.0
-
-        self.angle = {idx: 0 for idx in config.valid_sources}
-        self.angle_step = {idx: 1 for idx in config.valid_sources}
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(self._rotating_test)
-        self.timer.start()
-
-    def _rotating_test(self):
-        """Testing the rotation mechanism."""
-        for idx, (source, assembly) in enumerate(self.assemblies.items()):
-            self.angle[source] += 1
-            assembly.lens.angle = self.angle[source]
-            if assembly.linear_position < 0 or assembly.linear_position >= 1400:
-                self.angle_step[source] *= -1
-            assembly.linear_position += (-1) ** idx * (10 * self.angle_step[source])
-            self.beams[source].destination = self.get_closest_destination(
-                source, assembly.linear_position
-            )
-            self.beams[source].update_lines()
-
     def _create_source(self, source: SourcePosition) -> LaserSource:
         """Create a single LaserSource for LS ``source``."""
         source = LaserSource(ls_position=source)
