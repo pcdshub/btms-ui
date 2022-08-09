@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import ClassVar, Optional
+import threading
+from functools import partial
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 from ophyd.status import MoveStatus
 from pcdsdevices.lasers import btms_config
@@ -9,13 +11,18 @@ from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
+from qtpy.QtCore import Qt
 from typhos.positioner import TyphosPositionerWidget
+
+from btms_ui.util import channel_from_signal
 
 from .core import DesignerDisplay
 from .scene import BtmsStatusView
 
 
 class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
+    new_destination: QtCore.Signal = QtCore.Signal(object)
+
     def setText(self, text: str):
         try:
             ld = int(text)
@@ -24,11 +31,14 @@ class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
 
         if ld == 0:
             text = "Unknown"
+            self.new_destination.emit(None)
         elif ld < 0:
             text = "(Misconfiguration)"
+            self.new_destination.emit(None)
         else:
             pos = DestinationPosition.from_index(ld)
-            text = f"Destination: {pos.description} (LD{ld})"
+            text = f"→ {pos.description} (LD{ld})"
+            self.new_destination.emit(pos)
 
         return super().setText(text)
 
@@ -63,6 +73,47 @@ class QMoveStatus(QtCore.QObject):
     def _finished_callback(self, fraction: Optional[float] = None, **kwargs):
         self.percent_changed.emit(1.0)
         self.finished_moving.emit()
+
+
+class QCombinedMoveStatus(QtCore.QObject):
+    move_statuses: List[MoveStatus]
+    percents: Tuple[float, ...]
+    percents_changed = QtCore.Signal(float, list)  # List[float]
+    finished_moving = QtCore.Signal()
+
+    def __init__(self, move_statuses: List[MoveStatus]):
+        super().__init__()
+        if not move_statuses:
+            raise ValueError("At least one MoveStatus required")
+
+        self.move_statuses = list(st for st in move_statuses)
+        self.percents = [0.0] * len(move_statuses)
+        self.lock = threading.Lock()
+        self._finished_count = 0
+        for idx, move_status in enumerate(self.move_statuses):
+            move_status.watch(partial(self._watch_callback, idx))
+            move_status.callbacks.append(partial(self._finished_callback, idx))
+
+    def _watch_callback(self, index: int, /, fraction: Optional[float] = None, **kwargs):
+        if fraction is not None:
+            percent = 1.0 - fraction
+            with self.lock:
+                percents = list(self.percents)
+                percents[index] = percent
+                self.percents = tuple(percents)
+
+            overall = sum(percents) / len(percents)
+            self.percents_changed.emit(overall, percents)
+            if overall >= (1.0 - 1e-6):
+                self.finished_moving.emit()
+
+    def _finished_callback(self, index: int, /, fraction: Optional[float] = None, **kwargs):
+        with self.lock:
+            self._finished_count += 1
+
+        if self._finished_count == len(self.move_statuses):
+            self.percents_changed.emit(1.0, [1.0] * len(self.move_statuses))
+            self.finished_moving.emit()
 
 
 class BtmsLaserDestinationChoice(QtWidgets.QFrame):
@@ -106,12 +157,98 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
         self._device = device
 
 
+class BtmsSourceValidWidget(QtWidgets.QFrame):
+    indicators: Dict[DestinationPosition, List[pydm_widgets.PyDMByteIndicator]]
+
+    def __init__(
+        self,
+        parent: Optional[QtWidgets.QWidget] = None,
+        **kwargs
+    ):
+        self._device = None
+        self._destination = None
+        self.indicators = {}
+        super().__init__(parent, **kwargs)
+        self.setLayout(QtWidgets.QHBoxLayout())
+        self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+
+    @property
+    def device(self) -> Optional[BtpsSourceStatus]:
+        """The device for the BTMS."""
+        return self._device
+
+    @device.setter
+    def device(self, device: BtpsSourceStatus):
+        self._device = device
+        self.set_destination(self._destination)
+
+    @property
+    def destination(self) -> Optional[DestinationPosition]:
+        """The destination for the BTMS."""
+        return self._destination
+
+    @destination.setter
+    def destination(self, destination: DestinationPosition):
+        self.set_destination(self._destination)
+
+    @QtCore.Slot(object)
+    def set_destination(self, destination: Optional[DestinationPosition]):
+        device = self._device
+
+        self._destination = destination
+
+        if device is None or destination is None:
+            self.setVisible(False)
+            return
+
+        state = device.parent
+        source_pos = device.source_pos
+
+        def get_indicators(dest: DestinationPosition) -> List[pydm_widgets.PyDMByteIndicator]:
+            conf = state.destinations[dest].sources[source_pos]
+
+            data_valid = pydm_widgets.PyDMByteIndicator(
+                init_channel=channel_from_signal(conf.data_valid)
+            )
+            data_valid.setObjectName("data_valid_indicator")
+            data_label = QtWidgets.QLabel("Data")
+            for indicator in getattr(data_valid, "_indicators", []):
+                indicator.setToolTip(f"Green if data is valid ({dest})")
+            checks_ok = pydm_widgets.PyDMByteIndicator(
+                init_channel=channel_from_signal(conf.checks_ok)
+            )
+            checks_label = QtWidgets.QLabel("Checks")
+            for indicator in getattr(checks_ok, "_indicators", []):
+                checks_ok.setToolTip(f"Green if all checks are OK ({dest})")
+            data_valid.setObjectName("checks_ok_indicator")
+            self.layout().addWidget(data_valid)
+            self.layout().addWidget(data_label)
+            self.layout().addWidget(checks_ok)
+            self.layout().addWidget(checks_label)
+            return [data_valid, data_label, checks_ok, checks_label]
+
+        if not self.indicators:
+            self.indicators = {
+                dest: get_indicators(dest)
+                for dest in btms_config.valid_destinations
+            }
+
+        for indicator_dest, indicators in self.indicators.items():
+            for indicator in indicators:
+                indicator.setVisible(indicator_dest == destination)
+
+        self.setVisible(True)
+
+
 class BtmsSourceOverviewWidget(QtWidgets.QFrame):
+    valid_widget: BtmsSourceValidWidget
     source_name_label: QtWidgets.QLabel
     current_dest_label: BtmsLaserDestinationLabel
     target_dest_widget: BtmsLaserDestinationChoice
     motion_progress_widget: QtWidgets.QProgressBar
     source: Optional[BtpsSourceStatus]
+
+    new_destination: QtCore.Signal = QtCore.Signal(object)
 
     def __init__(
         self,
@@ -131,6 +268,8 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
 
     def _setup_ui(self):
         layout = QtWidgets.QGridLayout()
+        self.valid_widget = BtmsSourceValidWidget()
+        self.valid_widget.setObjectName("source_valid_widget")
         self.source_name_label = QtWidgets.QLabel()
         self.source_name_label.setObjectName("source_name_label")
         self.current_dest_label = BtmsLaserDestinationLabel()
@@ -140,33 +279,58 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         self.motion_progress_widget = QtWidgets.QProgressBar()
         self.motion_progress_widget.setMaximumWidth(150)
         self.motion_progress_widget.setVisible(False)
+
+        self.current_dest_label.new_destination.connect(self.new_destination.emit)
+        self.current_dest_label.new_destination.connect(self.valid_widget.set_destination)
+
+        for widget in (
+            self.source_name_label,
+            self.current_dest_label,
+            self.motion_progress_widget,
+        ):
+            widget.setAlignment(Qt.AlignLeft)
+            widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum
+            )
+
+        # Row 0: [ [ valid_widget] [source_name_label] ] [ current_dest_label ] []
+        # Row 1: []  [ target_dest_widget] [motion_progress_widget]
+
+        self.source_layout = QtWidgets.QHBoxLayout()
+        self.source_layout.addWidget(self.valid_widget)
+        self.source_layout.addWidget(self.source_name_label)
+        layout.addLayout(self.source_layout, 0, 0)
+        layout.addWidget(self.current_dest_label, 0, 1)
+
         for col, widget in enumerate(
             (
-                self.source_name_label,
-                self.current_dest_label,
                 self.target_dest_widget,
                 self.motion_progress_widget,
-            )
-        ):
-            layout.addWidget(widget, 0, col)
-
-        self.linear_widget = TyphosPositionerWidget()
-        self.rotary_widget = TyphosPositionerWidget()
-        self.goniometer_widget = TyphosPositionerWidget()
-
-        for col, widget in enumerate(
-            (
-                self.linear_widget,
-                self.rotary_widget,
-                self.goniometer_widget,
-             )
+            ),
+            start=1
         ):
             layout.addWidget(widget, 1, col)
+
+        for col, widget in enumerate(self._create_positioners()):
+            layout.addWidget(widget, 2, col)
 
         TyphosPositionerWidget()
         self.setLayout(layout)
 
+    def _create_positioners(self) -> List[TyphosPositionerWidget]:
+        self.linear_widget = TyphosPositionerWidget()
+        self.rotary_widget = TyphosPositionerWidget()
+        self.goniometer_widget = TyphosPositionerWidget()
+        return [
+            self.linear_widget,
+            self.rotary_widget,
+            self.goniometer_widget,
+        ]
+
     def move_request(self, target: DestinationPosition):
+        """
+        Request move of this source to the ``target`` DestinationPosition.
+        """
         device = self.device
 
         if device is None:
@@ -175,15 +339,17 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         def finished_moving():
             self.motion_progress_widget.setVisible(False)
 
-        def update(percent: float):
-            self.motion_progress_widget.setValue(percent * 100.0)
+        def update(overall_percent: float, individual_percents: List[float]):
+            self.motion_progress_widget.setValue(int(overall_percent * 100.0))
 
-        self.motion_progress_widget.setValue(0.0)
+        self.motion_progress_widget.setValue(0)
 
-        self._move_status = QMoveStatus(device.set_destination(target))
-        self._move_status.percent_changed.connect(update)
+        self._move_status = QCombinedMoveStatus(device.set_with_movestatus(target))
+        self._move_status.percents_changed.connect(update)
         self._move_status.finished_moving.connect(finished_moving)
-        self.motion_progress_widget.setVisible(not self._move_status.move_status.done)
+        self.motion_progress_widget.setVisible(
+            not any(st.done for st in self._move_status.move_statuses)
+        )
 
     @QtCore.Property(str)
     def prefix(self) -> str:
@@ -230,6 +396,7 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
     def device(self, device: BtpsSourceStatus):
         self._device = device
         self.target_dest_widget.device = device
+        self.valid_widget.device = device
         self.rotary_widget.add_device(device.rotary)
         self.linear_widget.add_device(device.linear)
         self.goniometer_widget.add_device(device.goniometer)

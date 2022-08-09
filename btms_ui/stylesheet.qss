@@ -97,3 +97,10 @@ QLabel#NameLabel {
 BtmsSourceOverviewWidget > QLabel#source_name_label {
     font: bold underline;
 }
+
+BtmsSourceValidWidget > PyDMByteIndicator {
+    qproperty-onColor: green;
+    qproperty-offColor: red;
+    qproperty-showLabels: 0;
+    qproperty-circles: 1;
+}
