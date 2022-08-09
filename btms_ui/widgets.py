@@ -242,15 +242,17 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     filename: ClassVar[str] = "btms-source.ui"
 
-    valid_widget: BtmsSourceValidWidget
-    source_name_label: QtWidgets.QLabel
     current_dest_label: BtmsLaserDestinationLabel
-    target_dest_widget: BtmsLaserDestinationChoice
-    motion_progress_widget: QtWidgets.QProgressBar
-    linear_widget: TyphosPositionerWidget
-    rotary_widget: TyphosPositionerWidget
     goniometer_widget: TyphosPositionerWidget
+    linear_widget: TyphosPositionerWidget
+    motor_frame: QtWidgets.QFrame
+    motion_progress_widget: QtWidgets.QProgressBar
+    rotary_widget: TyphosPositionerWidget
+    show_motors_button: QtWidgets.QPushButton
     source: Optional[BtpsSourceStatus]
+    source_name_label: QtWidgets.QLabel
+    target_dest_widget: BtmsLaserDestinationChoice
+    valid_widget: BtmsSourceValidWidget
 
     new_destination: QtCore.Signal = QtCore.Signal(object)
 
@@ -274,6 +276,13 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self.current_dest_label.new_destination.connect(self.new_destination.emit)
         self.current_dest_label.new_destination.connect(self.valid_widget.set_destination)
+
+        self.show_motors_button.clicked.connect(self.show_motors)
+        self.show_motors(False)
+
+    def show_motors(self, show: bool):
+        self.motor_frame.setVisible(show)
+        self.updateGeometry()
 
     def move_request(self, target: DestinationPosition):
         """
