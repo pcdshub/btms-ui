@@ -10,6 +10,7 @@ from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
+from pydm.exception import raise_to_operator
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
 
@@ -156,6 +157,28 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
         self._device = device
 
 
+class BtmsStateDetails(QtWidgets.QFrame):
+    def __init__(
+        self,
+        parent: Optional[QtWidgets.QWidget],
+        state: BtpsState,
+        source: SourcePosition,
+        dest: DestinationPosition,
+    ):
+        super().__init__(parent)
+        self.state = state
+        self.source = source
+        self.dest = dest
+
+        self.setWindowTitle(f"Checks for {source} -> {dest}")
+        config = state.destinations[dest].sources[source]
+        self.setLayout(QtWidgets.QVBoxLayout())
+        text_edit = QtWidgets.QTextEdit()
+        self.layout().addWidget(text_edit)
+        summary = config.summarize_checks()
+        text_edit.setText("\n".join(summary))
+
+
 class BtmsSourceValidWidget(QtWidgets.QFrame):
     indicators: Dict[DestinationPosition, List[pydm_widgets.PyDMByteIndicator]]
 
@@ -166,6 +189,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
     ):
         self._device = None
         self._destination = None
+        self._details = {}
         self.indicators = {}
         super().__init__(parent, **kwargs)
         self.setLayout(QtWidgets.QHBoxLayout())
@@ -190,6 +214,69 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
     def destination(self, destination: DestinationPosition):
         self.set_destination(self._destination)
 
+    def _open_details(
+        self, source: SourcePosition, dest: DestinationPosition
+    ) -> None:
+        device = self.device
+        if device is None:
+            return
+
+        try:
+            details = BtmsStateDetails(
+                None,
+                state=device.parent,
+                source=source,
+                dest=dest,
+            )
+        except Exception as ex:
+            raise_to_operator(ex)
+            self.setVisible(False)
+            return
+
+        details.show()
+        self._details[source] = details
+
+    def _get_indicators(
+        self, state: BtpsState, source: SourcePosition, dest: DestinationPosition
+    ) -> List[pydm_widgets.PyDMByteIndicator]:
+        """
+        Get the indicator widgets for a given source/dest combination.
+        """
+        conf = state.destinations[dest].sources[source]
+
+        data_valid = pydm_widgets.PyDMByteIndicator(
+            init_channel=channel_from_signal(conf.data_valid)
+        )
+        data_valid.setObjectName("data_valid_indicator")
+        data_label = QtWidgets.QLabel("Data")
+        for indicator in getattr(data_valid, "_indicators", []):
+            indicator.setToolTip(f"Green if data is valid ({dest})")
+        checks_ok = pydm_widgets.PyDMByteIndicator(
+            init_channel=channel_from_signal(conf.checks_ok)
+        )
+        checks_label = QtWidgets.QLabel("Checks")
+        for indicator in getattr(checks_ok, "_indicators", []):
+            checks_ok.setToolTip(f"Green if all checks are OK ({dest})")
+
+        checks_button = QtWidgets.QToolButton()
+        checks_button.setText("?")
+        checks_button.setToolTip("Open details about checks...")
+        checks_button.clicked.connect(partial(self._open_details, source, dest))
+
+        data_valid.setObjectName("checks_ok_indicator")
+        widgets = [
+            data_valid,
+            data_label,
+            checks_ok,
+            checks_label,
+            checks_button,
+        ]
+        for widget in widgets:
+            # All widgets are added to the layout and selectively hidden/shown
+            # instead of changing channels on the fly
+            self.layout().addWidget(widget)
+        return widgets
+
     @QtCore.Slot(object)
     def set_destination(self, destination: Optional[DestinationPosition]):
         device = self._device
@@ -200,35 +287,9 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
             self.setVisible(False)
             return
 
-        state = device.parent
-        source_pos = device.source_pos
-
-        def get_indicators(dest: DestinationPosition) -> List[pydm_widgets.PyDMByteIndicator]:
-            conf = state.destinations[dest].sources[source_pos]
-
-            data_valid = pydm_widgets.PyDMByteIndicator(
-                init_channel=channel_from_signal(conf.data_valid)
-            )
-            data_valid.setObjectName("data_valid_indicator")
-            data_label = QtWidgets.QLabel("Data")
-            for indicator in getattr(data_valid, "_indicators", []):
-                indicator.setToolTip(f"Green if data is valid ({dest})")
-            checks_ok = pydm_widgets.PyDMByteIndicator(
-                init_channel=channel_from_signal(conf.checks_ok)
-            )
-            checks_label = QtWidgets.QLabel("Checks")
-            for indicator in getattr(checks_ok, "_indicators", []):
-                checks_ok.setToolTip(f"Green if all checks are OK ({dest})")
-            data_valid.setObjectName("checks_ok_indicator")
-            self.layout().addWidget(data_valid)
-            self.layout().addWidget(data_label)
-            self.layout().addWidget(checks_ok)
-            self.layout().addWidget(checks_label)
-            return [data_valid, data_label, checks_ok, checks_label]
-
         if not self.indicators:
             self.indicators = {
-                dest: get_indicators(dest)
+                dest: self._get_indicators(device.parent, device.source_pos, dest)
                 for dest in btms_config.valid_destinations
             }
 

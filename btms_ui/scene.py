@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import pathlib
 from typing import ClassVar, Dict, Optional, Tuple, Union
 
@@ -390,6 +391,40 @@ class PositionHelper(QtCore.QObject):
         self.position_updated.emit(self.x, self.y)
 
 
+class AngleHelper(PositionHelper):
+    """
+    A lazy extension of PositionHelper.
+
+    NOTE: If these are to be customized any further, these should be split up
+    and implemented properly.
+    """
+    #: Emitted when the angle is updated from the control system.
+    angle_updated = QtCore.Signal(float)
+    #: Emitted when the final angle is set and applied to the group.
+    angle_set = QtCore.Signal(float)
+
+    def _update_position(self, angle: Optional[float], offset: Optional[float]):
+        """
+        Hook for when X or Y position updated - signal to be emitted.
+
+        Parameters
+        ----------
+        angle : float, optional
+            The new angle.
+        y : float, optional
+            The new offset.
+        """
+        if angle is not None:
+            self.x = angle
+        if offset is not None:
+            self.y = offset
+
+        values = [value for value in (self.x, self.y) if value is not None]
+        if values:
+            self.angle = sum(values)
+            self.angle_updated.emit(self.angle)
+
+
 class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
     """
     A graphics item group that gets positioned based on a PyDM channel.
@@ -433,6 +468,58 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
         )
         self.setPos(offset_position)
         self.helper.position_set.emit(offset_position)
+
+
+class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
+    """
+    A graphics item group that gets rotated based on a PyDM channel.
+
+    Radian values are converted to degrees for offset methods.  This is what
+    Qt expects.
+    """
+
+    def __init__(
+        self,
+        channel_angle: Optional[str] = None,
+        channel_offset: Optional[str] = None,
+        offset: float = 0.0,
+        source_is_degrees: bool = True,
+    ):
+        super().__init__()
+        self.helper = AngleHelper(channel_x=channel_angle, channel_y=channel_offset)
+        self.helper.angle_updated.connect(self._update_angle)
+        self.offset = offset
+        self.source_is_degrees = source_is_degrees
+
+    @property
+    def channel_angle(self) -> Optional[str]:
+        """The angle channel."""
+        return self.helper.channel_x
+
+    @channel_angle.setter
+    def channel_angle(self, value: Optional[str]):
+        self.helper.channel_x = value
+
+    @property
+    def channel_offset(self) -> Optional[str]:
+        """The offset channel for the angle."""
+        return self.helper.channel_y
+
+    @channel_offset.setter
+    def channel_offset(self, value: Optional[str]):
+        self.helper.channel_y = value
+
+    def get_offset_angle(self, angle: float):
+        """Optionally add an angular offset."""
+        return angle
+
+    def _update_angle(self, angle: float):
+        if not self.source_is_degrees:
+            angle = math.degrees(angle)
+
+        offset_angle = self.get_offset_angle(angle)
+        self.setRotation(offset_angle)
+        self.helper.angle_set.emit(offset_angle)
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
@@ -679,9 +766,13 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
             source.shutter.state_update.connect(self._update_all_lines)
             source.entry_valve.state_update.connect(self._update_all_lines)
-            assembly.lens.helper.channel_x = util.channel_from_signal(
+            assembly.lens.channel_x = util.channel_from_signal(
                 source_device.linear.user_readback
-            ).rstrip(":)")
+            ).rstrip(":")
+
+            assembly.lens.lens.channel_angle = util.channel_from_signal(
+                source_device.rotary.user_readback
+            ).rstrip(":")
 
         for dest in self.destinations.values():
             dest_conf: DestinationConfig = getattr(device, f"{dest.ld_position.name}")
@@ -1055,7 +1146,7 @@ class LensAssembly(PyDMPositionedGroup):
     lens_brush: ClassVar[QtGui.QColor] = QtGui.QColor("red")
 
     base: QtWidgets.QGraphicsRectItem
-    lens: QtWidgets.QGraphicsRectItem
+    lens: PyDMRotatedGroup
 
     def __init__(self):
         super().__init__()
@@ -1071,13 +1162,16 @@ class LensAssembly(PyDMPositionedGroup):
         base_center = self.base.rect().center()
         self.addToGroup(self.base)
 
-        self.lens = create_scene_rectangle(
-            cx=base_center.x(),
-            cy=base_center.y(),
-            width=self.lens_width,
-            height=self.lens_height,
-            pen=self.lens_pen,
-            brush=self.lens_brush,
+        self.lens = PyDMRotatedGroup()
+        self.lens.addToGroup(
+            create_scene_rectangle(
+                cx=base_center.x(),
+                cy=base_center.y(),
+                width=self.lens_width,
+                height=self.lens_height,
+                pen=self.lens_pen,
+                brush=self.lens_brush,
+            )
         )
 
         self.addToGroup(self.lens)
@@ -1137,7 +1231,11 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         if item is not None:
             group = item.group()
             if isinstance(group, SourceDestinationIndicator):
-                self.move_request(group.source, group.dest)
+                # NOTE: Disabling move with clicking of the SourceDestinationIndicator
+                # I expect it would not be desirable.  Uncomment the following
+                # to re-enable it:
+                # self.move_request(group.source, group.dest)
+                ...
         if isinstance(item, QtWidgets.QGraphicsProxyWidget):
             # Forward mouse events to proxy widgets
             # TODO: I feel like this shouldn't be necessary and I messed something
