@@ -9,6 +9,7 @@ from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
+from typhos.positioner import TyphosPositionerWidget
 
 from .core import DesignerDisplay
 from .scene import BtmsStatusView
@@ -129,7 +130,7 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         }
 
     def _setup_ui(self):
-        layout = QtWidgets.QHBoxLayout()
+        layout = QtWidgets.QGridLayout()
         self.source_name_label = QtWidgets.QLabel()
         self.source_name_label.setObjectName("source_name_label")
         self.current_dest_label = BtmsLaserDestinationLabel()
@@ -139,14 +140,30 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         self.motion_progress_widget = QtWidgets.QProgressBar()
         self.motion_progress_widget.setMaximumWidth(150)
         self.motion_progress_widget.setVisible(False)
-        for widget in (
-            self.source_name_label,
-            self.current_dest_label,
-            self.target_dest_widget,
-            self.motion_progress_widget,
+        for col, widget in enumerate(
+            (
+                self.source_name_label,
+                self.current_dest_label,
+                self.target_dest_widget,
+                self.motion_progress_widget,
+            )
         ):
-            layout.addWidget(widget)
+            layout.addWidget(widget, 0, col)
 
+        self.linear_widget = TyphosPositionerWidget()
+        self.rotary_widget = TyphosPositionerWidget()
+        self.goniometer_widget = TyphosPositionerWidget()
+
+        for col, widget in enumerate(
+            (
+                self.linear_widget,
+                self.rotary_widget,
+                self.goniometer_widget,
+             )
+        ):
+            layout.addWidget(widget, 1, col)
+
+        TyphosPositionerWidget()
         self.setLayout(layout)
 
     def move_request(self, target: DestinationPosition):
@@ -213,6 +230,9 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
     def device(self, device: BtpsSourceStatus):
         self._device = device
         self.target_dest_widget.device = device
+        self.rotary_widget.add_device(device.rotary)
+        self.linear_widget.add_device(device.linear)
+        self.goniometer_widget.add_device(device.goniometer)
 
 
 class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):
