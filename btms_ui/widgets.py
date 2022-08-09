@@ -11,7 +11,6 @@ from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
-from qtpy.QtCore import Qt
 from typhos.positioner import TyphosPositionerWidget
 
 from btms_ui.util import channel_from_signal
@@ -240,12 +239,17 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         self.setVisible(True)
 
 
-class BtmsSourceOverviewWidget(QtWidgets.QFrame):
+class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
+    filename: ClassVar[str] = "btms-source.ui"
+
     valid_widget: BtmsSourceValidWidget
     source_name_label: QtWidgets.QLabel
     current_dest_label: BtmsLaserDestinationLabel
     target_dest_widget: BtmsLaserDestinationChoice
     motion_progress_widget: QtWidgets.QProgressBar
+    linear_widget: TyphosPositionerWidget
+    rotary_widget: TyphosPositionerWidget
+    goniometer_widget: TyphosPositionerWidget
     source: Optional[BtpsSourceStatus]
 
     new_destination: QtCore.Signal = QtCore.Signal(object)
@@ -261,71 +265,15 @@ class BtmsSourceOverviewWidget(QtWidgets.QFrame):
         self._prefix = prefix
         self._source_index = source_index
 
-        self._setup_ui()
         self.pydm_widgets_to_suffix = {
             self.current_dest_label: "BTPS:CurrentLD_RBV",
         }
 
-    def _setup_ui(self):
-        layout = QtWidgets.QGridLayout()
-        self.valid_widget = BtmsSourceValidWidget()
-        self.valid_widget.setObjectName("source_valid_widget")
-        self.source_name_label = QtWidgets.QLabel()
-        self.source_name_label.setObjectName("source_name_label")
-        self.current_dest_label = BtmsLaserDestinationLabel()
-        self.current_dest_label.setObjectName("current_dest_label")
-        self.target_dest_widget = BtmsLaserDestinationChoice()
         self.target_dest_widget.move_requested.connect(self.move_request)
-        self.motion_progress_widget = QtWidgets.QProgressBar()
-        self.motion_progress_widget.setMaximumWidth(150)
         self.motion_progress_widget.setVisible(False)
 
         self.current_dest_label.new_destination.connect(self.new_destination.emit)
         self.current_dest_label.new_destination.connect(self.valid_widget.set_destination)
-
-        for widget in (
-            self.source_name_label,
-            self.current_dest_label,
-            self.motion_progress_widget,
-        ):
-            widget.setAlignment(Qt.AlignLeft)
-            widget.setSizePolicy(
-                QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum
-            )
-
-        # Row 0: [ [ valid_widget] [source_name_label] ] [ current_dest_label ] []
-        # Row 1: []  [ target_dest_widget] [motion_progress_widget]
-
-        self.source_layout = QtWidgets.QHBoxLayout()
-        self.source_layout.addWidget(self.valid_widget)
-        self.source_layout.addWidget(self.source_name_label)
-        layout.addLayout(self.source_layout, 0, 0)
-        layout.addWidget(self.current_dest_label, 0, 1)
-
-        for col, widget in enumerate(
-            (
-                self.target_dest_widget,
-                self.motion_progress_widget,
-            ),
-            start=1
-        ):
-            layout.addWidget(widget, 1, col)
-
-        for col, widget in enumerate(self._create_positioners()):
-            layout.addWidget(widget, 2, col)
-
-        TyphosPositionerWidget()
-        self.setLayout(layout)
-
-    def _create_positioners(self) -> List[TyphosPositionerWidget]:
-        self.linear_widget = TyphosPositionerWidget()
-        self.rotary_widget = TyphosPositionerWidget()
-        self.goniometer_widget = TyphosPositionerWidget()
-        return [
-            self.linear_widget,
-            self.rotary_widget,
-            self.goniometer_widget,
-        ]
 
     def move_request(self, target: DestinationPosition):
         """

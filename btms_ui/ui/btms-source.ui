@@ -6,35 +6,119 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>826</width>
-    <height>78</height>
+    <width>1329</width>
+    <height>329</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
-   <item>
-    <widget class="QLabel" name="source_name_label">
-     <property name="text">
-      <string>Source</string>
+  <layout class="QGridLayout" name="source_layout">
+   <item row="1" column="2">
+    <widget class="QProgressBar" name="motion_progress_widget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="value">
+      <number>24</number>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="PyDMLabel" name="current_dest_label">
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="source_and_validity_layout">
+     <item>
+      <widget class="BtmsSourceValidWidget" name="valid_widget">
+       <property name="frameShape">
+        <enum>QFrame::Panel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="source_name_label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Source name</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="BtmsLaserDestinationChoice" name="target_dest_widget">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="TyphosPositionerWidget" name="linear_widget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string/>
      </property>
-     <property name="alarmSensitiveContent" stdset="0">
-      <bool>true</bool>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="TyphosPositionerWidget" name="goniometer_widget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string/>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QLabel" name="label_3">
+   <item row="0" column="1" alignment="Qt::AlignVCenter">
+    <widget class="BtmsLaserDestinationLabel" name="current_dest_label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Target</string>
+      <string>Current destination</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="TyphosPositionerWidget" name="rotary_widget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string/>
      </property>
     </widget>
    </item>
@@ -42,9 +126,26 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMLabel</class>
+   <class>TyphosPositionerWidget</class>
+   <extends>QWidget</extends>
+   <header>typhos.positioner</header>
+  </customwidget>
+  <customwidget>
+   <class>BtmsLaserDestinationLabel</class>
    <extends>QLabel</extends>
-   <header>pydm.widgets.label</header>
+   <header>btms_ui.widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>BtmsLaserDestinationChoice</class>
+   <extends>QFrame</extends>
+   <header>btms_ui.widgets</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BtmsSourceValidWidget</class>
+   <extends>QFrame</extends>
+   <header>btms_ui.widgets</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
