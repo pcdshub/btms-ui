@@ -161,6 +161,83 @@ class BtmsStateDetails(QtWidgets.QFrame):
     def __init__(
         self,
         parent: Optional[QtWidgets.QWidget],
+        state: Optional[BtpsState] = None,
+        source: Optional[SourcePosition] = None,
+        dest: Optional[DestinationPosition] = None,
+    ):
+        super().__init__(parent)
+        self._state = None
+        self._source = None
+        self._dest = None
+
+        self._setup_ui()
+
+        self.state = state
+        self.source = source
+        self.dest = dest
+
+    def _setup_ui(self) -> None:
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+        self.text_edit = QtWidgets.QTextEdit()
+        layout.addWidget(self.text_edit)
+
+    @property
+    def state(self) -> Optional[BtpsState]:
+        """The BtpsState Bevice."""
+        return self._state
+
+    @state.setter
+    def state(self, value: Optional[BtpsState]):
+        self._state = value
+        self._update()
+
+    @property
+    def dest(self) -> Optional[DestinationPosition]:
+        """The destination."""
+        return self._dest
+
+    @dest.setter
+    def dest(self, value: Optional[DestinationPosition]):
+        self._dest = value
+        self._update()
+
+    @property
+    def source(self) -> Optional[SourcePosition]:
+        """The source."""
+        return self._source
+
+    @source.setter
+    def source(self, value: Optional[SourcePosition]):
+        self._source = value
+        self._update()
+
+    def _update(self):
+        source = self.source
+        dest = self.dest
+        state = self.state
+
+        if source is None or dest is None or state is None:
+            self.setWindowTitle("Motion conflict checks")
+            return
+
+        self.setWindowTitle(f"Checks for {source} -> {dest}")
+
+        config = state.destinations[dest].sources[source]
+        summary = config.summarize_checks()
+        self.text_edit.setText("\n".join(summary))
+
+
+class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
+    filename: ClassVar[str] = "btms-move-request.ui"
+
+    conflicts_label: QtWidgets.QLabel
+    conflicts_list_widget: QtWidgets.QListWidget
+    resolution_list_widget: QtWidgets.QListWidget
+
+    def __init__(
+        self,
+        parent: Optional[QtWidgets.QWidget],
         state: BtpsState,
         source: SourcePosition,
         dest: DestinationPosition,
@@ -170,13 +247,29 @@ class BtmsStateDetails(QtWidgets.QFrame):
         self.source = source
         self.dest = dest
 
-        self.setWindowTitle(f"Checks for {source} -> {dest}")
-        config = state.destinations[dest].sources[source]
-        self.setLayout(QtWidgets.QVBoxLayout())
-        text_edit = QtWidgets.QTextEdit()
-        self.layout().addWidget(text_edit)
-        summary = config.summarize_checks()
-        text_edit.setText("\n".join(summary))
+        self.conflicts_label.setText(
+            f"Conflicts detected moving {source.description} {source} to "
+            f"{dest.description} {dest}:"
+        )
+        self.conflicts = state.sources[source].check_move_all(dest)
+        for conflict in self.conflicts:
+            self.conflicts_list_widget.addItem(f"{conflict.__class__.__name__}: {conflict}")
+            self.resolution_list_widget.addItem(self.get_resolution_explanation(conflict))
+
+    def get_resolution_explanation(self, conflict: Exception) -> str:
+        if isinstance(conflict, btms_config.MovingActiveSource):
+            return f"Close shutter for {self.source}"
+
+        if isinstance(conflict, btms_config.DestinationInUseError):
+            return "Destination already in use: cannot automatically resolve"
+
+        if isinstance(conflict, btms_config.PathCrossedError):
+            return f"Close shutter for active crossed source: {conflict.crosses_source}"
+
+        return (
+            f"Unknown issue, cannot automatically resolve: "
+            f"{conflict.__class__.__name__} {conflict}"
+        )
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
@@ -355,6 +448,17 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
 
         self.motion_progress_widget.setValue(0)
+
+        failures = device.check_move_all(target)
+        if failures:
+            self._conflict = BtmsMoveConflictWidget(
+                parent=None,
+                source=self.source_position,
+                dest=target,
+                state=device.parent,
+            )
+            self._conflict.show()
+            return
 
         self._move_status = QCombinedMoveStatus(device.set_with_movestatus(target))
         self._move_status.percents_changed.connect(update)

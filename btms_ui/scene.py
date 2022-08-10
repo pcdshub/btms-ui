@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import functools
 import logging
 import math
 import pathlib
-from typing import ClassVar, Dict, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import pcdsdevices.lasers.btms_config as config
-import pydm
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import BtpsSourceStatus
 from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
@@ -15,7 +15,7 @@ from pcdsdevices.lasers.btps import (DestinationConfig,
 from qtpy import QtCore, QtGui, QtWidgets
 
 from . import config as btms_config
-from . import util
+from . import helpers, util
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -262,169 +262,6 @@ def align_vertically(
         item.setPos(item.pos().x(), item.pos().y() + delta_to_center.y())
 
 
-class PositionHelper(QtCore.QObject):
-    """
-    A helper for monitoring positions via PyDM channels.
-
-    Emits ``position_updated`` whenever X or Y updates.
-
-    Parameters
-    ----------
-    x : float, optional
-        The starting X position.
-    y : float, optional
-        The starting Y position.
-    channel_x : PyDMChannel, optional
-        The PyDM channel for the X position.
-    channel_y : PyDMChannel, optional
-        The PyDM channel for the Y position.
-    """
-
-    #: Emitted on every X or Y update.
-    position_updated = QtCore.Signal(object, object)  # Optional[float]
-    #: Emitted on every X or Y update, including the offsets.
-    position_set = QtCore.Signal(QtCore.QPointF)
-
-    def __init__(
-        self,
-        x: float = 0.0,
-        y: float = 0.0,
-        channel_x: Optional[str] = None,
-        channel_y: Optional[str] = None,
-    ):
-        super().__init__()
-        self._channel_x = None
-        self._channel_y = None
-        self._channels = []
-        self.channel_x = channel_x   # pyright: ignore
-        self.channel_y = channel_y   # pyright: ignore
-        self.x = x
-        self.y = y
-
-    def _remove_channel(self, channel: pydm.widgets.PyDMChannel):
-        old_connections = [
-            ch for ch in self._channels
-            if ch.address == channel.address
-        ]
-
-        for channel in old_connections:
-            channel.disconnect()
-            self._channels.remove(channel)
-
-    def _set_channel(
-        self,
-        old: Optional[pydm.widgets.PyDMChannel],
-        new: Optional[str],
-    ) -> Optional[pydm.widgets.PyDMChannel]:
-        """Update a channel setting."""
-        if old is None and new is None:
-            return None
-
-        if old is not None:
-            self._remove_channel(old)
-
-        if not new:
-            return None
-
-        channel = pydm.widgets.PyDMChannel(address=new)
-        self._channels.append(channel)
-        return channel
-
-    @QtCore.Property(str)
-    def channel_x(self) -> Optional[str]:   # pyright: ignore
-        """The channel address for the X position."""
-        if self._channel_x is None:
-            return None
-        return self._channel_x.address
-
-    @channel_x.setter
-    def channel_x(self, value: Optional[str]):
-        self._channel_x = self._set_channel(self._channel_x, value)
-        if self._channel_x is None:
-            return
-
-        self._channel_x.value_slot = self._set_x
-        self._channel_x.connect()
-
-    @QtCore.Slot(int)
-    @QtCore.Slot(float)
-    def _set_x(self, value: Union[float, int]):
-        self._update_position(float(value), None)
-
-    @QtCore.Property(str)
-    def channel_y(self) -> Optional[str]:   # pyright: ignore
-        """The channel address for the Y position."""
-        if self._channel_y is None:
-            return None
-        return self._channel_y.address
-
-    @channel_y.setter
-    def channel_y(self, value: Optional[str]):
-        self._channel_y = self._set_channel(self._channel_y, value)
-        if self._channel_y is None:
-            return
-
-        self._channel_y.value_slot = self._set_y
-        self._channel_y.connect()
-
-    @QtCore.Slot(int)
-    @QtCore.Slot(float)
-    def _set_y(self, value: Union[float, int]):
-        self._update_position(None, float(value))
-
-    def _update_position(self, x: Optional[float], y: Optional[float]):
-        """
-        Hook for when X or Y position updated - signal to be emitted.
-
-        Parameters
-        ----------
-        x : float, optional
-            The new X position.
-        y : float, optional
-            The new Y position.
-        """
-        if x is not None:
-            self.x = x
-        if y is not None:
-            self.y = y
-
-        self.position_updated.emit(self.x, self.y)
-
-
-class AngleHelper(PositionHelper):
-    """
-    A lazy extension of PositionHelper.
-
-    NOTE: If these are to be customized any further, these should be split up
-    and implemented properly.
-    """
-    #: Emitted when the angle is updated from the control system.
-    angle_updated = QtCore.Signal(float)
-    #: Emitted when the final angle is set and applied to the group.
-    angle_set = QtCore.Signal(float)
-
-    def _update_position(self, angle: Optional[float], offset: Optional[float]):
-        """
-        Hook for when X or Y position updated - signal to be emitted.
-
-        Parameters
-        ----------
-        angle : float, optional
-            The new angle.
-        y : float, optional
-            The new offset.
-        """
-        if angle is not None:
-            self.x = angle
-        if offset is not None:
-            self.y = offset
-
-        values = [value for value in (self.x, self.y) if value is not None]
-        if values:
-            self.angle = sum(values)
-            self.angle_updated.emit(self.angle)
-
-
 class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
     """
     A graphics item group that gets positioned based on a PyDM channel.
@@ -436,7 +273,7 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
         channel_y: Optional[str] = None,
     ):
         super().__init__()
-        self.helper = PositionHelper(channel_x=channel_x, channel_y=channel_y)
+        self.helper = helpers.PositionHelper(channel_x=channel_x, channel_y=channel_y)
         self.helper.position_updated.connect(self._update_position)
 
     @property
@@ -486,7 +323,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
         source_is_degrees: bool = True,
     ):
         super().__init__()
-        self.helper = AngleHelper(channel_x=channel_angle, channel_y=channel_offset)
+        self.helper = helpers.AngleHelper(channel_x=channel_angle, channel_y=channel_offset)
         self.helper.angle_updated.connect(self._update_angle)
         self.offset = offset
         self.source_is_degrees = source_is_degrees
@@ -569,6 +406,8 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
     sources: Dict[SourcePosition, LaserSource]
     destinations: Dict[DestinationPosition, Destination]
     beams: Dict[SourcePosition, BeamIndicator]
+    current_destinations: Dict[SourcePosition, Optional[DestinationPosition]]
+    _subscriptions: List[helpers.OphydCallbackHelper]
 
     def __init__(self):
         super().__init__()
@@ -583,6 +422,8 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.sources = self._create_sources()
         self.destinations = self._create_destinations()
         self.beams = self._create_beam_indicators()
+        self.current_destinations = {}
+        self._subscriptions = []
 
         self._align_items()
 
@@ -632,9 +473,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         )
 
         def assembly_moved(_):
-            # TODO
             self._update_all_lines()
-            # self.beams[source].update_lines()
 
         assembly.lens.helper.position_set.connect(assembly_moved)
 
@@ -727,16 +566,35 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         dest = distances[min(distances)]
         return dest
 
+    def cleanup(self):
+        """Clean up any subscriptions."""
+        for helper in self._subscriptions:
+            try:
+                helper.unsubscribe()
+            except Exception:
+                logger.exception("Failed to unsubscribe")
+
     def _update_all_lines(self):
         """Update all beam indicator lines as a shutter/valve was opened/closed."""
-        # TODO: not quite right just yet; we want destination info from
-        # the PLC not the widget location
-        for source, beam in self.beams.items():
-            assembly = self.assemblies[source]
-            beam.destination = self.get_closest_destination(
-                source, assembly.linear_position
+        device = self._device
+        if device is None:
+            return
+
+        for source_pos, beam in self.beams.items():
+            beam.destination = self.destinations.get(
+                self.current_destinations[source_pos], None
             )
             beam.update_lines()
+
+    def _destination_updated(self, source_pos: SourcePosition, info: Dict[str, Any]):
+        """Ophyd callback indicating a destination has updated."""
+        value = info.get("value", None)
+        try:
+            dest_pos = DestinationPosition.from_index(value)
+        except ValueError:
+            dest_pos = None
+
+        self.current_destinations[source_pos] = dest_pos
 
     @device.setter
     def device(self, device: Optional[BtpsStateDevice]) -> None:
@@ -753,6 +611,14 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
                 indicator.helper.channel_x = channel
 
             source_device: BtpsSourceStatus = getattr(device, source.name)
+
+            self.current_destinations[source] = None
+            cur_dest = helpers.OphydCallbackHelper(source_device.current_destination)
+            self._subscriptions.append(cur_dest)
+            cur_dest.updated.connect(
+                functools.partial(self._destination_updated, source)
+            )
+
             source = self.sources[source]
             source.shutter.device = source_device.lss
             source.shutter.channelsPrefix = util.channel_from_device(
@@ -933,8 +799,11 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
             self.source_to_assembly.isVisible() and
             dest.exit_valve.state.lower() == "open"
         )
-        exit_valve_rect = dest.exit_valve_proxy.sceneBoundingRect()
-        dest_y = exit_valve_rect.center().y()
+        # exit_valve_rect = dest.exit_valve_proxy.sceneBoundingRect()
+        if dest.ld_position.is_top:
+            dest_y = dest.sceneBoundingRect().bottom()
+        else:
+            dest_y = dest.sceneBoundingRect().top()
 
         self.assembly_to_destination.setLine(
             lens_center.x(),
@@ -1137,8 +1006,11 @@ class LensAssembly(PyDMPositionedGroup):
 
     base_width: ClassVar[float] = 50.0
     base_height: ClassVar[float] = 50.0
-    base_pen: ClassVar[QtGui.QColor] = QtGui.QColor("black")
-    base_brush: ClassVar[QtGui.QColor] = QtGui.QColor(217, 217, 217)
+    base_pen: ClassVar[QtGui.QColor] = QtGui.QPen(
+        QtGui.QColor("black"),
+        5.0
+    )
+    base_brush: ClassVar[QtGui.QColor] = QtGui.QColor("white")
 
     lens_width: ClassVar[float] = 8.0
     lens_height: ClassVar[float] = 50.0
@@ -1218,6 +1090,12 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
         self._device_prefix = ""
         self.device = None
+
+    def __dtor__(self):
+        try:
+            self.switch_box.cleanup()
+        except Exception:
+            logger.exception("Teardown error")
 
     def move_request(self, source: SourcePosition, dest: DestinationPosition):
         device = self.device
