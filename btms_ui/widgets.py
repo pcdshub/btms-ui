@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 from functools import partial
 from typing import ClassVar, Dict, List, Optional, Tuple
@@ -18,6 +19,8 @@ from btms_ui.util import channel_from_signal
 
 from .core import DesignerDisplay
 from .scene import BtmsStatusView
+
+logger = logging.getLogger(__name__)
 
 
 class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
@@ -234,6 +237,13 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
     conflicts_label: QtWidgets.QLabel
     conflicts_list_widget: QtWidgets.QListWidget
     resolution_list_widget: QtWidgets.QListWidget
+    apply_resolution_button: QtWidgets.QPushButton
+    move_button: QtWidgets.QPushButton
+    state: BtpsState
+    source: SourcePosition
+    dset: DestinationPosition
+
+    request_move = QtCore.Signal()
 
     def __init__(
         self,
@@ -248,15 +258,80 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         self.dest = dest
 
         self.conflicts_label.setText(
-            f"Conflicts detected moving {source.description} {source} to "
+            f"Issues detected moving {source.description} {source} to "
             f"{dest.description} {dest}:"
         )
-        self.conflicts = state.sources[source].check_move_all(dest)
-        for conflict in self.conflicts:
-            self.conflicts_list_widget.addItem(f"{conflict.__class__.__name__}: {conflict}")
-            self.resolution_list_widget.addItem(self.get_resolution_explanation(conflict))
+
+        self._update_checks()
+        self.apply_resolution_button.clicked.connect(self._resolve_all)
+        self.update_button.clicked.connect(self._update_checks)
+        self.move_button.clicked.connect(self._move)
+
+    def _move(self):
+        conflicts = "\n".join(
+            self.conflicts_list_widget.item(idx).text()
+            for idx in range(self.conflicts_list_widget.count())
+        )
+        if conflicts:
+            self._confirmation = QtWidgets.QMessageBox()
+            self._confirmation.setWindowTitle("Move request")
+            self._confirmation.setText(
+                f"Issues remain for {self.source}: ignore and move?"
+            )
+            self._confirmation.setInformativeText(conflicts)
+            self._confirmation.setStandardButtons(
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+            )
+            self._confirmation.setDefaultButton(
+                QtWidgets.QMessageBox.No
+            )
+            should_move = self._confirmation.exec_()
+            if should_move != QtWidgets.QMessageBox.Yes:
+                return
+
+        self.request_move.emit()
+        self.close()
+
+    def _update_checks(self):
+        """Update the issue list."""
+        self.issues = self.state.sources[self.source].check_move_all(self.dest)
+        self.conflicts_list_widget.clear()
+        self.resolution_list_widget.clear()
+        for issue in self.issues:
+            self.conflicts_list_widget.addItem(f"{issue.__class__.__name__}: {issue}")
+            self.resolution_list_widget.addItem(self.get_resolution_explanation(issue))
+
+    def _resolve_all(self):
+        """Attempt to resolve all issues."""
+        for issue in self.issues:
+            self.fix_issue(issue)
+
+    def fix_issue(self, conflict: Exception) -> None:
+        """Try to fix the issue in ``conflict`` automatically."""
+        if isinstance(conflict, btms_config.MovingActiveSource):
+            logger.warning("Closing shutter for %s", self.source)
+            self.state.sources[self.source].open_request.set(0)
+        elif isinstance(conflict, btms_config.PathCrossedError):
+            logger.warning("Closing shutter for %s", conflict.crosses_source)
+            self.state.sources[conflict.crosses_source].open_request.set(0)
+        elif isinstance(conflict, btms_config.DestinationInUseError):
+            # Any idea?
+            ...
 
     def get_resolution_explanation(self, conflict: Exception) -> str:
+        """
+        Get an explanation about a resolution for the provided issue.
+
+        Parameters
+        ----------
+        conflict : Exception
+            The exception.
+
+        Returns
+        -------
+        str
+            An explanation.
+        """
         if isinstance(conflict, btms_config.MovingActiveSource):
             return f"Close shutter for {self.source}"
 
@@ -432,7 +507,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.motor_frame.setVisible(show)
         self.updateGeometry()
 
-    def move_request(self, target: DestinationPosition):
+    def _perform_move(
+        self, target: DestinationPosition
+    ) -> Optional[QCombinedMoveStatus]:
         """
         Request move of this source to the ``target`` DestinationPosition.
         """
@@ -449,23 +526,47 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self.motion_progress_widget.setValue(0)
 
-        failures = device.check_move_all(target)
-        if failures:
+        status = device.set_with_movestatus(target, check=False)
+        self._move_status = QCombinedMoveStatus(status)
+        self._move_status.percents_changed.connect(update)
+        self._move_status.finished_moving.connect(finished_moving)
+        self.motion_progress_widget.setVisible(
+            not any(st.done for st in self._move_status.move_statuses)
+        )
+        return self._move_status
+
+    def move_request(self, target: DestinationPosition) -> Optional[QCombinedMoveStatus]:
+        """
+        Request move of this source to the ``target`` DestinationPosition.
+        """
+        device = self.device
+
+        if device is None:
+            return
+
+        def finished_moving():
+            self.motion_progress_widget.setVisible(False)
+
+        def update(overall_percent: float, individual_percents: List[float]):
+            self.motion_progress_widget.setValue(int(overall_percent * 100.0))
+
+        self.motion_progress_widget.setValue(0)
+
+        issues = device.check_move_all(target)
+        if issues:
             self._conflict = BtmsMoveConflictWidget(
                 parent=None,
                 source=self.source_position,
                 dest=target,
                 state=device.parent,
             )
+            self._conflict.request_move.connect(
+                partial(self._perform_move, target)
+            )
             self._conflict.show()
             return
 
-        self._move_status = QCombinedMoveStatus(device.set_with_movestatus(target))
-        self._move_status.percents_changed.connect(update)
-        self._move_status.finished_moving.connect(finished_moving)
-        self.motion_progress_widget.setVisible(
-            not any(st.done for st in self._move_status.move_statuses)
-        )
+        return self._perform_move(target)
 
     @QtCore.Property(str)
     def prefix(self) -> str:
@@ -546,7 +647,6 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     ls1_widget: BtmsSourceOverviewWidget
     ls5_widget: BtmsSourceOverviewWidget
     ls8_widget: BtmsSourceOverviewWidget
-    # open_btps_config_button: QtWidgets.QPushButton
     open_btps_overview_button: QtWidgets.QPushButton
     _btps_overview: Optional[QtWidgets.QWidget]
 

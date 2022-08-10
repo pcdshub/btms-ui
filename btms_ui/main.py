@@ -67,9 +67,13 @@ def main(prefix: str = "", stylesheet: Optional[str] = None):
     except Exception:
         logger.exception("Failed to load stylesheet; things may look odd...")
 
-    widget = BtmsMain()
-    widget.prefix = prefix
-    widget.show()
+    try:
+        widget = BtmsMain()
+        widget.prefix = prefix
+        widget.show()
+    except Exception:
+        logger.exception("Failed to load BtmsMain user interface")
+        raise
     app.exec_()
 
 
