@@ -910,6 +910,14 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         except Exception:
             logger.exception("Teardown error")
 
+    def resizeEvent(self, event: QtGui.QResizeEvent):
+        try:
+            self.fitInView(self.scene().sceneRect(), QtCore.Qt.KeepAspectRatio)
+            self.recenter()
+        except Exception:
+            logger.exception("Failed to resize view")
+        return super().resizeEvent(event)
+
     def move_request(self, source: SourcePosition, dest: DestinationPosition):
         device = self.device
         if device is None:
