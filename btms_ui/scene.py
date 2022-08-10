@@ -4,7 +4,7 @@ import functools
 import logging
 import math
 import pathlib
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple
 
 import pcdsdevices.lasers.btms_config as config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
@@ -15,7 +15,7 @@ from pcdsdevices.lasers.btps import (DestinationConfig,
 from qtpy import QtCore, QtGui, QtWidgets
 
 from . import config as btms_config
-from . import helpers, util
+from . import helpers, primitives, util
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
 logger = logging.getLogger(__name__)
@@ -49,195 +49,6 @@ def get_right_center(rect: QtCore.QRectF) -> QtCore.QPointF:
     QtCore.QPointF
     """
     return QtCore.QPointF(rect.right(), rect.center().y())
-
-
-def center_transform_origin(obj: QtWidgets.QGraphicsItem):
-    """Put the object's transform origin at its center position."""
-    obj.setTransformOriginPoint(obj.rect().center())
-
-
-def center_transform_top_left(obj: Union[QtWidgets.QGraphicsItem, QtWidgets.QGraphicsItemGroup]):
-    """Put the object's transform origin at its top-left position."""
-    if isinstance(obj, QtWidgets.QGraphicsItemGroup):
-        rect = obj.boundingRect()
-    else:
-        rect = obj.rect()
-
-    obj.setTransformOriginPoint(rect.topLeft())
-
-
-def create_scene_rectangle_topleft(
-    left: float,
-    top: float,
-    width: float,
-    height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-    zvalue: Optional[int] = None,
-) -> QtWidgets.QGraphicsRectItem:
-    """
-    Create a QGraphicsRectItem for a QGraphicsScene.
-
-    The transform origin of the rectangle will be set to its top left.
-
-    Parameters
-    ----------
-    left : float
-        The left X position.
-    top : float
-        The top Y position.
-    width : float
-        The width.
-    height : float
-        The height.
-    pen : QColor or QPen, optional
-        The pen to draw the rectangle with.
-    brush : QColor or QBrush, optional
-        The brush to draw the rectangle with.
-    zvalue : int, optional
-        The z index for the rectangle.
-
-    Returns
-    -------
-    QtWidgets.QGraphicsRectItem
-        The created rectangle.
-    """
-    item = QtWidgets.QGraphicsRectItem(
-        QtCore.QRectF(left, top, width, height)
-    )
-    center_transform_origin(item)
-    if pen is not None:
-        item.setPen(pen)
-    if brush is not None:
-        item.setBrush(brush)
-    if zvalue is not None:
-        item.setZValue(zvalue)
-    return item
-
-
-def create_scene_rectangle(
-    cx: float,
-    cy: float,
-    width: float,
-    height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-    zvalue: Optional[int] = None,
-) -> QtWidgets.QGraphicsRectItem:
-    """
-    Create a QGraphicsRectItem for a QGraphicsScene.
-
-    The transform origin of the rectangle will be set to its center.
-
-    Parameters
-    ----------
-    cx : float
-        The center X position.
-    cy : float
-        The center Y position.
-    width : float
-        The width.
-    height : float
-        The height.
-    pen : QColor or QPen, optional
-        The pen to draw the rectangle with.
-    brush : QColor or QBrush, optional
-        The brush to draw the rectangle with.
-    zvalue : int, optional
-        The z index for the rectangle.
-
-    Returns
-    -------
-    QtWidgets.QGraphicsRectItem
-        The created rectangle.
-    """
-    item = QtWidgets.QGraphicsRectItem(
-        QtCore.QRectF(cx - width / 2.0, cy - height / 2.0, width, height)
-    )
-    center_transform_origin(item)
-    if pen is not None:
-        item.setPen(pen)
-    if brush is not None:
-        item.setBrush(brush)
-    if zvalue is not None:
-        item.setZValue(zvalue)
-    return item
-
-
-def create_scene_polygon(
-    polygon: QtGui.QPolygonF,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-) -> QtWidgets.QGraphicsPolygonItem:
-    """
-    Create a QGraphicsPolygonItem in the provided shape for a QGraphicsScene.
-
-    The transform origin of the polygon will be set to its center.
-
-    Parameters
-    ----------
-    polygon : QPolygonF
-        The polygon shape.
-    pen : QColor or QPen, optional
-        The pen to draw the rectangle with.
-    brush : QColor or QBrush, optional
-        The brush to draw the rectangle with.
-
-    Returns
-    -------
-    QtWidgets.QGraphicsPolygonItem
-        The created polygon.
-    """
-    item = QtWidgets.QGraphicsPolygonItem(polygon)
-    item.setTransformOriginPoint(QtCore.QPointF(0.0, 0.0))
-    if pen is not None:
-        item.setPen(pen)
-    if brush is not None:
-        item.setBrush(brush)
-    return item
-
-
-def create_scene_cross(
-    width: float,
-    height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-) -> QtWidgets.QGraphicsPolygonItem:
-    """
-    Create a QGraphicsPolygonItem in the shape of a cross for a QGraphicsScene.
-
-    The transform origin of the cross will be set to its center.
-
-    Parameters
-    ----------
-    width : float
-        The width.
-    height : float
-        The height.
-    pen : QColor or QPen, optional
-        The pen to draw the rectangle with.
-    brush : QColor or QBrush, optional
-        The brush to draw the rectangle with.
-
-    Returns
-    -------
-    QtWidgets.QGraphicsPolygonItem
-        The created polygon (cross).
-    """
-    return create_scene_polygon(
-        QtGui.QPolygonF(
-            [
-                QtCore.QPointF(0.0, 0.0),
-                QtCore.QPointF(-width / 2.0, 0.0),
-                QtCore.QPointF(width / 2.0, 0.0),
-                QtCore.QPointF(0.0, 0.0),
-                QtCore.QPointF(0.0, -height / 2.0),
-                QtCore.QPointF(0.0, height / 2.0),
-            ]
-        ),
-        brush=brush,
-        pen=pen,
-    )
 
 
 def align_vertically(
@@ -378,7 +189,9 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         self.dest = dest
         super().__init__(channel_x=channel_x, channel_y=channel_y)
         self.addToGroup(
-            create_scene_cross(width=50, height=50, pen=self.pen, brush=self.brush)
+            primitives.create_scene_cross(
+                width=50, height=50, pen=self.pen, brush=self.brush
+            )
         )
 
     def get_offset_position(self, x: float, y: float):
@@ -846,7 +659,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.entry_valve_proxy = QtWidgets.QGraphicsProxyWidget()
         self.entry_valve_proxy.setWidget(self.entry_valve)
         self.addToGroup(self.entry_valve_proxy)
-        center_transform_origin(self.entry_valve_proxy)
+        primitives.center_transform_origin(self.entry_valve_proxy)
 
         self.shutter = LaserShutter()
         self.shutter.controlsLocation = self.shutter.ContentLocation.Hidden
@@ -855,7 +668,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
         self.shutter_proxy = QtWidgets.QGraphicsProxyWidget()
         self.shutter_proxy.setWidget(self.shutter)
         self.addToGroup(self.shutter_proxy)
-        center_transform_origin(self.shutter_proxy)
+        primitives.center_transform_origin(self.shutter_proxy)
 
         self.name_label = QtWidgets.QLabel(
             f"{self.ls_position}:\n{self.ls_position.description}"
@@ -914,7 +727,7 @@ class Destination(QtWidgets.QGraphicsItemGroup):
         self.exit_valve_proxy = QtWidgets.QGraphicsProxyWidget()
         self.exit_valve_proxy.setWidget(self.exit_valve)
         self.addToGroup(self.exit_valve_proxy)
-        center_transform_origin(self.exit_valve_proxy)
+        primitives.center_transform_origin(self.exit_valve_proxy)
 
         self.exit_valve_proxy.setRotation(90.)
 
@@ -963,7 +776,7 @@ class MotorizedMirrorAssembly(QtWidgets.QGraphicsItemGroup):
 
         self.ls_position = ls_position
 
-        self.base = create_scene_rectangle_topleft(
+        self.base = primitives.create_scene_rectangle_topleft(
             left=0,
             top=-self.base_height / 2.0,
             width=self.base_width,
@@ -1023,7 +836,7 @@ class LensAssembly(PyDMPositionedGroup):
     def __init__(self):
         super().__init__()
 
-        self.base = create_scene_rectangle(
+        self.base = primitives.create_scene_rectangle(
             cx=0.0,
             cy=0.0,
             width=self.base_width,
@@ -1036,7 +849,7 @@ class LensAssembly(PyDMPositionedGroup):
 
         self.lens = PyDMRotatedGroup()
         self.lens.addToGroup(
-            create_scene_rectangle(
+            primitives.create_scene_rectangle(
                 cx=base_center.x(),
                 cy=base_center.y(),
                 width=self.lens_width,
