@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from functools import partial
 from typing import ClassVar, Dict, List, Optional, Tuple
 
@@ -17,6 +18,7 @@ from typhos.suite import TyphosSuite
 
 from btms_ui.util import channel_from_signal
 
+from . import util
 from .core import DesignerDisplay
 from .scene import BtmsStatusView
 
@@ -301,10 +303,17 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
             self.conflicts_list_widget.addItem(f"{issue.__class__.__name__}: {issue}")
             self.resolution_list_widget.addItem(self.get_resolution_explanation(issue))
 
-    def _resolve_all(self):
+    def _resolve_all_thread(self):
         """Attempt to resolve all issues."""
         for issue in self.issues:
             self.fix_issue(issue)
+        time.sleep(1.0)
+        util.run_in_gui_thread(self._update_checks)
+
+    def _resolve_all(self):
+        """Attempt to resolve all issues."""
+        self._thread = threading.Thread(target=self._resolve_all_thread, daemon=True)
+        self._thread.start()
 
     def fix_issue(self, conflict: Exception) -> None:
         """Try to fix the issue in ``conflict`` automatically."""
