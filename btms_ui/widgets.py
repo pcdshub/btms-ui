@@ -486,6 +486,21 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     target_dest_widget: BtmsLaserDestinationChoice
     valid_widget: BtmsSourceValidWidget
 
+    far_field_desc_label: QtWidgets.QLabel
+    far_x_label: pydm_widgets.label.PyDMLabel
+    far_y_label: pydm_widgets.label.PyDMLabel
+    goniometer_desc_label: QtWidgets.QLabel
+    goniometer_label: pydm_widgets.PyDMLabel
+    linear_desc_label: QtWidgets.QLabel
+    linear_label: pydm_widgets.PyDMLabel
+    near_field_label: QtWidgets.QLabel
+    near_x_label: pydm_widgets.PyDMLabel
+    near_y_label: pydm_widgets.PyDMLabel
+    overview_frame: QtWidgets.QFrame
+    overview_layout: QtWidgets.QGridLayout
+    rotary_desc_label: QtWidgets.QLabel
+    rotary_label: pydm_widgets.label.PyDMLabel
+
     new_destination: QtCore.Signal = QtCore.Signal(object)
 
     def __init__(
@@ -626,6 +641,13 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.rotary_widget.add_device(device.rotary)
         self.linear_widget.add_device(device.linear)
         self.goniometer_widget.add_device(device.goniometer)
+        self.linear_label.channel = channel_from_signal(device.linear.user_readback)
+        self.rotary_label.channel = channel_from_signal(device.rotary.user_readback)
+        self.goniometer_label.channel = channel_from_signal(device.goniometer.user_readback)
+        self.near_x_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidX_RBV"
+        self.near_y_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidY_RBV"
+        self.far_x_label.channel = f"ca://{device.source_pos.far_field_camera_prefix}Stats2:CentroidX_RBV"
+        self.far_y_label.channel = f"ca://{device.source_pos.far_field_camera_prefix}Stats2:CentroidY_RBV"
 
 
 class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):

@@ -20,7 +20,7 @@
    <string>Laser Beam Transport Motion System (BTMS) Overview</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
+   <item row="0" column="1" alignment="Qt::AlignLeft">
     <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
@@ -33,7 +33,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
+   <item row="1" column="1" alignment="Qt::AlignLeft">
     <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
@@ -46,20 +46,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="source_index" stdset="0">
-      <number>8</number>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QFrame" name="button_frame">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -68,25 +55,12 @@
       </sizepolicy>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
+      <item alignment="Qt::AlignLeft">
        <widget class="QPushButton" name="open_btps_overview_button">
         <property name="text">
          <string>BTPS overview...</string>
         </property>
        </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>
@@ -98,6 +72,19 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" alignment="Qt::AlignLeft">
+    <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="source_index" stdset="0">
+      <number>8</number>
      </property>
     </widget>
    </item>
