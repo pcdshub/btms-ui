@@ -481,7 +481,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     motor_frame: QtWidgets.QFrame
     motion_progress_widget: QtWidgets.QProgressBar
     rotary_widget: TyphosPositionerWidget
-    show_motors_button: QtWidgets.QPushButton
+    toggle_control_button: QtWidgets.QPushButton
+    show_cameras_button: QtWidgets.QPushButton
     source: Optional[BtpsSourceStatus]
     source_name_label: QtWidgets.QLabel
     target_dest_widget: BtmsLaserDestinationChoice
@@ -525,8 +526,23 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.current_dest_label.new_destination.connect(self.new_destination.emit)
         self.current_dest_label.new_destination.connect(self.valid_widget.set_destination)
 
-        self.show_motors_button.clicked.connect(self.show_motors)
+        self.show_cameras_button.clicked.connect(self.show_cameras)
+        self.toggle_control_button.clicked.connect(self.show_motors)
+        self._camera_process = None
         self.show_motors(False)
+
+    def show_cameras(self):
+        if self.device is None:
+            return
+
+        bay = self.device.source_pos.bay
+        if bay is None:
+            return
+
+        self._camera_process = util.open_typhos_in_subprocess(
+            f"las_lhn_bay{bay}_cam_nf",
+            f"las_lhn_bay{bay}_cam_ff",
+        )
 
     def show_motors(self, show: bool):
         for motor in [self.linear_widget, self.rotary_widget, self.goniometer_widget]:

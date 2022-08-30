@@ -1,5 +1,7 @@
 import functools
 import pathlib
+import subprocess
+import sys
 from typing import Callable
 
 import ophyd
@@ -22,3 +24,9 @@ def channel_from_device(device: ophyd.Device) -> str:
 def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
     """PyDM-compatible PV name URIs from a given EpicsSignal."""
     return f"ca://{signal.pvname}"
+
+
+def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
+    return subprocess.Popen(
+        args=[sys.executable, "-m", "typhos", *devices],
+    )
