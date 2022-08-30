@@ -180,6 +180,7 @@ class BtmsStateDetails(QtWidgets.QFrame):
         self.state = state
         self.source = source
         self.dest = dest
+        self.setMinimumSize(800, 400)
 
     def _setup_ui(self) -> None:
         layout = QtWidgets.QVBoxLayout()
@@ -528,8 +529,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.show_motors(False)
 
     def show_motors(self, show: bool):
-        self.motor_frame.setVisible(show)
-        self.updateGeometry()
+        for motor in [self.linear_widget, self.rotary_widget, self.goniometer_widget]:
+            motor.setVisible(show)
 
     def _perform_move(
         self, target: DestinationPosition
