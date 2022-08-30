@@ -62,6 +62,62 @@
      </property>
     </widget>
    </item>
+   <item row="2" column="0">
+    <widget class="QFrame" name="button_frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="show_cameras_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Open camera screens in a separate process</string>
+        </property>
+        <property name="text">
+         <string>Cameras...</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="toggle_control_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Motion</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item row="0" column="0" colspan="4">
     <widget class="Line" name="line">
      <property name="orientation">
@@ -151,7 +207,7 @@
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -185,13 +241,13 @@
          <number>0</number>
         </property>
         <property name="showUnits" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="precisionFromPV" stdset="0">
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -320,13 +376,13 @@
          <number>0</number>
         </property>
         <property name="showUnits" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="precisionFromPV" stdset="0">
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -404,7 +460,7 @@
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -441,7 +497,7 @@
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -475,13 +531,13 @@
          <number>0</number>
         </property>
         <property name="showUnits" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="precisionFromPV" stdset="0">
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
@@ -518,69 +574,13 @@
          <bool>true</bool>
         </property>
         <property name="alarmSensitiveContent" stdset="0">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="alarmSensitiveBorder" stdset="0">
          <bool>true</bool>
         </property>
         <property name="channel" stdset="0">
          <string/>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QFrame" name="button_frame">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="show_cameras_button">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string>Open camera screens in a separate process</string>
-        </property>
-        <property name="text">
-         <string>Cameras...</string>
-        </property>
-        <property name="checkable">
-         <bool>false</bool>
-        </property>
-        <property name="autoExclusive">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="toggle_control_button">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Motion</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
