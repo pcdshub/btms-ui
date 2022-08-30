@@ -22,6 +22,12 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="1">
     <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="source_index" stdset="0">
       <number>1</number>
      </property>
@@ -29,6 +35,12 @@
    </item>
    <item row="1" column="1">
     <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="source_index" stdset="0">
       <number>5</number>
      </property>
@@ -36,6 +48,12 @@
    </item>
    <item row="2" column="1">
     <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="source_index" stdset="0">
       <number>8</number>
      </property>

@@ -889,6 +889,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
     ):
         if scene is None:
             scene = QtWidgets.QGraphicsScene()
+
         super().__init__(scene, parent=parent)
 
         self.setMinimumSize(750, 500)
