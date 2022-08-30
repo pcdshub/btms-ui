@@ -2,9 +2,10 @@ import functools
 import pathlib
 import subprocess
 import sys
-from typing import Callable
+from typing import Callable, List
 
 import ophyd
+from pcdsdevices.lasers import btms_config
 from qtpy import QtCore
 
 #: The source path of the btms-ui package.
@@ -30,3 +31,27 @@ def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
     return subprocess.Popen(
         args=[sys.executable, "-m", "typhos", *devices],
     )
+
+
+def prune_expert_issues(issues: List[btms_config.MoveError]) -> List[btms_config.MoveError]:
+    """
+    Remove issues that experts can safely ignore.
+
+    Parameters
+    ----------
+    issues : List[MoveError]
+        The list of issues to be resolved prior to moving.
+
+    Returns
+    -------
+    List[MoveError]
+        A pruned list of issues.
+    """
+    return [
+        issue
+        for issue in issues
+        if not isinstance(
+            issue,
+            (btms_config.PositionInvalidError, btms_config.MaintenanceModeActiveError)
+        )
+    ]

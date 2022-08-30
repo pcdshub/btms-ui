@@ -303,6 +303,12 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         for issue in self.issues:
             self.conflicts_list_widget.addItem(f"{issue.__class__.__name__}: {issue}")
             self.resolution_list_widget.addItem(self.get_resolution_explanation(issue))
+        self.apply_resolution_button.setEnabled(
+            any(
+                self.can_fix_issue(issue)
+                for issue in self.issues
+            )
+        )
 
     def _resolve_all_thread(self):
         """Attempt to resolve all issues."""
@@ -315,6 +321,15 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         """Attempt to resolve all issues."""
         self._thread = threading.Thread(target=self._resolve_all_thread, daemon=True)
         self._thread.start()
+
+    def can_fix_issue(self, conflict: Exception) -> bool:
+        """Are we able to fix the issue in ``conflict`` automatically?"""
+        if isinstance(conflict, btms_config.MovingActiveSource):
+            return True
+        if isinstance(conflict, btms_config.PathCrossedError):
+            return True
+
+        return False
 
     def fix_issue(self, conflict: Exception) -> None:
         """Try to fix the issue in ``conflict`` automatically."""
@@ -347,6 +362,12 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
         if isinstance(conflict, btms_config.DestinationInUseError):
             return "Destination already in use: cannot automatically resolve"
+
+        if isinstance(conflict, btms_config.PositionInvalidError):
+            return f"{conflict.source} is not at a recognized position: cannot proceed safely"
+
+        if isinstance(conflict, btms_config.MaintenanceModeActiveError):
+            return "Maintenance mode active.  Expert mode required to move."
 
         if isinstance(conflict, btms_config.PathCrossedError):
             return f"Close shutter for active crossed source: {conflict.crosses_source}"
@@ -510,6 +531,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         parent: Optional[QtWidgets.QWidget],
         prefix: str = "",
         source_index: int = 1,
+        expert_mode: bool = True,
         **kwargs
     ):
         super().__init__(parent, **kwargs)
@@ -529,7 +551,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.show_cameras_button.clicked.connect(self.show_cameras)
         self.toggle_control_button.clicked.connect(self.show_motors)
         self._camera_process = None
-        self.show_motors(False)
+        self._expert_mode = None
+        self.expert_mode = expert_mode
 
     def show_cameras(self):
         if self.device is None:
@@ -612,6 +635,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.motion_progress_widget.setValue(0)
 
         issues = device.check_move_all(target)
+
+        if self.expert_mode:
+            issues = util.prune_expert_issues(issues)
+
         if issues:
             self._conflict = BtmsMoveConflictWidget(
                 parent=None,
@@ -626,6 +653,21 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             return
 
         return self._perform_move(target)
+
+    @QtCore.Property(bool)
+    def expert_mode(self) -> bool:
+        """The expert mode setting."""
+        return self._expert_mode
+
+    @expert_mode.setter
+    def expert_mode(self, expert_mode: bool):
+        if expert_mode == self._expert_mode:
+            return
+
+        self._expert_mode = bool(expert_mode)
+        self.toggle_control_button.setVisible(self._expert_mode)
+        if not self._expert_mode:
+            self.show_motors(False)
 
     @QtCore.Property(str)
     def prefix(self) -> str:
@@ -734,8 +776,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     def _set_expert_mode(self, expert_mode: bool):
         """Toggle expert mode widgets."""
         for source_widget in self.source_widgets:
-            source_widget.toggle_control_button.setVisible(expert_mode)
-            source_widget.show_motors(False)
+            source_widget.expert_mode = expert_mode
 
     @property
     def device(self) -> Optional[BtpsState]:
