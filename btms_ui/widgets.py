@@ -539,6 +539,24 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         if bay is None:
             return
 
+        if self._camera_process is not None:
+            if self._camera_process.returncode is None:
+                self._confirmation = QtWidgets.QMessageBox()
+                self._confirmation.setWindowTitle("Camera screens open")
+                self._confirmation.setText(
+                    f"Camera screens for {self.source_position} are already running. "
+                    f"Open a new set of screens?"
+                )
+                self._confirmation.setInformativeText(f"PID: {self._camera_process.pid}")
+                self._confirmation.setStandardButtons(
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+                )
+                self._confirmation.setDefaultButton(
+                    QtWidgets.QMessageBox.No
+                )
+                if self._confirmation.exec_() != QtWidgets.QMessageBox.Yes:
+                    return
+
         self._camera_process = util.open_typhos_in_subprocess(
             f"las_lhn_bay{bay}_cam_nf",
             f"las_lhn_bay{bay}_cam_ff",
@@ -696,9 +714,11 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     ls5_widget: BtmsSourceOverviewWidget
     ls8_widget: BtmsSourceOverviewWidget
     open_btps_overview_button: QtWidgets.QPushButton
+    expert_mode_checkbox: QtWidgets.QCheckBox
+    source_widgets: List[BtmsSourceOverviewWidget]
     _btps_overview: Optional[QtWidgets.QWidget]
 
-    def __init__(self, *args, prefix: str = "", **kwargs):
+    def __init__(self, *args, prefix: str = "", expert_mode: bool = False, **kwargs):
         self._prefix = prefix
         super().__init__(*args, **kwargs)
         self.source_widgets = [
@@ -708,6 +728,14 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
         ]
         self.open_btps_overview_button.clicked.connect(self.open_btps_overview)
         self._btps_overview = None
+        self.expert_mode_checkbox.clicked.connect(self._set_expert_mode)
+        self._set_expert_mode(expert_mode)
+
+    def _set_expert_mode(self, expert_mode: bool):
+        """Toggle expert mode widgets."""
+        for source_widget in self.source_widgets:
+            source_widget.toggle_control_button.setVisible(expert_mode)
+            source_widget.show_motors(False)
 
     @property
     def device(self) -> Optional[BtpsState]:

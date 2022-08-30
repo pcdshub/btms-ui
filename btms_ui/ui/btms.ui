@@ -50,12 +50,36 @@
    <item>
     <widget class="QFrame" name="sourceoverview_frame">
      <layout class="QVBoxLayout" name="verticalLayout">
-      <item alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="open_btps_overview_button">
-        <property name="text">
-         <string>BTPS overview...</string>
-        </property>
-       </widget>
+      <item>
+       <layout class="QHBoxLayout" name="button_layout">
+        <item>
+         <widget class="QPushButton" name="open_btps_overview_button">
+          <property name="text">
+           <string>BTPS overview...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="button_spacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="expert_mode_checkbox">
+          <property name="text">
+           <string>Expert mode</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
@@ -115,7 +139,7 @@
        </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer">
+       <spacer name="source_v_spacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
