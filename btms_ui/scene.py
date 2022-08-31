@@ -171,7 +171,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
-    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 10.0)
+    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 3.0)
     brush: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     source: SourcePosition
     dest: DestinationPosition
@@ -188,11 +188,14 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         self.source = source
         self.dest = dest
         super().__init__(channel_x=channel_x, channel_y=channel_y)
-        self.addToGroup(
-            primitives.create_scene_cross(
-                width=50, height=50, pen=self.pen, brush=self.brush
-            )
+        arrow = primitives.create_scene_arrow(
+            width=50,
+            height=50,
+            direction=(primitives.ArrowDirection.up if dest.is_top else primitives.ArrowDirection.down),
+            pen=self.pen,
+            brush=self.brush,
         )
+        self.addToGroup(arrow)
 
     def get_offset_position(self, x: float, y: float):
         """Optionally add a position offset."""

@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import Optional, Union
 
 from qtpy import QtCore, QtGui, QtWidgets
+
+
+class ArrowDirection(str, Enum):
+    up = "up"
+    down = "down"
+    left = "left"
+    right = "right"
 
 
 def center_transform_origin(obj: QtWidgets.QGraphicsItem):
@@ -192,3 +200,62 @@ def create_scene_cross(
         brush=brush,
         pen=pen,
     )
+
+
+def create_scene_arrow(
+    width: float,
+    height: float,
+    direction: ArrowDirection,
+    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
+    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    head_percent: float = 0.5,
+) -> QtWidgets.QGraphicsPolygonItem:
+    """
+    Create a QGraphicsPolygonItem in the shape of an arrow for a QGraphicsScene.
+
+    The transform origin of the shape will be set to its center.
+
+    Parameters
+    ----------
+    width : float
+        The width.
+    height : float
+        The height.
+    direction : ArrowDirection
+        Direction of the arrow.
+    pen : QColor or QPen, optional
+        The pen to draw the rectangle with.
+    brush : QColor or QBrush, optional
+        The brush to draw the rectangle with.
+    head_percent : float, optional
+        Normalized factor to be applied to the height to determine where the
+        head of the arrow should be drawn.
+
+    Returns
+    -------
+    QtWidgets.QGraphicsPolygonItem
+        The created polygon (arrow).
+    """
+    half_width = width / 2.0
+    half_height = height / 2.0
+    polygon = create_scene_polygon(
+        QtGui.QPolygonF(
+            [
+                QtCore.QPointF(0.0, -half_height),
+                QtCore.QPointF(0.0, half_height),
+                QtCore.QPointF(-half_width, head_percent * half_height),
+                QtCore.QPointF(0.0, half_height),
+                QtCore.QPointF(half_width, head_percent * half_height),
+                QtCore.QPointF(0.0, half_height),
+            ]
+        ),
+        brush=brush,
+        pen=pen,
+    )
+    if direction == ArrowDirection.up:
+        polygon.setRotation(180)
+    # elif direction == ArrowDirection.left:
+    #     polygon.setRotation(90)
+    # elif direction == ArrowDirection.right:
+    #     polygon.setRotation(270)
+    return polygon
