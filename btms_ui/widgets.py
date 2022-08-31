@@ -227,7 +227,7 @@ class BtmsStateDetails(QtWidgets.QFrame):
             self.setWindowTitle("Motion conflict checks")
             return
 
-        self.setWindowTitle(f"Checks for {source} -> {dest}")
+        self.setWindowTitle(f"Checks for {source.name_and_desc} -> {dest.name_and_desc}")
 
         config = state.destinations[dest].sources[source]
         summary = config.summarize_checks()
@@ -438,6 +438,19 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         for indicator in getattr(checks_ok, "_indicators", []):
             checks_ok.setToolTip(f"Green if all checks are OK ({dest})")
 
+        dest_conf = state.destinations[dest]
+
+        yield_status = pydm_widgets.PyDMByteIndicator(
+            init_channel=channel_from_signal(dest_conf.yields_control)
+        )
+        yield_status.setObjectName("yield_status_indicator")
+        yield_label = QtWidgets.QLabel("Yielded")
+
+        for widget in [yield_label, yield_status, *getattr(yield_status, "_indicators", [])]:
+            widget.setToolTip(
+                "Green if current destination hutch yielded control to others"
+            )
+
         checks_button = QtWidgets.QToolButton()
         checks_button.setText("?")
         checks_button.setToolTip("Open details about checks...")
@@ -449,6 +462,9 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
             data_label,
             checks_ok,
             checks_label,
+            yield_status,
+            yield_label,
+            # Keep the checks button last:
             checks_button,
         ]
         for widget in widgets:

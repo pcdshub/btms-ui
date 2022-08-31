@@ -589,8 +589,14 @@
    </item>
    <item row="1" column="0" colspan="2">
     <layout class="QHBoxLayout" name="source_and_validity_layout">
-     <item>
+     <item alignment="Qt::AlignLeft">
       <widget class="BtmsSourceValidWidget" name="valid_widget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
        </property>
