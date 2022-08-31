@@ -302,13 +302,12 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         self.resolution_list_widget.clear()
         for issue in self.issues:
             self.conflicts_list_widget.addItem(f"{issue.__class__.__name__}: {issue}")
-            self.resolution_list_widget.addItem(self.get_resolution_explanation(issue))
-        self.apply_resolution_button.setEnabled(
-            any(
-                self.can_fix_issue(issue)
-                for issue in self.issues
-            )
-        )
+            resolution = self.get_resolution_explanation(issue)
+            if resolution is not None:
+                self.resolution_list_widget.addItem(resolution)
+
+        can_fix = any(self.can_fix_issue(issue) for issue in self.issues)
+        self.apply_resolution_button.setEnabled(can_fix)
 
     def _resolve_all_thread(self):
         """Attempt to resolve all issues."""
@@ -343,7 +342,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
             # Any idea?
             ...
 
-    def get_resolution_explanation(self, conflict: Exception) -> str:
+    def get_resolution_explanation(self, conflict: Exception) -> Optional[str]:
         """
         Get an explanation about a resolution for the provided issue.
 
@@ -354,28 +353,16 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
         Returns
         -------
-        str
-            An explanation.
+        str or None
+            An explanation of the resolution, if supported.
         """
         if isinstance(conflict, btms_config.MovingActiveSource):
             return f"Close shutter for {self.source}"
 
-        if isinstance(conflict, btms_config.DestinationInUseError):
-            return "Destination already in use: cannot automatically resolve"
-
-        if isinstance(conflict, btms_config.PositionInvalidError):
-            return f"{conflict.source} is not at a recognized position: cannot proceed safely"
-
-        if isinstance(conflict, btms_config.MaintenanceModeActiveError):
-            return "Maintenance mode active.  Expert mode required to move."
-
         if isinstance(conflict, btms_config.PathCrossedError):
             return f"Close shutter for active crossed source: {conflict.crosses_source}"
 
-        return (
-            f"Unknown issue, cannot automatically resolve: "
-            f"{conflict.__class__.__name__} {conflict}"
-        )
+        return None
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
