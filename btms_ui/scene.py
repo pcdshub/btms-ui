@@ -981,9 +981,6 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
         """
         Create the BTPS State device given its prefix.
         """
-        device = BtpsStateDevice(
-            prefix,
-            name="las_btps"
-        )
+        device = util.get_btps_device(prefix)
         self.switch_box.device = device
         return device

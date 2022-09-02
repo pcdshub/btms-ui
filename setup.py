@@ -51,10 +51,12 @@ setup(
     description='Beam Transport System Motion User Interface',
     long_description=readme,
     long_description_content_type="text/x-rst",
-    url='https://github.com/pcdshub/btms_ui',  # noqa
+    url='https://github.com/pcdshub/btms-ui',
     entry_points={
         "console_scripts": [
-            "btms-ui=btms_ui.bin.main:main",
+            "btms-ui-overview=btms_ui.bin.main:overview_screen",
+            "btms-ui-btps=btms_ui.bin.main:btps_screen",
+            "btms-ui-hutch=btms_ui.bin.main:hutch_screen",
         ],
         "pydm.widget": [
             "BtmsStatusView=btms_ui.scene:BtmsStatusView",

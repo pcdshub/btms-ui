@@ -6,6 +6,7 @@ from typing import Callable, List
 
 import ophyd
 from pcdsdevices.lasers import btms_config
+from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from qtpy import QtCore
 
 #: The source path of the btms-ui package.
@@ -55,3 +56,21 @@ def prune_expert_issues(issues: List[btms_config.MoveError]) -> List[btms_config
             (btms_config.PositionInvalidError, btms_config.MaintenanceModeActiveError)
         )
     ]
+
+
+_btps_device_by_prefix = {}
+
+
+def get_btps_device(prefix: str = "") -> BtpsStateDevice:
+    """
+    Get the BtpsState singleton.
+
+    Parameters
+    ----------
+    prefix : str, optional
+        Custom prefix to use.
+    """
+    if _btps_device_by_prefix.get(prefix, None) is None:
+        _btps_device_by_prefix[prefix] = BtpsStateDevice(prefix, name="las_btps")
+
+    return _btps_device_by_prefix[prefix]

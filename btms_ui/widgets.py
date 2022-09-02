@@ -749,6 +749,14 @@ class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):
         self._prefix = prefix
 
 
+class HutchOverviewDisplay(DesignerDisplay, QtWidgets.QWidget):
+    """
+    Hutch information display, including maintenance mode status and hutch
+    control state.
+    """
+    filename: ClassVar[str] = "btms-hutch.ui"
+
+
 class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     """
     Main display, including diagram and source information.
@@ -759,9 +767,11 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     ls5_widget: BtmsSourceOverviewWidget
     ls8_widget: BtmsSourceOverviewWidget
     open_btps_overview_button: QtWidgets.QPushButton
+    open_hutch_overview_button: QtWidgets.QPushButton
     expert_mode_checkbox: QtWidgets.QCheckBox
     source_widgets: List[BtmsSourceOverviewWidget]
     _btps_overview: Optional[QtWidgets.QWidget]
+    _hutch_overview: Optional[QtWidgets.QWidget]
 
     def __init__(self, *args, prefix: str = "", expert_mode: bool = False, **kwargs):
         self._prefix = prefix
@@ -772,7 +782,9 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             self.ls8_widget,
         ]
         self.open_btps_overview_button.clicked.connect(self.open_btps_overview)
+        self.open_hutch_overview_button.clicked.connect(self.open_hutch_overview)
         self._btps_overview = None
+        self._hutch_overview = None
         self.expert_mode_checkbox.clicked.connect(self._set_expert_mode)
         self._set_expert_mode(expert_mode)
 
@@ -804,6 +816,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             source.device = device.sources[source.source_position]
 
     def open_btps_overview(self):
+        """Open the btps overview screen."""
         overview = self._btps_overview
         if overview is not None:
             overview.setVisible(True)
@@ -815,3 +828,17 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
 
         self._btps_overview = TyphosSuite.from_device(self.device)
         self._btps_overview.show()
+
+    def open_hutch_overview(self):
+        """Open the hutch overview screen."""
+        overview = self._hutch_overview
+        if overview is not None:
+            overview.setVisible(True)
+            overview.raise_()
+            return
+
+        if self.device is None:
+            return
+
+        self._hutch_overview = HutchOverviewDisplay()
+        self._hutch_overview.show()
