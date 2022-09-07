@@ -602,6 +602,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         for motor in [self.linear_widget, self.rotary_widget, self.goniometer_widget]:
             motor.setVisible(show)
 
+        self.save_nominal_button.setVisible(show)
+
     def _perform_move(
         self, target: DestinationPosition
     ) -> Optional[QCombinedMoveStatus]:
