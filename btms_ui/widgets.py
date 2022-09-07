@@ -502,14 +502,15 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     current_dest_label: BtmsLaserDestinationLabel
     goniometer_widget: TyphosPositionerWidget
     linear_widget: TyphosPositionerWidget
-    motor_frame: QtWidgets.QFrame
     motion_progress_widget: QtWidgets.QProgressBar
+    motor_frame: QtWidgets.QFrame
     rotary_widget: TyphosPositionerWidget
-    toggle_control_button: QtWidgets.QPushButton
+    save_nominal_button: QtWidgets.QPushButton
     show_cameras_button: QtWidgets.QPushButton
     source: Optional[BtpsSourceStatus]
     source_name_label: QtWidgets.QLabel
     target_dest_widget: BtmsLaserDestinationChoice
+    toggle_control_button: QtWidgets.QPushButton
     valid_widget: BtmsSourceValidWidget
 
     far_field_desc_label: QtWidgets.QLabel
@@ -553,11 +554,20 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self.show_cameras_button.clicked.connect(self.show_cameras)
         self.toggle_control_button.clicked.connect(self.show_motors)
+        self.save_nominal_button.clicked.connect(self.save_nominal)
         self._camera_process = None
         self._expert_mode = None
         self.expert_mode = expert_mode
 
+    def save_nominal(self):
+        """Save the current positions to the BTPS nominal positions."""
+        if self.device is None:
+            return
+
+        self.device.set_nominal_to_current()
+
     def show_cameras(self):
+        """Show the camera control screen."""
         if self.device is None:
             return
 
