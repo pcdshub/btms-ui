@@ -748,6 +748,15 @@ class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):
         self._prefix = prefix
         super().__init__(*args, **kwargs)
 
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding,
+            QtWidgets.QSizePolicy.MinimumExpanding,
+        )
+        self.view.setSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding,
+            QtWidgets.QSizePolicy.MinimumExpanding,
+        )
+
     @QtCore.Property(str)
     def prefix(self) -> str:
         """The PV prefix for the BTMS."""

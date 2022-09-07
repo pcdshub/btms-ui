@@ -895,7 +895,6 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
         super().__init__(scene, parent=parent)
 
-        self.setMinimumSize(750, 500)
         self.scale(btms_config.VIEW_SCALE, btms_config.VIEW_SCALE)
 
         self.switch_box = SwitchBox()

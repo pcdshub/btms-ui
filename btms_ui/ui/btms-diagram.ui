@@ -6,20 +6,38 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>774</width>
-    <height>524</height>
+    <width>883</width>
+    <height>586</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>750</width>
+    <height>500</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
-   <item alignment="Qt::AlignLeft|Qt::AlignVCenter">
+   <item>
     <widget class="BtmsStatusView" name="view">
-     <property name="maximumSize">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
       <size>
-       <width>800</width>
-       <height>800</height>
+       <width>701</width>
+       <height>493</height>
       </size>
      </property>
      <property name="verticalScrollBarPolicy">
@@ -27,6 +45,12 @@
      </property>
      <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+     </property>
+     <property name="resizeAnchor">
+      <enum>QGraphicsView::AnchorViewCenter</enum>
      </property>
     </widget>
    </item>

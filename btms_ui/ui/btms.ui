@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1320</width>
-    <height>558</height>
+    <width>1282</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,203 +19,213 @@
   <property name="windowTitle">
    <string>Laser Beam Transport Motion System (BTMS) Control Overview</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2">
-   <item alignment="Qt::AlignTop">
-    <widget class="BtmsDiagramWidget" name="diagram_widget" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-    </widget>
-   </item>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
-    <widget class="QFrame" name="button_frame">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <widget class="QSplitter" name="main_splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout"/>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="sourceoverview_frame">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <layout class="QHBoxLayout" name="button_layout">
-        <item>
-         <widget class="QPushButton" name="open_btps_overview_button">
-          <property name="text">
-           <string>BTPS Screen</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="open_hutch_overview_button">
-          <property name="text">
-           <string>Hutch Screen</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="button_spacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Status:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="PyDMLabel">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="precision" stdset="0">
-           <number>0</number>
-          </property>
-          <property name="showUnits" stdset="0">
-           <bool>false</bool>
-          </property>
-          <property name="precisionFromPV" stdset="0">
-           <bool>true</bool>
-          </property>
-          <property name="alarmSensitiveContent" stdset="0">
-           <bool>true</bool>
-          </property>
-          <property name="alarmSensitiveBorder" stdset="0">
-           <bool>true</bool>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ca://LTLHN:BTPS:Config:Maintenance_RBV</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="button_spacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="expert_mode_checkbox">
-          <property name="text">
-           <string>Expert mode</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>500</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="source_index" stdset="0">
-         <number>1</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>500</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="source_index" stdset="0">
-         <number>5</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>500</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="source_index" stdset="0">
-         <number>8</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="source_v_spacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
+     <widget class="BtmsDiagramWidget" name="diagram_widget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>750</width>
+        <height>500</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777211</width>
+        <height>16777215</height>
+       </size>
+      </property>
+     </widget>
+     <widget class="QFrame" name="sourceoverview_frame">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="button_layout">
+         <item>
+          <widget class="QPushButton" name="open_btps_overview_button">
+           <property name="text">
+            <string>BTPS Screen</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="open_hutch_overview_button">
+           <property name="text">
+            <string>Hutch Screen</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="button_spacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Status:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="PyDMLabel" name="PyDMLabel">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="precision" stdset="0">
+            <number>0</number>
+           </property>
+           <property name="showUnits" stdset="0">
+            <bool>false</bool>
+           </property>
+           <property name="precisionFromPV" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="alarmSensitiveContent" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="alarmSensitiveBorder" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="channel" stdset="0">
+            <string>ca://LTLHN:BTPS:Config:Maintenance_RBV</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="button_spacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="expert_mode_checkbox">
+           <property name="text">
+            <string>Expert mode</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="source_index" stdset="0">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="source_index" stdset="0">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="source_index" stdset="0">
+          <number>8</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="source_v_spacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
