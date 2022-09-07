@@ -166,7 +166,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
             angle = math.degrees(angle)
 
         offset_angle = self.get_offset_angle(angle)
-        self.setRotation(offset_angle)
+        self.setRotation(-offset_angle)
         self.helper.angle_set.emit(offset_angle)
 
 
