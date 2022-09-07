@@ -602,6 +602,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         for motor in [self.linear_widget, self.rotary_widget, self.goniometer_widget]:
             motor.setVisible(show)
 
+        show_position_labels = not show
+        self.linear_label.setVisible(show_position_labels)
+        self.goniometer_label.setVisible(show_position_labels)
+        self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
 
     def _perform_move(
