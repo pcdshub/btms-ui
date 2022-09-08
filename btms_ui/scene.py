@@ -862,6 +862,16 @@ class LensAssembly(PyDMPositionedGroup):
             )
         )
 
+        self.lens.addToGroup(
+            primitives.create_scene_rectangle(
+                cx=base_center.x(),
+                cy=base_center.y() - self.lens_height,
+                width=self.lens_width / 2.0,
+                height=self.lens_height,
+                pen=self.lens_pen,
+                brush=self.lens_brush,
+            )
+        )
         self.addToGroup(self.lens)
 
     @property
