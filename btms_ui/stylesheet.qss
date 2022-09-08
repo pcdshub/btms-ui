@@ -43,7 +43,7 @@ PneumaticValve #icon {
     qproperty-interlockBrush: #00FF00;
 }
 PneumaticValve[interlocked="true"] #icon{
-    border: 2px solid black;
+    border: 4px solid black;
     border-top-left-radius: 9px;
     border-top-right-radius: 9px;
     border-bottom-left-radius: 9px;
