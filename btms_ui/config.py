@@ -14,14 +14,14 @@ PACKAGED_IMAGES = {
         "origin": (0, 0),  # (144, 94),  # inner chamber top-left position (px)
         "positions": {
             # Sources (left side of rail, centered around axis of rotation)
-            SourcePosition.ls5: (200, 138),
-            SourcePosition.ls1: (200, 199),
-            SourcePosition.ls6: (200, 271),
-            SourcePosition.ls2: (200, 335),
-            SourcePosition.ls7: (200, 402),
-            SourcePosition.ls3: (200, 466),
-            SourcePosition.ls8: (200, 534),
-            SourcePosition.ls4: (200, 596),
+            SourcePosition.ls5: (207, 138),
+            SourcePosition.ls1: (207, 199),
+            SourcePosition.ls6: (207, 271),
+            SourcePosition.ls2: (207, 335),
+            SourcePosition.ls7: (207, 402),
+            SourcePosition.ls3: (207, 466),
+            SourcePosition.ls8: (207, 534),
+            SourcePosition.ls4: (207, 596),
 
             # Top destinations (rough bottom centers, inside chamber)
             DestinationPosition.ld8: (238, 94),
