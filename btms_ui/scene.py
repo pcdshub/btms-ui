@@ -166,7 +166,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
             angle = math.degrees(angle)
 
         offset_angle = self.get_offset_angle(angle)
-        self.setRotation(offset_angle)
+        self.setRotation(-offset_angle)
         self.helper.angle_set.emit(offset_angle)
 
 
@@ -828,8 +828,8 @@ class LensAssembly(PyDMPositionedGroup):
     )
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor("white")
 
-    lens_width: ClassVar[float] = 8.0
-    lens_height: ClassVar[float] = 50.0
+    lens_width: ClassVar[float] = 50.0
+    lens_height: ClassVar[float] = 8.0
     lens_pen: ClassVar[QtGui.QColor] = QtGui.QColor("red")
     lens_brush: ClassVar[QtGui.QColor] = QtGui.QColor("red")
 
