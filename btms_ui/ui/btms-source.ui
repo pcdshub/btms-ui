@@ -117,10 +117,10 @@
          </font>
         </property>
         <property name="text">
-         <string>Rotary</string>
+         <string>Rotary:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -139,7 +139,10 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Farear field centroid Y position</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="precision" stdset="0">
          <number>0</number>
@@ -221,6 +224,9 @@
         <property name="text">
          <string>Near field:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item row="3" column="0" alignment="Qt::AlignTop">
@@ -243,10 +249,10 @@
          </font>
         </property>
         <property name="text">
-         <string>Linear</string>
+         <string>Linear:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -269,11 +275,14 @@
           <underline>false</underline>
          </font>
         </property>
+        <property name="toolTip">
+         <string>Current goniometer position</string>
+        </property>
         <property name="text">
-         <string>Goniometer</string>
+         <string>Goniometer:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -311,7 +320,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Current linear position</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -375,6 +384,9 @@
         <property name="text">
          <string>Far field:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
@@ -392,7 +404,10 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Near field centroid Y position</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="precision" stdset="0">
          <number>0</number>
@@ -429,7 +444,10 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Near field centroid X position</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="precision" stdset="0">
          <number>0</number>
@@ -466,7 +484,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Current rotary position</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -506,7 +524,10 @@
          </size>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>Far field centroid X position</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="precision" stdset="0">
          <number>0</number>

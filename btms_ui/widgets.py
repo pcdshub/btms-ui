@@ -759,6 +759,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.toggle_control_button.setVisible(self._expert_mode)
         if not self._expert_mode:
             self.show_motors(False)
+            self.toggle_control_button.setChecked(False)
 
     @QtCore.Property(str)
     def prefix(self) -> str:
