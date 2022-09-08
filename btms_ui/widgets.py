@@ -564,7 +564,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     current_dest_label: BtmsLaserDestinationLabel
     goniometer_widget: TyphosPositionerWidget
     linear_widget: TyphosPositionerWidget
+    motion_progress_frame: QtWidgets.QFrame
     motion_progress_widget: QtWidgets.QProgressBar
+    motion_stop_button: QtWidgets.QPushButton
     motor_frame: QtWidgets.QFrame
     rotary_widget: TyphosPositionerWidget
     save_nominal_button: QtWidgets.QPushButton
@@ -609,7 +611,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         }
 
         self.target_dest_widget.move_requested.connect(self.move_request)
-        self.motion_progress_widget.setVisible(False)
+        self.motion_progress_frame.setVisible(False)
 
         self.current_dest_label.new_destination.connect(self.new_destination.emit)
         self.current_dest_label.new_destination.connect(self.valid_widget.set_destination)
@@ -681,8 +683,15 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         if device is None:
             return
 
+        def stop_all():
+            for st in status:
+                try:
+                    st.device.stop()
+                except Exception:
+                    logger.exception("Failed to stop device %s", st.device.name)
+
         def finished_moving():
-            self.motion_progress_widget.setVisible(False)
+            self.motion_progress_frame.setVisible(False)
 
         def update(overall_percent: float, current_deltas: List[float], initial_deltas: List[float]):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
@@ -690,12 +699,13 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.motion_progress_widget.setValue(0)
 
         status = device.set_with_movestatus(target, check=False)
-        self._move_status = QCombinedMoveStatus(status)
+        self._move_status = QCombinedMoveStatus(list(status))
         self._move_status.status_changed.connect(update)
         self._move_status.finished_moving.connect(finished_moving)
-        self.motion_progress_widget.setVisible(
-            not any(st.done for st in self._move_status.move_statuses)
-        )
+
+        show_progress = not any(st.done for st in self._move_status.move_statuses)
+        self.motion_stop_button.clicked.connect(stop_all)
+        self.motion_progress_frame.setVisible(show_progress)
         return self._move_status
 
     def move_request(self, target: DestinationPosition) -> Optional[QCombinedMoveStatus]:
@@ -708,7 +718,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             return
 
         def finished_moving():
-            self.motion_progress_widget.setVisible(False)
+            self.motion_progress_frame.setVisible(False)
 
         def update(overall_percent: float, individual_percents: List[float]):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
