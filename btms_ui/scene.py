@@ -172,7 +172,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
     pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 5.0)
-    brush: ClassVar[QtGui.QColor] = QtGui.QColor("black")
+    brush: ClassVar[QtGui.QColor] = QtGui.QColor("red")
     source: SourcePosition
     dest: DestinationPosition
 
@@ -189,8 +189,8 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         self.dest = dest
         super().__init__(channel_x=channel_x, channel_y=channel_y)
         arrow = primitives.create_scene_arrow(
-            width=50,
-            height=50,
+            width=25,
+            height=75,
             direction=(primitives.ArrowDirection.up if dest.is_top else primitives.ArrowDirection.down),
             pen=self.pen,
             brush=self.brush,
@@ -824,7 +824,7 @@ class LensAssembly(PyDMPositionedGroup):
     base_height: ClassVar[float] = 50.0
     base_pen: ClassVar[QtGui.QColor] = QtGui.QPen(
         QtGui.QColor("black"),
-        5.0
+        2.5
     )
     base_brush: ClassVar[QtGui.QColor] = QtGui.QColor("white")
 

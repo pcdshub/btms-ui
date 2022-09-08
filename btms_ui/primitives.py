@@ -208,7 +208,7 @@ def create_scene_arrow(
     direction: ArrowDirection,
     pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
     brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-    head_percent: float = 0.5,
+    head_percent: float = 0.75,
 ) -> QtWidgets.QGraphicsPolygonItem:
     """
     Create a QGraphicsPolygonItem in the shape of an arrow for a QGraphicsScene.
@@ -238,15 +238,16 @@ def create_scene_arrow(
     """
     half_width = width / 2.0
     half_height = height / 2.0
+    head_base = head_percent * half_height
     polygon = create_scene_polygon(
         QtGui.QPolygonF(
             [
                 QtCore.QPointF(0.0, -half_height),
+                QtCore.QPointF(0.0, head_base),
+                QtCore.QPointF(-half_width, head_base),
                 QtCore.QPointF(0.0, half_height),
-                QtCore.QPointF(-half_width, head_percent * half_height),
-                QtCore.QPointF(0.0, half_height),
-                QtCore.QPointF(half_width, head_percent * half_height),
-                QtCore.QPointF(0.0, half_height),
+                QtCore.QPointF(half_width, head_base),
+                QtCore.QPointF(0.0, head_base),
             ]
         ),
         brush=brush,
