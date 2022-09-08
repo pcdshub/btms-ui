@@ -54,6 +54,12 @@ def _configure_stylesheet(paths: Optional[List[str]] = None) -> str:
     return full_stylesheet
 
 
+def configure_ophyd():
+    """Configure ophyd defaults."""
+    from ophyd.signal import EpicsSignalBase
+    EpicsSignalBase.set_defaults(timeout=10.0, connection_timeout=10.0)
+
+
 def main(
     screen: str = "overview",
     prefix: str = "",
@@ -66,6 +72,8 @@ def main(
         app = QtWidgets.QApplication([])
 
     install_exception_handler()
+    configure_ophyd()
+
     try:
         _configure_stylesheet(paths=[stylesheet] if stylesheet else None)
     except Exception:
