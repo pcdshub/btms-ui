@@ -171,7 +171,7 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
 
 
 class SourceDestinationIndicator(PyDMPositionedGroup):
-    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 3.0)
+    pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("red"), 5.0)
     brush: ClassVar[QtGui.QColor] = QtGui.QColor("black")
     source: SourcePosition
     dest: DestinationPosition

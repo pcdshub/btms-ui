@@ -6,6 +6,7 @@ import time
 from functools import partial
 from typing import ClassVar, Dict, List, Optional, Tuple
 
+import numpy as np
 from ophyd.status import MoveStatus
 from pcdsdevices.lasers import btms_config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
@@ -82,8 +83,11 @@ class QMoveStatus(QtCore.QObject):
 
 class QCombinedMoveStatus(QtCore.QObject):
     move_statuses: List[MoveStatus]
+    initials: Tuple[float, ...]
     percents: Tuple[float, ...]
-    percents_changed = QtCore.Signal(float, list)  # List[float]
+    currents: Tuple[float, ...]
+    targets: Tuple[float, ...]
+    status_changed = QtCore.Signal(float, list, list)  # List[float]
     finished_moving = QtCore.Signal()
 
     def __init__(self, move_statuses: List[MoveStatus]):
@@ -92,32 +96,90 @@ class QCombinedMoveStatus(QtCore.QObject):
             raise ValueError("At least one MoveStatus required")
 
         self.move_statuses = list(st for st in move_statuses)
-        self.percents = [0.0] * len(move_statuses)
+        self.initials = tuple([0.0] * len(move_statuses))
+        self.targets = tuple([0.0] * len(move_statuses))
+        self.currents = tuple([0.0] * len(move_statuses))
+        self.percents = tuple([0.0] * len(move_statuses))
         self.lock = threading.Lock()
         self._finished_count = 0
         for idx, move_status in enumerate(self.move_statuses):
             move_status.watch(partial(self._watch_callback, idx))
             move_status.callbacks.append(partial(self._finished_callback, idx))
 
-    def _watch_callback(self, index: int, /, fraction: Optional[float] = None, **kwargs):
-        if fraction is not None:
-            percent = 1.0 - fraction
-            with self.lock:
+    @property
+    def current_deltas(self) -> List[float]:
+        """Delta of current position to target position."""
+        return [
+            abs(target - current)
+            for current, target in zip(self.currents, self.targets)
+            if current is not None and target is not None
+        ]
+
+    @property
+    def initial_deltas(self) -> List[float]:
+        """Delta of initial position to target position."""
+        return [
+            abs(target - initial)
+            for initial, target in zip(self.initials, self.targets)
+            if initial is not None and target is not None
+        ]
+
+    def _watch_callback(
+        self,
+        index: int,
+        /,
+        fraction: Optional[float] = None,
+        initial: Optional[float] = None,
+        current: Optional[float] = None,
+        target: Optional[float] = None,
+        **kwargs,
+    ):
+        with self.lock:
+            if self._finished_count == len(self.move_statuses):
+                return
+
+            if initial is not None:
+                initials = list(self.initials)
+                initials[index] = initial
+                self.initials = tuple(initials)
+            if target is not None:
+                targets = list(self.targets)
+                targets[index] = target
+                self.targets = tuple(targets)
+            if current is not None:
+                currents = list(self.currents)
+                currents[index] = current
+                self.currents = tuple(currents)
+            if fraction is not None:
                 percents = list(self.percents)
-                percents[index] = percent
+                percents[index] = fraction
                 self.percents = tuple(percents)
 
-            overall = sum(percents) / len(percents)
-            self.percents_changed.emit(overall, percents)
+            current_deltas = self.current_deltas
+            initial_deltas = self.initial_deltas
+
+        if not current_deltas or not initial_deltas:
+            return
+
+        try:
+            current_sum = sum(current_deltas)
+            final_sum = sum(initial_deltas)
+            overall = 1.0 - np.clip(current_sum / final_sum, 0, 1)
+        except Exception:
+            overall = None
+        else:
+            self.status_changed.emit(overall, current_deltas, initial_deltas)
             if overall >= (1.0 - 1e-6):
                 self.finished_moving.emit()
 
     def _finished_callback(self, index: int, /, fraction: Optional[float] = None, **kwargs):
         with self.lock:
             self._finished_count += 1
+            current_deltas = self.current_deltas
+            initial_deltas = self.initial_deltas
 
         if self._finished_count == len(self.move_statuses):
-            self.percents_changed.emit(1.0, [1.0] * len(self.move_statuses))
+            self.status_changed.emit(1.0, current_deltas, initial_deltas)
             self.finished_moving.emit()
 
 
@@ -622,14 +684,14 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         def finished_moving():
             self.motion_progress_widget.setVisible(False)
 
-        def update(overall_percent: float, individual_percents: List[float]):
+        def update(overall_percent: float, current_deltas: List[float], initial_deltas: List[float]):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
 
         self.motion_progress_widget.setValue(0)
 
         status = device.set_with_movestatus(target, check=False)
         self._move_status = QCombinedMoveStatus(status)
-        self._move_status.percents_changed.connect(update)
+        self._move_status.status_changed.connect(update)
         self._move_status.finished_moving.connect(finished_moving)
         self.motion_progress_widget.setVisible(
             not any(st.done for st in self._move_status.move_statuses)
