@@ -629,7 +629,7 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
         )
         # exit_valve_rect = dest.exit_valve_proxy.sceneBoundingRect()
         if dest.ld_position.is_top:
-            dest_y = dest.sceneBoundingRect().bottom()
+            dest_y = dest.exit_valve_proxy.sceneBoundingRect().bottom()
         else:
             dest_y = dest.sceneBoundingRect().top()
 
