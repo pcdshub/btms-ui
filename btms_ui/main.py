@@ -57,7 +57,11 @@ def _configure_stylesheet(paths: Optional[List[str]] = None) -> str:
 def configure_ophyd():
     """Configure ophyd defaults."""
     from ophyd.signal import EpicsSignalBase
-    EpicsSignalBase.set_defaults(timeout=10.0, connection_timeout=10.0)
+    EpicsSignalBase.set_defaults(
+        timeout=10.0,
+        connection_timeout=10.0,
+        auto_monitor=True,
+    )
 
 
 def main(
