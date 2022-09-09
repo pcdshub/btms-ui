@@ -10,7 +10,8 @@ import numpy as np
 from ophyd.status import MoveStatus
 from pcdsdevices.lasers import btms_config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
-from pcdsdevices.lasers.btps import BtpsSourceStatus, BtpsState
+from pcdsdevices.lasers.btps import (BtpsSourceStatus, BtpsState,
+                                     RangeComparison)
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
@@ -29,6 +30,14 @@ logger = logging.getLogger(__name__)
 class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
     new_destination: QtCore.Signal = QtCore.Signal(object)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._destination = None
+
+    @property
+    def destination(self) -> Optional[DestinationPosition]:
+        return self._destination
+
     def setText(self, text: str):
         try:
             ld = int(text)
@@ -37,13 +46,16 @@ class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
 
         if ld == 0:
             text = "Unknown"
+            self._destination = None
             self.new_destination.emit(None)
         elif ld < 0:
             text = "(Misconfiguration)"
+            self._destination = None
             self.new_destination.emit(None)
         else:
             pos = DestinationPosition.from_index(ld)
             text = f"→ {pos.description} (LD{ld})"
+            self._destination = pos
             self.new_destination.emit(pos)
 
         return super().setText(text)
@@ -633,12 +645,56 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self._expert_mode = None
         self.expert_mode = expert_mode
 
+    def _save_nominal(self, dest: DestinationPosition) -> None:
+        """Save nominal positions to the BTPS for ``dest``."""
+        if self.device is None:
+            return
+
+        config = self.device.parent.destinations[dest].sources[self.source_position]
+
+        # The current positions
+        linear = float(self.device.linear.user_readback.get())
+        rotary = float(self.device.rotary.user_readback.get())
+        goniometer = float(self.device.goniometer.user_readback.get())
+
+        # Set the source-to-destination data store values:
+        def adjust(range_device: RangeComparison, value: float):
+            range_device.nominal.put(value)
+            if float(range_device.low.get()) >= value:
+                range_device.low.put(value - 1.0)
+            if float(range_device.high.get()) <= value:
+                range_device.high.put(value + 1.0)
+
+        adjust(config.linear, linear)
+        adjust(config.rotary, rotary)
+        adjust(config.goniometer, goniometer)
+
     def save_nominal(self):
         """Save the current positions to the BTPS nominal positions."""
         if self.device is None:
             return
 
-        self.device.set_nominal_to_current()
+        dest = self.current_dest_label.destination
+        if dest is None:
+            destinations = {
+                dest.name_and_desc: dest
+                for dest in DestinationPosition
+            }
+            dest_text, ok = QtWidgets.QInputDialog.getItem(
+                self,
+                "Select the destination to save nominal positions to",
+                "Destinations:",
+                tuple(destinations),
+                0,
+                False,
+            )
+            if ok:
+                dest = destinations[dest_text]
+
+        if dest is None:
+            return
+
+        self._save_nominal(dest)
 
     def show_cameras(self):
         """Show the camera control screen."""
