@@ -655,9 +655,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             "Adjusting %s to %s +- %s", range_device.nominal.pvname, value, delta
         )
         range_device.nominal.put(value)
-        if float(range_device.low.get()) >= value:
+        if float(range_device.low.get()) >= (value - delta):
             range_device.low.put(value - delta)
-        if float(range_device.high.get()) <= value:
+        if float(range_device.high.get()) <= (value + delta):
             range_device.high.put(value + delta)
 
     def _save_nominal(self, dest: DestinationPosition) -> None:
@@ -672,6 +672,13 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         rotary = float(self.device.rotary.user_readback.get())
         goniometer = float(self.device.goniometer.user_readback.get())
 
+        logger.info(
+            "Set motor nominal for %s linear=%s rotary=%s goniometer=%s",
+            dest.name_and_desc,
+            linear,
+            rotary,
+            goniometer,
+        )
         # Set the source-to-destination data store values:
         self.adjust_range(config.linear, linear, delta=1.0)
         self.adjust_range(config.rotary, rotary, delta=1.0)
@@ -688,15 +695,24 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         ff_x = float(config.far_field.centroid_x.value.get())
         ff_y = float(config.far_field.centroid_y.value.get())
 
+        logger.info(
+            "Set nominal for %s nf=%s %s ff=%s %s",
+            dest.name_and_desc,
+            nf_x,
+            nf_y,
+            ff_x,
+            ff_y,
+        )
+
         # Set the source-to-destination data store values:
         if nf_x > 0.0:
-            self.adjust_range(config.near_field.centroid_x, nf_x, delta=1.0)
+            self.adjust_range(config.near_field.centroid_x, nf_x, delta=20.0)
         if nf_y > 0.0:
-            self.adjust_range(config.near_field.centroid_y, nf_y, delta=1.0)
+            self.adjust_range(config.near_field.centroid_y, nf_y, delta=20.0)
         if ff_x > 0.0:
-            self.adjust_range(config.far_field.centroid_x, ff_x, delta=1.0)
+            self.adjust_range(config.far_field.centroid_x, ff_x, delta=20.0)
         if ff_y > 0.0:
-            self.adjust_range(config.far_field.centroid_y, ff_y, delta=1.0)
+            self.adjust_range(config.far_field.centroid_y, ff_y, delta=20.0)
 
     def save_centroid_nominal(self) -> None:
         """Save the current centroid X/Y positions to the BTPS."""
