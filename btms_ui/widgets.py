@@ -561,6 +561,8 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     filename: ClassVar[str] = "btms-source.ui"
 
+    positioner_widgets: Tuple[TyphosPositionerWidget, ...]
+
     current_dest_label: BtmsLaserDestinationLabel
     goniometer_widget: TyphosPositionerWidget
     linear_widget: TyphosPositionerWidget
@@ -609,6 +611,14 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.pydm_widgets_to_suffix = {
             self.current_dest_label: "BTPS:CurrentLD_RBV",
         }
+        self.positioner_widgets = (
+            self.linear_widget,
+            self.rotary_widget,
+            self.goniometer_widget,
+        )
+
+        for widget in self.positioner_widgets:
+            widget.ui.clear_error_button.setVisible(False)
 
         self.target_dest_widget.move_requested.connect(self.move_request)
         self.motion_progress_frame.setVisible(False)
@@ -663,7 +673,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         )
 
     def show_motors(self, show: bool):
-        for motor in [self.linear_widget, self.rotary_widget, self.goniometer_widget]:
+        for motor in self.positioner_widgets:
             motor.setVisible(show)
 
         show_position_labels = not show
