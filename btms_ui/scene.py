@@ -445,6 +445,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             cur_dest.updated.connect(
                 functools.partial(self._destination_updated, source)
             )
+            cur_dest.subscribe()
 
             source = self.sources[source]
             source.shutter.device = source_device.lss

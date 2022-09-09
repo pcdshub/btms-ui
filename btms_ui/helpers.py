@@ -157,11 +157,20 @@ class OphydCallbackHelper(QtCore.QObject):
         self,
         sig: ophyd.Signal,
         event_type: Optional[str] = None,
+        subscribe_now: bool = False,
     ):
         super().__init__()
         self.sig = sig
         self.event_type = event_type
-        self.cid = self.sig.subscribe(self._ophyd_callback)
+        self.cid = None
+        if subscribe_now:
+            self.subscribe()
+
+    def subscribe(self, run: bool = True):
+        """Start the subscription."""
+        if self.cid is None:
+            self.unsubscribe()
+        self.cid = self.sig.subscribe(self._ophyd_callback, run=run)
 
     def unsubscribe(self):
         cid, self.cid = self.cid, None
