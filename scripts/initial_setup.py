@@ -1,7 +1,11 @@
 import dataclasses
-from btms_ui.scene import SourcePosition, DestinationPosition
-from btms_ui.util import get_btps_device
 from typing import Optional
+
+from ophyd import EpicsSignal
+from pcdsdevices.lasers.btps import RangeComparison
+
+from btms_ui.scene import DestinationPosition, SourcePosition
+from btms_ui.util import get_btps_device
 
 
 def ophyd_cleanup():
@@ -14,9 +18,9 @@ def ophyd_cleanup():
 
 @dataclasses.dataclass
 class Config:
-    linear: Optional[float]
-    rotary: Optional[float]
-    # goniometer: float
+    linear: Optional[float] = None
+    rotary: Optional[float] = None
+    goniometer: Optional[float] = None
 
 
 default_rotary_positions = {
@@ -25,6 +29,14 @@ default_rotary_positions = {
     ("right", "up"): 315.085,
     ("right", "down"): 225.12,
 }
+
+default_goniometer_positions = {
+    ("left", "up"): -0.4666,
+    ("left", "down"): -0.4276,
+    ("right", "up"): -0.28,
+    ("right", "down"): -0.3219,
+}
+
 
 # Bottom destinations (rough top centers, inside chamber)
 BOTTOM_PORTS = [
@@ -96,6 +108,7 @@ full_config = {
             # "RIX ChemRIXS",
             linear=787.9045,
             rotary=135.6510,
+            goniometer=-0.4276,
         ),
         DestinationPosition.ld6: Config(
             # "RIX QRIXS",
@@ -106,6 +119,7 @@ full_config = {
             # "TMO IP1",
             linear=46.4244,
             rotary=45.6414,
+            goniometer=-0.4666,
         ),
         DestinationPosition.ld9: Config(
             # "Laser Lab",
@@ -121,6 +135,15 @@ full_config = {
             # "XPP",
             linear=1339.5865,
             rotary=45.6566,
+            goniometer=-0.4394,
+        ),
+    },
+    # LS5 - bay 3
+    SourcePosition.ls8: {
+        DestinationPosition.ld9: Config(
+            # "Laser Lab",
+            linear=252.860,
+            rotary=315.085,
         ),
     },
     # LS8 - bay 4
@@ -134,6 +157,7 @@ full_config = {
             # "RIX ChemRIXS",
             linear=782.60952,
             rotary=225.12,
+            goniometer=-0.3219,
         ),
         DestinationPosition.ld6: Config(
             # "RIX QRIXS",
@@ -144,6 +168,7 @@ full_config = {
             # "TMO IP1",
             linear=31.95952,
             rotary=315.085,
+            goniometer=-0.28,
         ),
         DestinationPosition.ld9: Config(
             # "Laser Lab",
@@ -159,9 +184,24 @@ full_config = {
             # "XPP",
             linear=1329.95952,
             rotary=315.107,
+            goniometer=-0.338,
         ),
     },
 }
+
+
+def _put(signal: EpicsSignal, value: float):
+    current = signal.get()
+    if abs(current - value) > 1e-6:
+        print(f"-> Changing {signal.pvname} to {value}")
+        if not dry_run:
+            signal.put(value)
+
+
+def _update(device: RangeComparison, value: float, delta: float):
+    _put(device.nominal, value)
+    _put(device.low, value - delta)
+    _put(device.high, value + delta)
 
 
 def set_all():
@@ -180,12 +220,15 @@ def set_all():
             guess_config = Config(
                 linear=guess_position_for_port(source, dest),
                 rotary=default_rotary_positions[key],
+                goniometer=default_goniometer_positions[key],
             )
 
             if config.linear is None:
                 config.linear = guess_config.linear
             if config.rotary is None:
                 config.rotary = guess_config.rotary
+            if config.goniometer is None:
+                config.goniometer = guess_config.goniometer
 
             print(source.name_and_desc, dest.name_and_desc, config)
             if not dry_run:
@@ -194,15 +237,10 @@ def set_all():
                 except KeyError:
                     print("No device for", dest, source)
                     continue
-                device.linear.nominal.put(config.linear)
-                device.linear.low.put(config.linear - 5.0)
-                device.linear.high.put(config.linear + 5.0)
-                device.rotary.nominal.put(config.rotary)
-                device.rotary.low.put(config.rotary - 5.0)
-                device.rotary.high.put(config.rotary + 5.0)
-                device.goniometer.nominal.put(0.0)
-                device.goniometer.low.put(-5.0)
-                device.goniometer.high.put(+5.0)
+
+                _update(device.linear, config.linear, delta=5.0)
+                _update(device.rotary, config.rotary, delta=5.0)
+                _update(device.goniometer, config.goniometer, delta=5.0)
 
 
 try:
