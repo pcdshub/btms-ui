@@ -652,12 +652,17 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     ):
         """Adjust a range comparison to the new value."""
         logger.warning(
-            "Adjusting %s to %s +- %s", range_device.nominal.pvname, value, delta
+            "Adjusting %s to %s +- %s",
+            range_device.nominal.setpoint_pvname,
+            value,
+            delta,
         )
         range_device.nominal.put(value)
-        if float(range_device.low.get()) >= (value - delta):
+        low_value = range_device.low.get()
+        high_value = range_device.high.get()
+        if float(low_value) >= (value - delta) or low_value == 0.0:
             range_device.low.put(value - delta)
-        if float(range_device.high.get()) <= (value + delta):
+        if float(range_device.high.get()) <= (value + delta) or high_value == 0.0:
             range_device.high.put(value + delta)
 
     def _save_nominal(self, dest: DestinationPosition) -> None:
