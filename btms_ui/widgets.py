@@ -584,6 +584,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     motor_frame: QtWidgets.QFrame
     rotary_widget: TyphosPositionerWidget
     save_nominal_button: QtWidgets.QPushButton
+    save_centroid_nominal_button: QtWidgets.QPushButton
     show_cameras_button: QtWidgets.QPushButton
     source: Optional[BtpsSourceStatus]
     source_name_label: QtWidgets.QLabel
@@ -640,10 +641,24 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self.show_cameras_button.clicked.connect(self.show_cameras)
         self.toggle_control_button.clicked.connect(self.show_motors)
-        self.save_nominal_button.clicked.connect(self.save_nominal)
+        self.save_nominal_button.clicked.connect(self.save_motor_nominal)
+        self.save_centroid_nominal_button.clicked.connect(self.save_centroid_nominal)
         self._camera_process = None
         self._expert_mode = None
         self.expert_mode = expert_mode
+
+    def adjust_range(
+        self, range_device: RangeComparison, value: float, delta: float = 1.0
+    ):
+        """Adjust a range comparison to the new value."""
+        logger.warning(
+            "Adjusting %s to %s +- %s", range_device.nominal.pvname, value, delta
+        )
+        range_device.nominal.put(value)
+        if float(range_device.low.get()) >= value:
+            range_device.low.put(value - delta)
+        if float(range_device.high.get()) <= value:
+            range_device.high.put(value + delta)
 
     def _save_nominal(self, dest: DestinationPosition) -> None:
         """Save nominal positions to the BTPS for ``dest``."""
@@ -658,39 +673,66 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         goniometer = float(self.device.goniometer.user_readback.get())
 
         # Set the source-to-destination data store values:
-        def adjust(range_device: RangeComparison, value: float):
-            range_device.nominal.put(value)
-            if float(range_device.low.get()) >= value:
-                range_device.low.put(value - 1.0)
-            if float(range_device.high.get()) <= value:
-                range_device.high.put(value + 1.0)
+        self.adjust_range(config.linear, linear, delta=1.0)
+        self.adjust_range(config.rotary, rotary, delta=1.0)
+        self.adjust_range(config.goniometer, goniometer, delta=1.0)
 
-        adjust(config.linear, linear)
-        adjust(config.rotary, rotary)
-        adjust(config.goniometer, goniometer)
+    def _save_centroid_nominal(self, dest: DestinationPosition) -> None:
+        """Save the current centroid X/Y positions to the BTPS."""
+        if self.device is None:
+            return
 
-    def save_nominal(self):
+        config = self.device.parent.destinations[dest].sources[self.source_position]
+        nf_x = float(config.near_field.centroid_x.value.get())
+        nf_y = float(config.near_field.centroid_y.value.get())
+        ff_x = float(config.far_field.centroid_x.value.get())
+        ff_y = float(config.far_field.centroid_y.value.get())
+
+        # Set the source-to-destination data store values:
+        if nf_x > 0.0:
+            self.adjust_range(config.near_field.centroid_x, nf_x, delta=1.0)
+        if nf_y > 0.0:
+            self.adjust_range(config.near_field.centroid_y, nf_y, delta=1.0)
+        if ff_x > 0.0:
+            self.adjust_range(config.far_field.centroid_x, ff_x, delta=1.0)
+        if ff_y > 0.0:
+            self.adjust_range(config.far_field.centroid_y, ff_y, delta=1.0)
+
+    def save_centroid_nominal(self) -> None:
+        """Save the current centroid X/Y positions to the BTPS."""
+        dest = self.get_destination()
+        if dest is None:
+            return
+
+        self._save_centroid_nominal(dest)
+
+    def get_destination(self) -> Optional[DestinationPosition]:
+        dest = self.current_dest_label.destination
+        if dest is not None:
+            return dest
+
+        destinations = {
+            dest.name_and_desc: dest
+            for dest in DestinationPosition
+        }
+        dest_text, ok = QtWidgets.QInputDialog.getItem(
+            self,
+            "Select the destination to save nominal positions to",
+            "Destinations:",
+            tuple(destinations),
+            0,
+            False,
+        )
+        if ok:
+            return destinations[dest_text]
+        return None
+
+    def save_motor_nominal(self):
         """Save the current positions to the BTPS nominal positions."""
         if self.device is None:
             return
 
-        dest = self.current_dest_label.destination
-        if dest is None:
-            destinations = {
-                dest.name_and_desc: dest
-                for dest in DestinationPosition
-            }
-            dest_text, ok = QtWidgets.QInputDialog.getItem(
-                self,
-                "Select the destination to save nominal positions to",
-                "Destinations:",
-                tuple(destinations),
-                0,
-                False,
-            )
-            if ok:
-                dest = destinations[dest_text]
-
+        dest = self.get_destination()
         if dest is None:
             return
 
@@ -737,6 +779,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.goniometer_label.setVisible(show_position_labels)
         self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
+        self.save_centroid_nominal_button.setVisible(show)
 
     def _perform_move(
         self, target: DestinationPosition

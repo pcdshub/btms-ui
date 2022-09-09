@@ -350,7 +350,7 @@
          <string>When clicked, the 3 motor positions (linear, rotary, and goniometer) will be used for the nominal positions for the current destination of this source.</string>
         </property>
         <property name="text">
-         <string>Save nominal positions...</string>
+         <string>Save motor nominal...</string>
         </property>
         <property name="checkable">
          <bool>false</bool>
@@ -531,6 +531,25 @@
         </property>
         <property name="channel" stdset="0">
          <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="11">
+       <widget class="QPushButton" name="save_centroid_nominal_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When clicked, the near field and far field centroid X and Y values will be used for the nominal positions for the current destination of this source.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Save centroid nominal...</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
