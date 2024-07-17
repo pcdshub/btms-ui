@@ -206,7 +206,7 @@ def _update(device: RangeComparison, value: float, delta: float):
 
 def set_all():
     btps = get_btps_device()
-    
+
     for source in SourcePosition:
         for dest in DestinationPosition:
             try:
@@ -248,4 +248,3 @@ try:
     set_all()
 finally:
     ophyd_cleanup()
-

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import ophyd
 import pydm
 from qtpy import QtCore
