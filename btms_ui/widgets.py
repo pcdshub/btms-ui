@@ -695,7 +695,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             f""
         )
 
-        dest_str = dest.name_and_desc()
+        dest_str = dest.name_and_desc
 
         self._confirm_nominal = QtWidgets.QMessageBox()
         self._confirm_nominal.setWindowTitle("Confirm Nominal Positions")
