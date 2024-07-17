@@ -45,14 +45,15 @@ release = ""
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.inheritance_diagram',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
+    "sphinxcontrib.jquery",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
     "numpydoc",
     "recommonmark",
     "docs_versions_menu",
@@ -79,7 +80,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -89,7 +90,7 @@ exclude_patterns = []
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 #
-default_role = 'any'
+default_role = "any"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -200,7 +201,7 @@ texinfo_documents = [
 
 # Intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
+    "python": ("https://docs.python.org/3", None),
 }
 
 
@@ -210,5 +211,4 @@ inheritance_graph_attrs = dict(
     size='""',
 )
 
-inheritance_alias = {
-}
+inheritance_alias = {}
