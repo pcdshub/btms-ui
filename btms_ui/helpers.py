@@ -34,8 +34,8 @@ class PositionHelper(QtCore.QObject):
         self,
         x: float = 0.0,
         y: float = 0.0,
-        channel_x: Optional[str] = None,
-        channel_y: Optional[str] = None,
+        channel_x: str | None = None,
+        channel_y: str | None = None,
     ):
         super().__init__()
         self._channel_x = None
@@ -58,9 +58,9 @@ class PositionHelper(QtCore.QObject):
 
     def _set_channel(
         self,
-        old: Optional[pydm.widgets.PyDMChannel],
-        new: Optional[str],
-    ) -> Optional[pydm.widgets.PyDMChannel]:
+        old: pydm.widgets.PyDMChannel | None,
+        new: str | None,
+    ) -> pydm.widgets.PyDMChannel | None:
         """Update a channel setting."""
         if old is None and new is None:
             return None
@@ -76,14 +76,14 @@ class PositionHelper(QtCore.QObject):
         return channel
 
     @QtCore.Property(str)
-    def channel_x(self) -> Optional[str]:   # pyright: ignore
+    def channel_x(self) -> str | None:   # pyright: ignore
         """The channel address for the X position."""
         if self._channel_x is None:
             return None
         return self._channel_x.address
 
     @channel_x.setter
-    def channel_x(self, value: Optional[str]):
+    def channel_x(self, value: str | None):
         self._channel_x = self._set_channel(self._channel_x, value)
         if self._channel_x is None:
             return
@@ -93,18 +93,18 @@ class PositionHelper(QtCore.QObject):
 
     @QtCore.Slot(int)
     @QtCore.Slot(float)
-    def _set_x(self, value: Union[float, int]):
+    def _set_x(self, value: float | int):
         self._update_position(float(value), None)
 
     @QtCore.Property(str)
-    def channel_y(self) -> Optional[str]:   # pyright: ignore
+    def channel_y(self) -> str | None:   # pyright: ignore
         """The channel address for the Y position."""
         if self._channel_y is None:
             return None
         return self._channel_y.address
 
     @channel_y.setter
-    def channel_y(self, value: Optional[str]):
+    def channel_y(self, value: str | None):
         self._channel_y = self._set_channel(self._channel_y, value)
         if self._channel_y is None:
             return
@@ -114,10 +114,10 @@ class PositionHelper(QtCore.QObject):
 
     @QtCore.Slot(int)
     @QtCore.Slot(float)
-    def _set_y(self, value: Union[float, int]):
+    def _set_y(self, value: float | int):
         self._update_position(None, float(value))
 
-    def _update_position(self, x: Optional[float], y: Optional[float]):
+    def _update_position(self, x: float | None, y: float | None):
         """
         Hook for when X or Y position updated - signal to be emitted.
 
@@ -156,7 +156,7 @@ class OphydCallbackHelper(QtCore.QObject):
     def __init__(
         self,
         sig: ophyd.Signal,
-        event_type: Optional[str] = None,
+        event_type: str | None = None,
         subscribe_now: bool = False,
     ):
         super().__init__()
@@ -193,7 +193,7 @@ class AngleHelper(PositionHelper):
     #: Emitted when the final angle is set and applied to the group.
     angle_set = QtCore.Signal(float)
 
-    def _update_position(self, angle: Optional[float], offset: Optional[float]):
+    def _update_position(self, angle: float | None, offset: float | None):
         """
         Hook for when X or Y position updated - signal to be emitted.
 

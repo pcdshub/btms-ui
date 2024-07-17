@@ -70,7 +70,7 @@ class TyphosDeviceMixin:
     Handles mousePressEvent specifically for forwarded events from a
     QGraphicsView.
     """
-    device: Optional[ophyd.Device]
+    device: ophyd.Device | None
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.type() == QtCore.QEvent.MouseButtonPress:
@@ -133,12 +133,12 @@ class LaserShutter(
 
     NAME = "Laser Shutter"
     EXPERT_OPHYD_CLASS = "pcdsdevices.lasers.btps.LssShutterStatus"
-    device: Optional[LssShutterStatus]
+    device: LssShutterStatus | None
 
     def __init__(
         self,
-        device: Optional[LssShutterStatus] = None,
-        parent: Optional[QtWidgets.QWidget] = None,
+        device: LssShutterStatus | None = None,
+        parent: QtWidgets.QWidget | None = None,
         **kwargs
     ):
         self.device = device
@@ -239,12 +239,12 @@ class GateValve(TyphosDeviceMixin, PneumaticValve):
 
     NAME = "Gate Valve"
     EXPERT_OPHYD_CLASS = "pcdsdevices.valve.VGC"
-    device: Optional[VGC]
+    device: VGC | None
 
     def __init__(
         self,
-        device: Optional[VGC] = None,
-        parent: Optional[QtWidgets.QWidget] = None,
+        device: VGC | None = None,
+        parent: QtWidgets.QWidget | None = None,
         **kwargs
     ):
         self.device = device
