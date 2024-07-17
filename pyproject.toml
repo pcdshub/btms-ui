@@ -1,2 +1,5 @@
 [tool.pyright]
 reportPrivateImportUsage=false
+
+[tool.setuptools.dynamic.optional-dependencies.test]
+file = "dev-requirements.txt"
