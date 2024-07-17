@@ -8,4 +8,4 @@ omit =
     *_version.py
     #tests
     *test*
-    btms-ui/tests/*
+    btms_ui/tests/*
