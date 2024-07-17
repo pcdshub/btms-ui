@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 exclude: |
   (?x)^(
-    btms-ui/_version.py|
+    btms_ui/_version.py|
   )$
 
 repos:
