@@ -1,4 +1,4 @@
-{% set package_name = "btms-ui" %}
+{% set package_name = "btms_ui" %}
 {% set import_name = "btms_ui" %}
 {% set version = load_file_regex(load_file=os.path.join(import_name, "_version.py"), regex_pattern=".*version = '(\S+)'").group(1) %}
 
@@ -38,7 +38,7 @@ test:
 
 
 about:
-  home: https://github.com/pcdshub/btms_ui
+  home: https://github.com/pcdshub/btms-ui
   license: LicenseRef-BSD-3-Clause-SLAC
   license_family: BSD
   summary: Beam Transport System Motion User Interface
