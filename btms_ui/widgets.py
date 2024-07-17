@@ -4,7 +4,7 @@ import logging
 import threading
 import time
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import ClassVar
 
 import numpy as np
 from ophyd.status import MoveStatus

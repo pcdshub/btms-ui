@@ -1,7 +1,7 @@
 import logging
 import signal
 import sys
-from typing import List, Optional
+from typing import Optional
 
 import typhos
 from pydm.exception import install as install_exception_handler

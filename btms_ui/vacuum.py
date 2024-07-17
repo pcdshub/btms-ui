@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import ophyd
 from pcdsdevices.lasers.btps import VGC, LssShutterStatus

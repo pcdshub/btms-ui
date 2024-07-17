@@ -2,7 +2,7 @@ import functools
 import pathlib
 import subprocess
 import sys
-from typing import Callable, List
+from typing import Callable
 
 import ophyd
 from pcdsdevices.lasers import btms_config
