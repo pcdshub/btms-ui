@@ -745,7 +745,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             f"\tFF X: {old_ff_x:.1f}",
             f"\tFF Y: {old_ff_y:.1f}",
             "",
-            "New nominal positions:",
+            "New nominal centroids:",
             f"\tNF X: {nf_x:.1f}",
             f"\tNF Y: {nf_y:.1f}",
             f"\tFF X: {ff_x:.1f}",
