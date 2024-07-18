@@ -1003,6 +1003,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     bay2_pushbutton: QtWidgets.QPushButton
     bay3_pushbutton: QtWidgets.QPushButton
     bay4_pushbutton: QtWidgets.QPushButton
+    graphics_pushbutton: QtWidgets.QPushButton
     expert_mode_checkbox: QtWidgets.QCheckBox
     source_widgets: list[BtmsSourceOverviewWidget]
     _btps_overview: QtWidgets.QWidget | None
@@ -1019,6 +1020,11 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             self.ls6_widget,
             self.ls8_widget,
         ]
+
+        self.graphics_pushbutton.setChecked(True)
+        self.graphics_pushbutton.clicked.connect(
+            self.show_graphics
+        )
 
         for source in self.source_widgets:
             source.setVisible(False)  # Start with source screens hidden
@@ -1090,6 +1096,12 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
 
         for source in self.source_widgets:
             source.device = device.sources[source.source_position]
+
+    def show_graphics(self):
+        if self.graphics_pushbutton.isChecked():
+            self.diagram_widget.setVisible(True)
+        else:
+            self.diagram_widget.setVisible(False)
 
     def show_sources(self, button: QtWidgets.QPushButton,
                      sources: list(BtmsSourceOverviewWidget)):

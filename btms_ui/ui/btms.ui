@@ -203,6 +203,16 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="graphics_pushbutton">
+           <property name="text">
+            <string>Graphics</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
