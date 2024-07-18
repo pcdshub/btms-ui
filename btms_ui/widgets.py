@@ -696,17 +696,17 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         dest_str = dest.name_and_desc
 
-        self._confirm_nominal = QtWidgets.QMessageBox()
-        self._confirm_nominal.setWindowTitle("Confirm Nominal Positions")
-        self._confirm_nominal.setText(f"Update positions for {dest_str}?")
-        self._confirm_nominal.setInformativeText("\n".join(msg_str))
-        self._confirm_nominal.setStandardButtons(
+        self._confirm_pos = QtWidgets.QMessageBox()
+        self._confirm_pos.setWindowTitle("Confirm Nominal Positions")
+        self._confirm_pos.setText(f"Update positions for {dest_str}?")
+        self._confirm_pos.setInformativeText("\n".join(msg_str))
+        self._confirm_pos.setStandardButtons(
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
         )
-        self._confirm_nominal.setDefaultButton(
+        self._confirm_pos.setDefaultButton(
             QtWidgets.QMessageBox.No
         )
-        save = self._confirm_nominal.exec_()
+        save = self._confirm_pos.exec_()
         if save == QtWidgets.QMessageBox.Yes:
             logger.info(
                 "Set motor nominal for %s linear=%s rotary=%s goniometer=%s",
