@@ -26,8 +26,7 @@ file = "LICENSE.md"
 write_to = "btms_ui/_version.py"
 
 [tool.setuptools.dynamic.readme]
-file = "README.md"
-content-type = "text/markdown"
+file = "README.rst"
 
 [tool.setuptools.dynamic.dependencies]
 file = [ "requirements.txt",]
