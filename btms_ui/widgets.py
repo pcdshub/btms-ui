@@ -212,14 +212,29 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
 
     def _setup_ui(self):
         layout = QtWidgets.QHBoxLayout()
+        spacer1 = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        spacer2 = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
         self.target_dest_combo = BtmsDestinationComboBox()
         self.go_button = QtWidgets.QPushButton("Go")
         self.go_button.clicked.connect(self._move_request)
+
+        layout.addItem(spacer1)
         for widget in (
             self.target_dest_combo,
             self.go_button,
         ):
             layout.addWidget(widget)
+        layout.addItem(spacer2)
 
         self.setLayout(layout)
 
