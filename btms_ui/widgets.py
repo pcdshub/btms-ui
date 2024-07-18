@@ -684,14 +684,14 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         msg_str = (
             "Current nominal positions:",
-            f"\tLinear: {old_linear}",
-            f"\tRotary: {old_rotary}",
-            f"\tGoniometer: {old_goniometer}",
+            f"\tLinear: {old_linear:.4f}",
+            f"\tRotary: {old_rotary:.4f}",
+            f"\tGoniometer: {old_goniometer:.4f}",
             "",
             "New nominal positions:",
-            f"\tLinear: {linear}",
-            f"\tRotary: {rotary}",
-            f"\tGoniometer: {goniometer}\n",
+            f"\tLinear: {linear:.4f}",
+            f"\tRotary: {rotary:.4f}",
+            f"\tGoniometer: {goniometer:.4f}\n",
         )
 
         dest_str = dest.name_and_desc
