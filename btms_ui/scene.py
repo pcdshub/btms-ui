@@ -4,7 +4,7 @@ import functools
 import logging
 import math
 import pathlib
-from typing import Any, ClassVar, Dict, List, Optional, Tuple
+from typing import Any, ClassVar
 
 import pcdsdevices.lasers.btms_config as config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
@@ -80,36 +80,36 @@ class PyDMPositionedGroup(QtWidgets.QGraphicsItemGroup):
 
     def __init__(
         self,
-        channel_x: Optional[str] = None,
-        channel_y: Optional[str] = None,
+        channel_x: str | None = None,
+        channel_y: str | None = None,
     ):
         super().__init__()
         self.helper = helpers.PositionHelper(channel_x=channel_x, channel_y=channel_y)
         self.helper.position_updated.connect(self._update_position)
 
     @property
-    def channel_x(self) -> Optional[str]:
+    def channel_x(self) -> str | None:
         """The X channel for the position."""
         return self.helper.channel_x
 
     @channel_x.setter
-    def channel_x(self, value: Optional[str]):
+    def channel_x(self, value: str | None):
         self.helper.channel_x = value
 
     @property
-    def channel_y(self) -> Optional[str]:
+    def channel_y(self) -> str | None:
         """The Y channel for the position."""
         return self.helper.channel_y
 
     @channel_y.setter
-    def channel_y(self, value: Optional[str]):
+    def channel_y(self, value: str | None):
         self.helper.channel_y = value
 
     def get_offset_position(self, x: float, y: float):
         """Optionally add a position offset."""
         return QtCore.QPointF(x, y)
 
-    def _update_position(self, x: Optional[float], y: Optional[float]):
+    def _update_position(self, x: float | None, y: float | None):
         offset_position = self.get_offset_position(
             self.x() if x is None else x,
             self.y() if y is None else y,
@@ -128,8 +128,8 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
 
     def __init__(
         self,
-        channel_angle: Optional[str] = None,
-        channel_offset: Optional[str] = None,
+        channel_angle: str | None = None,
+        channel_offset: str | None = None,
         offset: float = 0.0,
         source_is_degrees: bool = True,
     ):
@@ -140,21 +140,21 @@ class PyDMRotatedGroup(QtWidgets.QGraphicsItemGroup):
         self.source_is_degrees = source_is_degrees
 
     @property
-    def channel_angle(self) -> Optional[str]:
+    def channel_angle(self) -> str | None:
         """The angle channel."""
         return self.helper.channel_x
 
     @channel_angle.setter
-    def channel_angle(self, value: Optional[str]):
+    def channel_angle(self, value: str | None):
         self.helper.channel_x = value
 
     @property
-    def channel_offset(self) -> Optional[str]:
+    def channel_offset(self) -> str | None:
         """The offset channel for the angle."""
         return self.helper.channel_y
 
     @channel_offset.setter
-    def channel_offset(self, value: Optional[str]):
+    def channel_offset(self, value: str | None):
         self.helper.channel_y = value
 
     def get_offset_angle(self, angle: float):
@@ -187,8 +187,8 @@ class SourceDestinationIndicator(PyDMPositionedGroup):
         base_item: QtWidgets.QGraphicsRectItem,
         source: SourcePosition,
         dest: DestinationPosition,
-        channel_x: Optional[str] = None,
-        channel_y: Optional[str] = None,
+        channel_x: str | None = None,
+        channel_y: str | None = None,
     ):
         self.base_item = base_item
         self.source = source
@@ -229,12 +229,12 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
     source_margin: ClassVar[float] = 10.0
 
     base: PackagedPixmap
-    assemblies: Dict[SourcePosition, MotorizedMirrorAssembly]
-    sources: Dict[SourcePosition, LaserSource]
-    destinations: Dict[DestinationPosition, Destination]
-    beams: Dict[SourcePosition, BeamIndicator]
-    current_destinations: Dict[SourcePosition, Optional[DestinationPosition]]
-    _subscriptions: List[helpers.OphydCallbackHelper]
+    assemblies: dict[SourcePosition, MotorizedMirrorAssembly]
+    sources: dict[SourcePosition, LaserSource]
+    destinations: dict[DestinationPosition, Destination]
+    beams: dict[SourcePosition, BeamIndicator]
+    current_destinations: dict[SourcePosition, DestinationPosition | None]
+    _subscriptions: list[helpers.OphydCallbackHelper]
 
     def __init__(self):
         super().__init__()
@@ -259,7 +259,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         source = LaserSource(ls_position=source)
         return source
 
-    def _create_sources(self) -> Dict[SourcePosition, LaserSource]:
+    def _create_sources(self) -> dict[SourcePosition, LaserSource]:
         """Create all laser sources."""
         sources = {}
         for pos in config.valid_sources:
@@ -274,7 +274,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             ld_position=dest,
         )
 
-    def _create_destinations(self) -> Dict[DestinationPosition, Destination]:
+    def _create_destinations(self) -> dict[DestinationPosition, Destination]:
         """Create all laser destinations."""
         destinations = {}
         for pos in config.valid_destinations:
@@ -306,7 +306,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
         return assembly
 
-    def _create_assemblies(self) -> Dict[SourcePosition, MotorizedMirrorAssembly]:
+    def _create_assemblies(self) -> dict[SourcePosition, MotorizedMirrorAssembly]:
         """Create all laser assemblies."""
         assemblies = {}
         for pos in config.valid_sources:
@@ -360,7 +360,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             assembly=self.assemblies[source],
         )
 
-    def _create_beam_indicators(self) -> Dict[SourcePosition, BeamIndicator]:
+    def _create_beam_indicators(self) -> dict[SourcePosition, BeamIndicator]:
         """Create all laser beam indicators."""
         indicators = {}
         for pos in config.valid_sources:
@@ -370,7 +370,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         return indicators
 
     @property
-    def device(self) -> Optional[BtpsStateDevice]:
+    def device(self) -> BtpsStateDevice | None:
         """
         The ophyd device - BtpsStateDevice - associated with the SwitchBox.
 
@@ -380,7 +380,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         """
         return self._device
 
-    def get_closest_destination(self, source: SourcePosition, pos: float) -> Optional[Destination]:
+    def get_closest_destination(self, source: SourcePosition, pos: float) -> Destination | None:
         """Get the closest Destination to the given position."""
         zeropos = self.assemblies[source].base.sceneBoundingRect().left()
         distances = {
@@ -413,7 +413,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
             )
             beam.update_lines()
 
-    def _destination_updated(self, source_pos: SourcePosition, info: Dict[str, Any]):
+    def _destination_updated(self, source_pos: SourcePosition, info: dict[str, Any]):
         """Ophyd callback indicating a destination has updated."""
         value = info.get("value", None)
         try:
@@ -424,7 +424,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         self.current_destinations[source_pos] = dest_pos
 
     @device.setter
-    def device(self, device: Optional[BtpsStateDevice]) -> None:
+    def device(self, device: BtpsStateDevice | None) -> None:
         self._device = device
         if device is None:
             return
@@ -491,13 +491,13 @@ class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
     """
     filename: pathlib.Path
     pixels_to_mm: float
-    origin: Tuple[float, float]
+    origin: tuple[float, float]
 
     def __init__(
         self,
         filename: str,
         pixels_to_mm: float = 1.0,
-        origin: Optional[Tuple[float, float]] = None,
+        origin: tuple[float, float] | None = None,
     ):
         self.filename = util.BTMS_SOURCE_PATH / "ui" / filename
         self.pixels_to_mm = pixels_to_mm
@@ -508,8 +508,8 @@ class ScaledPixmapItem(QtWidgets.QGraphicsPixmapItem):
         self.setTransformOriginPoint(self.boundingRect().topLeft())
 
     def position_from_pixels(
-        self, pixel_pos: Tuple[float, float]
-    ) -> Tuple[float, float]:
+        self, pixel_pos: tuple[float, float]
+    ) -> tuple[float, float]:
         """
         Get an item position from the provided pixel position.
 
@@ -537,7 +537,7 @@ class PackagedPixmap(ScaledPixmapItem):
         The packaged pixmap filename (in ``ui/``).
     """
     filename: pathlib.Path
-    positions: Dict[config.AnyPosition, Tuple[float, float]]
+    positions: dict[config.AnyPosition, tuple[float, float]]
 
     def __init__(
         self,
@@ -556,10 +556,10 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
     """Active laser beam indicator."""
     source: LaserSource
     assembly: MotorizedMirrorAssembly
-    _destination: Optional[Destination]
+    _destination: Destination | None
     source_to_assembly: QtWidgets.QGraphicsLineItem
     assembly_to_destination: QtWidgets.QGraphicsLineItem
-    lines: Tuple[QtWidgets.QGraphicsLineItem, ...]
+    lines: tuple[QtWidgets.QGraphicsLineItem, ...]
 
     pen_width: ClassVar[int] = 10
     pen: ClassVar[QtGui.QPen] = QtGui.QPen(QtGui.QColor("green"), pen_width)
@@ -641,12 +641,12 @@ class BeamIndicator(QtWidgets.QGraphicsItemGroup):
         )
 
     @property
-    def destination(self) -> Optional[Destination]:
+    def destination(self) -> Destination | None:
         """The destination hutch."""
         return self._destination
 
     @destination.setter
-    def destination(self, destination: Optional[Destination]):
+    def destination(self, destination: Destination | None):
         self._destination = destination
 
 
@@ -904,13 +904,13 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
     _qt_designer_ = {
         "group": "Laser Transport System",
     }
-    device: Optional[BtpsStateDevice]
+    device: BtpsStateDevice | None
     switch_box: SwitchBox
 
     def __init__(
         self,
-        parent: Optional[QtWidgets.QWidget] = None,
-        scene: Optional[QtWidgets.QGraphicsScene] = None,
+        parent: QtWidgets.QWidget | None = None,
+        scene: QtWidgets.QGraphicsScene | None = None,
     ):
         if scene is None:
             scene = QtWidgets.QGraphicsScene()

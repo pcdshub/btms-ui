@@ -1,7 +1,7 @@
 import logging
 import signal
 import sys
-from typing import List, Optional
+from typing import Optional
 
 import typhos
 from pydm.exception import install as install_exception_handler
@@ -18,7 +18,7 @@ def _sigint_handler(signal, frame):
     sys.exit(1)
 
 
-def _configure_stylesheet(paths: Optional[List[str]] = None) -> str:
+def _configure_stylesheet(paths: Optional[list[str]] = None) -> str:
     """
     Configure stylesheets for btms-ui.
 
@@ -45,7 +45,7 @@ def _configure_stylesheet(paths: Optional[List[str]] = None) -> str:
     stylesheets = [app.styleSheet()]
 
     for path in paths:
-        with open(path, "rt") as fp:
+        with open(path) as fp:
             stylesheets.append(fp.read())
 
     full_stylesheet = "\n\n".join(stylesheets)

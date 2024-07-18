@@ -1,12 +1,10 @@
-
-{% set data = load_setup_py_data() %}
-
+{% set package_name = "btms_ui" %}
+{% set import_name = "btms_ui" %}
+{% set version = load_file_regex(load_file=os.path.join(import_name, "_version.py"), regex_pattern=".*version = '(\S+)'").group(1) %}
 
 package:
-  name: btms_ui
-
-  version: {{ data.get('version') }}
-
+  name: {{ package_name }}
+  version: {{ version }}
 
 source:
   path: ..
@@ -14,25 +12,33 @@ source:
 build:
   number: 0
   noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+
+
 
 requirements:
   build:
-    - python >=3.7
-    - setuptools
+  - python >=3.7
+  - setuptools_scm
+  - pip
   run:
-    - python >=3.7
-    - pcdsdevices
-    - qtpy
-    - pyqt <5.15
+  - python >=3.7
+  - pcdsdevices
+  - qtpy
+  - pyqt
+
+
 
 test:
   imports:
-    - btms_ui
+  - btms_ui
   requires:
-    - pytest
+  - pytest
+
+
 
 about:
-  home: https://github.com/pcdshub/btms_ui
+  home: https://github.com/pcdshub/btms-ui
   license: LicenseRef-BSD-3-Clause-SLAC
   license_family: BSD
   summary: Beam Transport System Motion User Interface

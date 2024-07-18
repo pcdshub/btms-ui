@@ -4,7 +4,7 @@ import logging
 import threading
 import time
 from functools import partial
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import ClassVar
 
 import numpy as np
 from ophyd.status import MoveStatus
@@ -35,7 +35,7 @@ class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
         self._destination = None
 
     @property
-    def destination(self) -> Optional[DestinationPosition]:
+    def destination(self) -> DestinationPosition | None:
         return self._destination
 
     def setText(self, text: str):
@@ -62,7 +62,7 @@ class BtmsLaserDestinationLabel(pydm_widgets.PyDMLabel):
 
 
 class BtmsDestinationComboBox(QtWidgets.QComboBox):
-    def __init__(self, parent: Optional[QtWidgets.QWidget] = None, **kwargs):
+    def __init__(self, parent: QtWidgets.QWidget | None = None, **kwargs):
         super().__init__(parent, **kwargs)
 
         for dest in sorted(DestinationPosition, key=lambda dest: dest.index):
@@ -80,7 +80,7 @@ class QMoveStatus(QtCore.QObject):
         move_status.watch(self._watch_callback)
         move_status.callbacks.append(self._finished_callback)
 
-    def _watch_callback(self, fraction: Optional[float] = None, **kwargs):
+    def _watch_callback(self, fraction: float | None = None, **kwargs):
         if fraction is not None:
             percent = 1.0 - fraction
             self.percent_changed.emit(percent)
@@ -88,21 +88,21 @@ class QMoveStatus(QtCore.QObject):
                 # TODO: this might not be necessary
                 self.finished_moving.emit()
 
-    def _finished_callback(self, fraction: Optional[float] = None, **kwargs):
+    def _finished_callback(self, fraction: float | None = None, **kwargs):
         self.percent_changed.emit(1.0)
         self.finished_moving.emit()
 
 
 class QCombinedMoveStatus(QtCore.QObject):
-    move_statuses: List[MoveStatus]
-    initials: Tuple[float, ...]
-    percents: Tuple[float, ...]
-    currents: Tuple[float, ...]
-    targets: Tuple[float, ...]
+    move_statuses: list[MoveStatus]
+    initials: tuple[float, ...]
+    percents: tuple[float, ...]
+    currents: tuple[float, ...]
+    targets: tuple[float, ...]
     status_changed = QtCore.Signal(float, list, list)  # List[float]
     finished_moving = QtCore.Signal()
 
-    def __init__(self, move_statuses: List[MoveStatus]):
+    def __init__(self, move_statuses: list[MoveStatus]):
         super().__init__()
         if not move_statuses:
             raise ValueError("At least one MoveStatus required")
@@ -119,7 +119,7 @@ class QCombinedMoveStatus(QtCore.QObject):
             move_status.callbacks.append(partial(self._finished_callback, idx))
 
     @property
-    def current_deltas(self) -> List[float]:
+    def current_deltas(self) -> list[float]:
         """Delta of current position to target position."""
         return [
             abs(target - current)
@@ -128,7 +128,7 @@ class QCombinedMoveStatus(QtCore.QObject):
         ]
 
     @property
-    def initial_deltas(self) -> List[float]:
+    def initial_deltas(self) -> list[float]:
         """Delta of initial position to target position."""
         return [
             abs(target - initial)
@@ -140,10 +140,10 @@ class QCombinedMoveStatus(QtCore.QObject):
         self,
         index: int,
         /,
-        fraction: Optional[float] = None,
-        initial: Optional[float] = None,
-        current: Optional[float] = None,
-        target: Optional[float] = None,
+        fraction: float | None = None,
+        initial: float | None = None,
+        current: float | None = None,
+        target: float | None = None,
         **kwargs,
     ):
         with self.lock:
@@ -184,7 +184,7 @@ class QCombinedMoveStatus(QtCore.QObject):
             if overall >= (1.0 - 1e-6):
                 self.finished_moving.emit()
 
-    def _finished_callback(self, index: int, /, fraction: Optional[float] = None, **kwargs):
+    def _finished_callback(self, index: int, /, fraction: float | None = None, **kwargs):
         with self.lock:
             self._finished_count += 1
             current_deltas = self.current_deltas
@@ -197,10 +197,10 @@ class QCombinedMoveStatus(QtCore.QObject):
 
 class BtmsLaserDestinationChoice(QtWidgets.QFrame):
     target_dest_combo: BtmsDestinationComboBox
-    _device: Optional[BtpsSourceStatus]
+    _device: BtpsSourceStatus | None
     move_requested = QtCore.Signal(object)
 
-    def __init__(self, parent: Optional[QtWidgets.QWidget] = None, **kwargs):
+    def __init__(self, parent: QtWidgets.QWidget | None = None, **kwargs):
         super().__init__(parent, **kwargs)
         self._device = None
 
@@ -227,7 +227,7 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
         self.move_requested.emit(self.target_dest_combo.currentData())
 
     @property
-    def device(self) -> Optional[BtpsSourceStatus]:
+    def device(self) -> BtpsSourceStatus | None:
         """The device for the BTMS."""
         return self._device
 
@@ -239,10 +239,10 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
 class BtmsStateDetails(QtWidgets.QFrame):
     def __init__(
         self,
-        parent: Optional[QtWidgets.QWidget],
-        state: Optional[BtpsState] = None,
-        source: Optional[SourcePosition] = None,
-        dest: Optional[DestinationPosition] = None,
+        parent: QtWidgets.QWidget | None,
+        state: BtpsState | None = None,
+        source: SourcePosition | None = None,
+        dest: DestinationPosition | None = None,
     ):
         super().__init__(parent)
         self._state = None
@@ -263,32 +263,32 @@ class BtmsStateDetails(QtWidgets.QFrame):
         layout.addWidget(self.text_edit)
 
     @property
-    def state(self) -> Optional[BtpsState]:
+    def state(self) -> BtpsState | None:
         """The BtpsState Bevice."""
         return self._state
 
     @state.setter
-    def state(self, value: Optional[BtpsState]):
+    def state(self, value: BtpsState | None):
         self._state = value
         self._update()
 
     @property
-    def dest(self) -> Optional[DestinationPosition]:
+    def dest(self) -> DestinationPosition | None:
         """The destination."""
         return self._dest
 
     @dest.setter
-    def dest(self, value: Optional[DestinationPosition]):
+    def dest(self, value: DestinationPosition | None):
         self._dest = value
         self._update()
 
     @property
-    def source(self) -> Optional[SourcePosition]:
+    def source(self) -> SourcePosition | None:
         """The source."""
         return self._source
 
     @source.setter
-    def source(self, value: Optional[SourcePosition]):
+    def source(self, value: SourcePosition | None):
         self._source = value
         self._update()
 
@@ -324,7 +324,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
     def __init__(
         self,
-        parent: Optional[QtWidgets.QWidget],
+        parent: QtWidgets.QWidget | None,
         state: BtpsState,
         source: SourcePosition,
         dest: DestinationPosition,
@@ -416,7 +416,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
             # Any idea?
             ...
 
-    def get_resolution_explanation(self, conflict: Exception) -> Optional[str]:
+    def get_resolution_explanation(self, conflict: Exception) -> str | None:
         """
         Get an explanation about a resolution for the provided issue.
 
@@ -440,11 +440,11 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
-    indicators: Dict[DestinationPosition, List[pydm_widgets.PyDMByteIndicator]]
+    indicators: dict[DestinationPosition, list[pydm_widgets.PyDMByteIndicator]]
 
     def __init__(
         self,
-        parent: Optional[QtWidgets.QWidget] = None,
+        parent: QtWidgets.QWidget | None = None,
         **kwargs
     ):
         self._device = None
@@ -456,7 +456,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         self.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
     @property
-    def device(self) -> Optional[BtpsSourceStatus]:
+    def device(self) -> BtpsSourceStatus | None:
         """The device for the BTMS."""
         return self._device
 
@@ -466,7 +466,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         self.set_destination(self._destination)
 
     @property
-    def destination(self) -> Optional[DestinationPosition]:
+    def destination(self) -> DestinationPosition | None:
         """The destination for the BTMS."""
         return self._destination
 
@@ -492,7 +492,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 
     def _get_indicators(
         self, state: BtpsState, source: SourcePosition, dest: DestinationPosition
-    ) -> List[pydm_widgets.PyDMByteIndicator]:
+    ) -> list[pydm_widgets.PyDMByteIndicator]:
         """
         Get the indicator widgets for a given source/dest combination.
         """
@@ -548,7 +548,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
         return widgets
 
     @QtCore.Slot(object)
-    def set_destination(self, destination: Optional[DestinationPosition]):
+    def set_destination(self, destination: DestinationPosition | None):
         device = self._device
 
         self._destination = destination
@@ -573,7 +573,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     filename: ClassVar[str] = "btms-source.ui"
 
-    positioner_widgets: Tuple[TyphosPositionerWidget, ...]
+    positioner_widgets: tuple[TyphosPositionerWidget, ...]
 
     current_dest_label: BtmsLaserDestinationLabel
     goniometer_widget: TyphosPositionerWidget
@@ -586,7 +586,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     save_nominal_button: QtWidgets.QPushButton
     save_centroid_nominal_button: QtWidgets.QPushButton
     show_cameras_button: QtWidgets.QPushButton
-    source: Optional[BtpsSourceStatus]
+    source: BtpsSourceStatus | None
     source_name_label: QtWidgets.QLabel
     target_dest_widget: BtmsLaserDestinationChoice
     toggle_control_button: QtWidgets.QPushButton
@@ -611,7 +611,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
     def __init__(
         self,
-        parent: Optional[QtWidgets.QWidget],
+        parent: QtWidgets.QWidget | None,
         prefix: str = "",
         source_index: int = 1,
         expert_mode: bool = True,
@@ -759,7 +759,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self._save_centroid_nominal(dest)
 
-    def get_destination(self) -> Optional[DestinationPosition]:
+    def get_destination(self) -> DestinationPosition | None:
         dest = self.current_dest_label.destination
         if dest is not None:
             return dest
@@ -836,7 +836,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
     def _perform_move(
         self, target: DestinationPosition
-    ) -> Optional[QCombinedMoveStatus]:
+    ) -> QCombinedMoveStatus | None:
         """
         Request move of this source to the ``target`` DestinationPosition.
         """
@@ -855,7 +855,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         def finished_moving():
             self.motion_progress_frame.setVisible(False)
 
-        def update(overall_percent: float, current_deltas: List[float], initial_deltas: List[float]):
+        def update(overall_percent: float, current_deltas: list[float], initial_deltas: list[float]):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
 
         self.motion_progress_widget.setValue(0)
@@ -870,7 +870,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.motion_progress_frame.setVisible(show_progress)
         return self._move_status
 
-    def move_request(self, target: DestinationPosition) -> Optional[QCombinedMoveStatus]:
+    def move_request(self, target: DestinationPosition) -> QCombinedMoveStatus | None:
         """
         Request move of this source to the ``target`` DestinationPosition.
         """
@@ -882,7 +882,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         def finished_moving():
             self.motion_progress_frame.setVisible(False)
 
-        def update(overall_percent: float, individual_percents: List[float]):
+        def update(overall_percent: float, individual_percents: list[float]):
             self.motion_progress_widget.setValue(int(overall_percent * 100.0))
 
         self.motion_progress_widget.setValue(0)
@@ -960,7 +960,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         )
 
     @property
-    def device(self) -> Optional[BtpsSourceStatus]:
+    def device(self) -> BtpsSourceStatus | None:
         """The device for the BTMS."""
         return self._device
 
@@ -1029,9 +1029,9 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     open_btps_overview_button: QtWidgets.QPushButton
     open_hutch_overview_button: QtWidgets.QPushButton
     expert_mode_checkbox: QtWidgets.QCheckBox
-    source_widgets: List[BtmsSourceOverviewWidget]
-    _btps_overview: Optional[QtWidgets.QWidget]
-    _hutch_overview: Optional[QtWidgets.QWidget]
+    source_widgets: list[BtmsSourceOverviewWidget]
+    _btps_overview: QtWidgets.QWidget | None
+    _hutch_overview: QtWidgets.QWidget | None
 
     def __init__(self, *args, prefix: str = "", expert_mode: bool = False, **kwargs):
         self._prefix = prefix
@@ -1056,7 +1056,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             source_widget.expert_mode = expert_mode
 
     @property
-    def device(self) -> Optional[BtpsState]:
+    def device(self) -> BtpsState | None:
         """The pcdsdevices BtpsState device; available after prefix is set."""
         return self.diagram_widget.view.device
 
