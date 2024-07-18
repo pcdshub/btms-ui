@@ -726,29 +726,64 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             return
 
         config = self.device.parent.destinations[dest].sources[self.source_position]
+
+        # Get the old config values
+        old_nf_x = float(config.near_field.centroid_x.nominal.get())
+        old_nf_y = float(config.near_field.centroid_y.nominal.get())
+        old_ff_x = float(config.far_field.centroid_x.nominal.get())
+        old_ff_y = float(config.far_field.centroid_y.nominal.get())
+
         nf_x = float(config.near_field.centroid_x.value.get())
         nf_y = float(config.near_field.centroid_y.value.get())
         ff_x = float(config.far_field.centroid_x.value.get())
         ff_y = float(config.far_field.centroid_y.value.get())
 
-        logger.info(
-            "Set nominal for %s nf=%s %s ff=%s %s",
-            dest.name_and_desc,
-            nf_x,
-            nf_y,
-            ff_x,
-            ff_y,
+        msg_str = (
+            "Current nominal centroids:",
+            f"\tNF X: {old_nf_x:.1f}",
+            f"\tNF Y: {old_nf_y:.1f}",
+            f"\tFF X: {old_ff_x:.1f}",
+            f"\tFF Y: {old_ff_y:.1f}",
+            "",
+            "New nominal positions:",
+            f"\tNF X: {nf_x:.1f}",
+            f"\tNF Y: {nf_y:.1f}",
+            f"\tFF X: {ff_x:.1f}",
+            f"\tFF Y: {ff_y:.1f}\n",
         )
 
-        # Set the source-to-destination data store values:
-        if nf_x > 0.0:
-            self.adjust_range(config.near_field.centroid_x, nf_x, delta=20.0)
-        if nf_y > 0.0:
-            self.adjust_range(config.near_field.centroid_y, nf_y, delta=20.0)
-        if ff_x > 0.0:
-            self.adjust_range(config.far_field.centroid_x, ff_x, delta=20.0)
-        if ff_y > 0.0:
-            self.adjust_range(config.far_field.centroid_y, ff_y, delta=20.0)
+        dest_str = dest.name_and_desc
+
+        self._confirm_centroid = QtWidgets.QMessageBox()
+        self._confirm_centroid.setWindowTitle("Confirm Nominal Centroids")
+        self._confirm_centroid.setText(f"Update centroids for {dest_str}?")
+        self._confirm_centroid.setInformativeText("\n".join(msg_str))
+        self._confirm_centroid.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+        )
+        self._confirm_centroid.setDefaultButton(
+            QtWidgets.QMessageBox.No
+        )
+        save = self._confirm_centroid.exec_()
+        if save == QtWidgets.QMessageBox.Yes:
+            logger.info(
+                "Set nominal for %s nf=%s %s ff=%s %s",
+                dest.name_and_desc,
+                nf_x,
+                nf_y,
+                ff_x,
+                ff_y,
+            )
+
+            # Set the source-to-destination data store values:
+            if nf_x > 0.0:
+                self.adjust_range(config.near_field.centroid_x, nf_x, delta=20.0)
+            if nf_y > 0.0:
+                self.adjust_range(config.near_field.centroid_y, nf_y, delta=20.0)
+            if ff_x > 0.0:
+                self.adjust_range(config.far_field.centroid_x, ff_x, delta=20.0)
+            if ff_y > 0.0:
+                self.adjust_range(config.far_field.centroid_y, ff_y, delta=20.0)
 
     def save_centroid_nominal(self) -> None:
         """Save the current centroid X/Y positions to the BTPS."""
