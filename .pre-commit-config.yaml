@@ -1,10 +1,15 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+exclude: |
+  (?x)^(
+    btms_ui/_version.py|
+  )$
+
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.6.0
     hooks:
-    # -   id: no-commit-to-branch
+    -   id: no-commit-to-branch
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
     -   id: check-ast
@@ -18,11 +23,11 @@ repos:
     -   id: debug-statements
 
 -   repo: https://github.com/pycqa/flake8.git
-    rev: 3.9.2
+    rev: 7.1.0
     hooks:
     -   id: flake8
 
 -   repo: https://github.com/timothycrosley/isort
-    rev: 5.10.1
+    rev: 5.13.2
     hooks:
     -   id: isort

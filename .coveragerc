@@ -1,6 +1,6 @@
 [run]
 source =
-    btms_ui
+    btms-ui
 [report]
 omit =
     #versioning

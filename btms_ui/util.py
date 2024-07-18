@@ -2,7 +2,7 @@ import functools
 import pathlib
 import subprocess
 import sys
-from typing import Callable, List
+from typing import Callable
 
 import ophyd
 from pcdsdevices.lasers import btms_config
@@ -34,7 +34,7 @@ def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
     )
 
 
-def prune_expert_issues(issues: List[btms_config.MoveError]) -> List[btms_config.MoveError]:
+def prune_expert_issues(issues: list[btms_config.MoveError]) -> list[btms_config.MoveError]:
     """
     Remove issues that experts can safely ignore.
 

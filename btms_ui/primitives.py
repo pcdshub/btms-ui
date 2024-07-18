@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, Union
 
 from qtpy import QtCore, QtGui, QtWidgets
 
@@ -18,7 +17,7 @@ def center_transform_origin(obj: QtWidgets.QGraphicsItem):
     obj.setTransformOriginPoint(obj.rect().center())
 
 
-def center_transform_top_left(obj: Union[QtWidgets.QGraphicsItem, QtWidgets.QGraphicsItemGroup]):
+def center_transform_top_left(obj: QtWidgets.QGraphicsItem | QtWidgets.QGraphicsItemGroup):
     """Put the object's transform origin at its top-left position."""
     if isinstance(obj, QtWidgets.QGraphicsItemGroup):
         rect = obj.boundingRect()
@@ -33,9 +32,9 @@ def create_scene_rectangle_topleft(
     top: float,
     width: float,
     height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-    zvalue: Optional[int] = None,
+    pen: QtGui.QColor | QtGui.QPen | None = None,
+    brush: QtGui.QColor | QtGui.QBrush | None = None,
+    zvalue: int | None = None,
 ) -> QtWidgets.QGraphicsRectItem:
     """
     Create a QGraphicsRectItem for a QGraphicsScene.
@@ -82,9 +81,9 @@ def create_scene_rectangle(
     cy: float,
     width: float,
     height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
-    zvalue: Optional[int] = None,
+    pen: QtGui.QColor | QtGui.QPen | None = None,
+    brush: QtGui.QColor | QtGui.QBrush | None = None,
+    zvalue: int | None = None,
 ) -> QtWidgets.QGraphicsRectItem:
     """
     Create a QGraphicsRectItem for a QGraphicsScene.
@@ -128,8 +127,8 @@ def create_scene_rectangle(
 
 def create_scene_polygon(
     polygon: QtGui.QPolygonF,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    pen: QtGui.QColor | QtGui.QPen | None = None,
+    brush: QtGui.QColor | QtGui.QBrush | None = None,
 ) -> QtWidgets.QGraphicsPolygonItem:
     """
     Create a QGraphicsPolygonItem in the provided shape for a QGraphicsScene.
@@ -162,8 +161,8 @@ def create_scene_polygon(
 def create_scene_cross(
     width: float,
     height: float,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    pen: QtGui.QColor | QtGui.QPen | None = None,
+    brush: QtGui.QColor | QtGui.QBrush | None = None,
 ) -> QtWidgets.QGraphicsPolygonItem:
     """
     Create a QGraphicsPolygonItem in the shape of a cross for a QGraphicsScene.
@@ -206,8 +205,8 @@ def create_scene_arrow(
     width: float,
     height: float,
     direction: ArrowDirection,
-    pen: Optional[Union[QtGui.QColor, QtGui.QPen]] = None,
-    brush: Optional[Union[QtGui.QColor, QtGui.QBrush]] = None,
+    pen: QtGui.QColor | QtGui.QPen | None = None,
+    brush: QtGui.QColor | QtGui.QBrush | None = None,
     head_percent: float = 0.75,
 ) -> QtWidgets.QGraphicsPolygonItem:
     """

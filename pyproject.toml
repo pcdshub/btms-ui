@@ -1,2 +1,38 @@
-[tool.pyright]
-reportPrivateImportUsage=false
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2",]
+
+[project]
+classifiers = [ "Programming Language :: Python :: 3",]
+description = "Beam Transport Motion System GUI and python code"
+dynamic = [ "version", "readme", "dependencies", "optional-dependencies",]
+keywords = []
+name = "btms_ui"
+requires-python = ">=3.9"
+
+[options]
+zip_safe = false
+include_package_data = true
+
+[[project.authors]]
+name = "SLAC National Accelerator Laboratory"
+
+[project.license]
+file = "LICENSE.md"
+
+[project.scripts]
+
+[tool.setuptools_scm]
+write_to = "btms_ui/_version.py"
+
+[tool.setuptools.dynamic.readme]
+file = "README.rst"
+
+[tool.setuptools.dynamic.dependencies]
+file = [ "requirements.txt",]
+
+[tool.setuptools.dynamic.optional-dependencies.test]
+file = "dev-requirements.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.doc]
+file = "docs-requirements.txt"
