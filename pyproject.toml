@@ -7,7 +7,7 @@ classifiers = [ "Programming Language :: Python :: 3",]
 description = "Beam Transport Motion System GUI and python code"
 dynamic = [ "version", "readme", "dependencies", "optional-dependencies",]
 keywords = []
-name = "btms-ui"
+name = "btms_ui"
 requires-python = ">=3.9"
 
 [options]
