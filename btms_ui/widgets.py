@@ -815,7 +815,6 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.goniometer_label.setVisible(show_position_labels)
         self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
-        self.save_centroid_nominal_button.setVisible(show)
 
     def _perform_move(
         self, target: DestinationPosition
@@ -902,8 +901,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self._expert_mode = bool(expert_mode)
         self.toggle_control_button.setVisible(self._expert_mode)
+        self.save_centroid_nominal_button.setVisible(self._expert_mode)
         if not self._expert_mode:
             self.show_motors(False)
+            self.save_centroid_nominal_button.setVisible(self._expert_mode)
             self.toggle_control_button.setChecked(False)
 
     @QtCore.Property(str)
