@@ -683,16 +683,15 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         goniometer = float(self.device.goniometer.user_readback.get())
 
         msg_str = (
-            f"Current nominal positions:",
-            f"\tLinear: {old_linear}",        
-            f"\tRotary: {old_rotary}",        
+            "Current nominal positions:",
+            f"\tLinear: {old_linear}",
+            f"\tRotary: {old_rotary}",
             f"\tGoniometer: {old_goniometer}",
-            f"",
-            f"New nominal positions:",
-            f"\tLinear: {linear}",        
-            f"\tRotary: {rotary}",        
-            f"\tGoniometer: {goniometer}",
-            f""
+            "",
+            "New nominal positions:",
+            f"\tLinear: {linear}",
+            f"\tRotary: {rotary}",
+            f"\tGoniometer: {goniometer}\n",
         )
 
         dest_str = dest.name_and_desc
