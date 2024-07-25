@@ -687,22 +687,53 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         config = self.device.parent.destinations[dest].sources[self.source_position]
 
-        # The current positions
+        # The old nominal positions
+        old_linear = config.linear.nominal.get()
+        old_rotary = config.rotary.nominal.get()
+        old_goniometer = config.goniometer.nominal.get()
+
+        # The current motor positions
         linear = float(self.device.linear.user_readback.get())
         rotary = float(self.device.rotary.user_readback.get())
         goniometer = float(self.device.goniometer.user_readback.get())
 
-        logger.info(
-            "Set motor nominal for %s linear=%s rotary=%s goniometer=%s",
-            dest.name_and_desc,
-            linear,
-            rotary,
-            goniometer,
+        msg_str = (
+            "Current nominal positions:",
+            f"\tLinear: {old_linear:.4f}",
+            f"\tRotary: {old_rotary:.4f}",
+            f"\tGoniometer: {old_goniometer:.4f}",
+            "",
+            "New nominal positions:",
+            f"\tLinear: {linear:.4f}",
+            f"\tRotary: {rotary:.4f}",
+            f"\tGoniometer: {goniometer:.4f}\n",
         )
-        # Set the source-to-destination data store values:
-        self.adjust_range(config.linear, linear, delta=1.0)
-        self.adjust_range(config.rotary, rotary, delta=1.0)
-        self.adjust_range(config.goniometer, goniometer, delta=1.0)
+
+        dest_str = dest.name_and_desc
+
+        self._confirm_pos = QtWidgets.QMessageBox()
+        self._confirm_pos.setWindowTitle("Confirm Nominal Positions")
+        self._confirm_pos.setText(f"Update positions for {dest_str}?")
+        self._confirm_pos.setInformativeText("\n".join(msg_str))
+        self._confirm_pos.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+        )
+        self._confirm_pos.setDefaultButton(
+            QtWidgets.QMessageBox.No
+        )
+        save = self._confirm_pos.exec_()
+        if save == QtWidgets.QMessageBox.Yes:
+            logger.info(
+                "Set motor nominal for %s linear=%s rotary=%s goniometer=%s",
+                dest.name_and_desc,
+                linear,
+                rotary,
+                goniometer,
+            )
+            # Set the source-to-destination data store values:
+            self.adjust_range(config.linear, linear, delta=1.0)
+            self.adjust_range(config.rotary, rotary, delta=1.0)
+            self.adjust_range(config.goniometer, goniometer, delta=1.0)
 
     def _save_centroid_nominal(self, dest: DestinationPosition) -> None:
         """Save the current centroid X/Y positions to the BTPS."""
@@ -710,29 +741,64 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
             return
 
         config = self.device.parent.destinations[dest].sources[self.source_position]
+
+        # Get the old config values
+        old_nf_x = float(config.near_field.centroid_x.nominal.get())
+        old_nf_y = float(config.near_field.centroid_y.nominal.get())
+        old_ff_x = float(config.far_field.centroid_x.nominal.get())
+        old_ff_y = float(config.far_field.centroid_y.nominal.get())
+
         nf_x = float(config.near_field.centroid_x.value.get())
         nf_y = float(config.near_field.centroid_y.value.get())
         ff_x = float(config.far_field.centroid_x.value.get())
         ff_y = float(config.far_field.centroid_y.value.get())
 
-        logger.info(
-            "Set nominal for %s nf=%s %s ff=%s %s",
-            dest.name_and_desc,
-            nf_x,
-            nf_y,
-            ff_x,
-            ff_y,
+        msg_str = (
+            "Current nominal centroids:",
+            f"\tNF X: {old_nf_x:.1f}",
+            f"\tNF Y: {old_nf_y:.1f}",
+            f"\tFF X: {old_ff_x:.1f}",
+            f"\tFF Y: {old_ff_y:.1f}",
+            "",
+            "New nominal centroids:",
+            f"\tNF X: {nf_x:.1f}",
+            f"\tNF Y: {nf_y:.1f}",
+            f"\tFF X: {ff_x:.1f}",
+            f"\tFF Y: {ff_y:.1f}\n",
         )
 
-        # Set the source-to-destination data store values:
-        if nf_x > 0.0:
-            self.adjust_range(config.near_field.centroid_x, nf_x, delta=20.0)
-        if nf_y > 0.0:
-            self.adjust_range(config.near_field.centroid_y, nf_y, delta=20.0)
-        if ff_x > 0.0:
-            self.adjust_range(config.far_field.centroid_x, ff_x, delta=20.0)
-        if ff_y > 0.0:
-            self.adjust_range(config.far_field.centroid_y, ff_y, delta=20.0)
+        dest_str = dest.name_and_desc
+
+        self._confirm_centroid = QtWidgets.QMessageBox()
+        self._confirm_centroid.setWindowTitle("Confirm Nominal Centroids")
+        self._confirm_centroid.setText(f"Update centroids for {dest_str}?")
+        self._confirm_centroid.setInformativeText("\n".join(msg_str))
+        self._confirm_centroid.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+        )
+        self._confirm_centroid.setDefaultButton(
+            QtWidgets.QMessageBox.No
+        )
+        save = self._confirm_centroid.exec_()
+        if save == QtWidgets.QMessageBox.Yes:
+            logger.info(
+                "Set nominal for %s nf=%s %s ff=%s %s",
+                dest.name_and_desc,
+                nf_x,
+                nf_y,
+                ff_x,
+                ff_y,
+            )
+
+            # Set the source-to-destination data store values:
+            if nf_x > 0.0:
+                self.adjust_range(config.near_field.centroid_x, nf_x, delta=20.0)
+            if nf_y > 0.0:
+                self.adjust_range(config.near_field.centroid_y, nf_y, delta=20.0)
+            if ff_x > 0.0:
+                self.adjust_range(config.far_field.centroid_x, ff_x, delta=20.0)
+            if ff_y > 0.0:
+                self.adjust_range(config.far_field.centroid_y, ff_y, delta=20.0)
 
     def save_centroid_nominal(self) -> None:
         """Save the current centroid X/Y positions to the BTPS."""
