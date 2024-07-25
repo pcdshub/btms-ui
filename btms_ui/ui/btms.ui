@@ -238,131 +238,156 @@
         </widget>
        </item>
        <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
          </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
          </property>
-         <property name="source_index" stdset="0">
-          <number>1</number>
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>518</width>
+            <height>386</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls1_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls3_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>3</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls4_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>4</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>5</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls6_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>6</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>500</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="source_index" stdset="0">
+              <number>8</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="source_v_spacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
         </widget>
-       </item>
-       <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls3_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="source_index" stdset="0">
-          <number>3</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls4_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="source_index" stdset="0">
-          <number>4</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls5_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="source_index" stdset="0">
-          <number>5</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls6_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="source_index" stdset="0">
-          <number>6</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="BtmsSourceOverviewWidget" name="ls8_widget" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>500</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="source_index" stdset="0">
-          <number>8</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="source_v_spacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
