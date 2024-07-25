@@ -212,14 +212,29 @@ class BtmsLaserDestinationChoice(QtWidgets.QFrame):
 
     def _setup_ui(self):
         layout = QtWidgets.QHBoxLayout()
+        spacer1 = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        spacer2 = QtWidgets.QSpacerItem(
+            40,
+            20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
         self.target_dest_combo = BtmsDestinationComboBox()
         self.go_button = QtWidgets.QPushButton("Go")
         self.go_button.clicked.connect(self._move_request)
+
+        layout.addItem(spacer1)
         for widget in (
             self.target_dest_combo,
             self.go_button,
         ):
             layout.addWidget(widget)
+        layout.addItem(spacer2)
 
         self.setLayout(layout)
 
@@ -866,7 +881,6 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.goniometer_label.setVisible(show_position_labels)
         self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
-        self.save_centroid_nominal_button.setVisible(show)
 
     def _perform_move(
         self, target: DestinationPosition
@@ -953,8 +967,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
         self._expert_mode = bool(expert_mode)
         self.toggle_control_button.setVisible(self._expert_mode)
+        self.save_centroid_nominal_button.setVisible(self._expert_mode)
         if not self._expert_mode:
             self.show_motors(False)
+            self.save_centroid_nominal_button.setVisible(self._expert_mode)
             self.toggle_control_button.setChecked(False)
 
     @QtCore.Property(str)
@@ -1058,10 +1074,18 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     filename: ClassVar[str] = "btms.ui"
     diagram_widget: BtmsDiagramWidget
     ls1_widget: BtmsSourceOverviewWidget
+    ls3_widget: BtmsSourceOverviewWidget
+    ls4_widget: BtmsSourceOverviewWidget
     ls5_widget: BtmsSourceOverviewWidget
+    ls6_widget: BtmsSourceOverviewWidget
     ls8_widget: BtmsSourceOverviewWidget
     open_btps_overview_button: QtWidgets.QPushButton
     open_hutch_overview_button: QtWidgets.QPushButton
+    bay1_pushbutton: QtWidgets.QPushButton
+    bay2_pushbutton: QtWidgets.QPushButton
+    bay3_pushbutton: QtWidgets.QPushButton
+    bay4_pushbutton: QtWidgets.QPushButton
+    graphics_pushbutton: QtWidgets.QPushButton
     expert_mode_checkbox: QtWidgets.QCheckBox
     source_widgets: list[BtmsSourceOverviewWidget]
     _btps_overview: QtWidgets.QWidget | None
@@ -1072,9 +1096,53 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         self.source_widgets = [
             self.ls1_widget,
+            self.ls3_widget,
+            self.ls4_widget,
             self.ls5_widget,
+            self.ls6_widget,
             self.ls8_widget,
         ]
+
+        self.graphics_pushbutton.setChecked(True)
+        self.graphics_pushbutton.clicked.connect(
+            self.show_graphics
+        )
+
+        for source in self.source_widgets:
+            source.setVisible(False)  # Start with source screens hidden
+
+        self.bay1_pushbutton.clicked.connect(
+            partial(
+                self.show_sources,
+                self.bay1_pushbutton,
+                [self.ls1_widget]
+            )
+        )
+
+        self.bay2_pushbutton.clicked.connect(
+            partial(
+                self.show_sources,
+                self.bay2_pushbutton,
+                [self.ls3_widget, self.ls4_widget]
+            )
+        )
+
+        self.bay3_pushbutton.clicked.connect(
+            partial(
+                self.show_sources,
+                self.bay3_pushbutton,
+                [self.ls5_widget, self.ls6_widget]
+            )
+        )
+
+        self.bay4_pushbutton.clicked.connect(
+            partial(
+                self.show_sources,
+                self.bay4_pushbutton,
+                [self.ls8_widget]
+            )
+        )
+
         # TODO: hiding the BTPS screen for now as a workaround
         self.open_btps_overview_button.setVisible(False)
         self.open_btps_overview_button.clicked.connect(self.open_btps_overview)
@@ -1110,6 +1178,21 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
 
         for source in self.source_widgets:
             source.device = device.sources[source.source_position]
+
+    def show_graphics(self):
+        if self.graphics_pushbutton.isChecked():
+            self.diagram_widget.setVisible(True)
+        else:
+            self.diagram_widget.setVisible(False)
+
+    def show_sources(self, button: QtWidgets.QPushButton,
+                     sources: list(BtmsSourceOverviewWidget)):
+        if button.isChecked():
+            for source in sources:
+                source.setVisible(True)
+        else:
+            for source in sources:
+                source.setVisible(False)
 
     def open_btps_overview(self):
         """Open the btps overview screen."""

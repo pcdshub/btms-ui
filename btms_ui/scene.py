@@ -341,8 +341,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
         """
         if source.ls_position.is_left:
             source.setPos(
-                assembly.boundingRect().x()
-                - (source.boundingRect().width() + self.source_margin),
+                (source.boundingRect().left() - self.source_margin * 10),
                 0.0,
             )
         else:
