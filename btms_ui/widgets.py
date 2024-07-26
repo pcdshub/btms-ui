@@ -454,6 +454,40 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         return None
 
 
+class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
+    filename: ClassVar[str] = "btms-homing.ui"
+
+    status_label: QtWidgets.QLabel
+    status_text: QtWidgets.QListWidget
+    home_button: QtWidgets.QPushButton
+    cancel_button: QtWidgets.QPushButton
+    progress_bar: QtWidgets.QProgressBar
+#    source: SourcePosition
+
+    request_home = QtCore.Signal()
+
+    def __init__(
+        self,
+        parent: QtWidgets.QWidget | None,
+    ):
+        super().__init__(parent)
+
+        self.status_text.setText('Ready')
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setValue(0.0)
+        self.cancel_button.clicked.connect(self._cancel_button_press)
+        self.home_button.clicked.connect(self._home_button_press)
+
+    def _cancel_button_press(self):
+        self.close()
+
+    def _home_button_press(self):
+        txt = self.status_text.text()
+        self.status_text.setText(txt + '\nHoming...')
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(50.0)
+
+
 class BtmsSourceValidWidget(QtWidgets.QFrame):
     indicators: dict[DestinationPosition, list[pydm_widgets.PyDMByteIndicator]]
 
@@ -597,6 +631,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     motion_progress_widget: QtWidgets.QProgressBar
     motion_stop_button: QtWidgets.QPushButton
     motor_frame: QtWidgets.QFrame
+    motion_home_button: QtWidgets.QPushButton
     rotary_widget: TyphosPositionerWidget
     save_nominal_button: QtWidgets.QPushButton
     save_centroid_nominal_button: QtWidgets.QPushButton
@@ -658,6 +693,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.toggle_control_button.clicked.connect(self.show_motors)
         self.save_nominal_button.clicked.connect(self.save_motor_nominal)
         self.save_centroid_nominal_button.clicked.connect(self.save_centroid_nominal)
+        self.motion_home_button.clicked.connect(self.show_home)
         self._camera_process = None
         self._expert_mode = None
         self.expert_mode = expert_mode
@@ -882,6 +918,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
 
+    def show_home(self):
+        self._homing = BtmsHomingScreen(parent=None)
+        self._homing.show()
+
     def _perform_move(
         self, target: DestinationPosition
     ) -> QCombinedMoveStatus | None:
@@ -968,9 +1008,11 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self._expert_mode = bool(expert_mode)
         self.toggle_control_button.setVisible(self._expert_mode)
         self.save_centroid_nominal_button.setVisible(self._expert_mode)
+        self.motion_home_button.setVisible(self._expert_mode)
         if not self._expert_mode:
             self.show_motors(False)
             self.save_centroid_nominal_button.setVisible(self._expert_mode)
+            self.motion_home_button.setVisible(self._expert_mode)
             self.toggle_control_button.setChecked(False)
 
     @QtCore.Property(str)
