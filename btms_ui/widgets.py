@@ -469,9 +469,13 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def __init__(
         self,
         parent: QtWidgets.QWidget | None,
+        positioners: tuple[TyphosPositionerWidget, ...]
     ):
         super().__init__(parent)
 
+        self.n_actions = 0  # progress counter for homing
+        self.total_actions = 5  # total number of homing steps
+        self.positioners = positioners
         self.status_text.setText('Ready')
         self.progress_bar.setVisible(False)
         self.progress_bar.setValue(0.0)
@@ -481,11 +485,62 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def _cancel_button_press(self):
         self.close()
 
-    def _home_button_press(self):
+    def _append_status_text(self, new_text):
         txt = self.status_text.text()
-        self.status_text.setText(txt + '\nHoming...')
+        self.status_text.setText(txt + new_text)
+
+    def _increment_progress(self):
+        """
+        Increment the internal status counter and update progress widget.
+        """
+        self.n_actions += 1
+        progress = (self.n_actions/self.total_actions)*100.0
+        self.progress_bar.setValue(progress)
+
+    def _home_button_press(self):
+        # TODO: Add homing safety checks?
+
         self.progress_bar.setVisible(True)
-        self.progress_bar.setValue(50.0)
+        self._append_status_text('\nHoming...')
+        self.n_actions = 0
+
+        # Expect a tuple of (linear, rotary, goniometer) from self.positioners
+        # linear = self.positioners[0].device
+        # rotary = self.positioners[1].device
+        # goniometer = self.positioners[2].device
+
+        # Home the linear first. The linear stages can give misleading results
+        # if we happen to home on a bad spot on the encoder. We generally home
+        # three times in a row and make sure that we're internally consistent,
+        # and that we see ~10mm between homing marks.
+        lin_pos = []
+        # Faking homing for testing right now
+        for i in range(3):
+            # linear.home_forward()
+            pos = 1000.0 + i*10.0
+            lin_pos.append(pos)
+            self._increment_progress()
+
+        def linear_pos_comp(pos1, pos2):
+            if 9 < abs(pos1-pos2) and 11 > abs(pos1-pos2):
+                return True
+            else:
+                return False
+
+        if not all(
+            linear_pos_comp(lin_pos[0], lin_pos[1]),
+            linear_pos_comp(lin_pos[1], lin_pos[2])
+        ):
+            err = 'Error: linear homing positons don\'t match:'
+            self._append_status_text(f'\n{err}')
+            self._append_status_text(f'\n{lin_pos}')
+            return
+
+        # for positioner in self.positioners:
+        #     val = positioner.device.user_readback.get()
+        #     txt = self.status_text.text()
+
+        # self.progress_bar.setValue(50.0)
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
@@ -919,7 +974,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.save_nominal_button.setVisible(show)
 
     def show_home(self):
-        self._homing = BtmsHomingScreen(parent=None)
+        self._homing = BtmsHomingScreen(
+            parent=None,
+            positioners=self.positioner_widgets
+        )
         self._homing.show()
 
     def _perform_move(
