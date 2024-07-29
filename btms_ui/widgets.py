@@ -499,48 +499,141 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
     def _home_button_press(self):
         # TODO: Add homing safety checks?
+        # TODO: Make this smarter with MoveStatus (how to do this cleanly with
+        #       indeterminate home times?
 
         self.progress_bar.setVisible(True)
         self._append_status_text('\nHoming...')
         self.n_actions = 0
 
         # Expect a tuple of (linear, rotary, goniometer) from self.positioners
-        # linear = self.positioners[0].device
-        # rotary = self.positioners[1].device
-        # goniometer = self.positioners[2].device
+        linear = self.positioners[0].device
+        rotary = self.positioners[1].device
+        goniometer = self.positioners[2].device
 
         # Home the linear first. The linear stages can give misleading results
         # if we happen to home on a bad spot on the encoder. We generally home
         # three times in a row and make sure that we're internally consistent,
         # and that we see ~10mm between homing marks.
+        ntries = 3
+        loop_counter = ntries
+        forward = True
         lin_pos = []
-        # Faking homing for testing right now
-        for i in range(3):
-            # linear.home_forward()
-            pos = 1000.0 + i*10.0
-            lin_pos.append(pos)
-            self._increment_progress()
-
-        def linear_pos_comp(pos1, pos2):
-            if 9 < abs(pos1-pos2) and 11 > abs(pos1-pos2):
-                return True
+        while loop_counter > 0:
+            linear.velocity.put(0.0)  # Use maximum closed loop freq
+            if forward:
+                linear.home_forward()
             else:
-                return False
+                linear.home_reverse()
+            time.sleep(1)  # Wait a bit to allow motor to start moving
+            while linear.moving:  # TODO: Add timeout here?
+                time.sleep(1)
+            pos = linear.user_readback.get()
+            if linear.homed:
+                loop_counter -= 1
+                lin_pos.append(pos)
+                self._increment_progress()
+                continue
+            else:
+                if self._motor_error(linear):
+                    # if we fail in the forward direction, try backward
+                    if forward:
+                        txt = '\nHad error in forward direction, reversing...'
+                        self._append_status_text(txt)
+                        # Account for the additional moves we've made in the
+                        # progress bar
+                        self.n_actions += ntries-loop_counter
+                        # Reset counter
+                        loop_counter = ntries
+                        self._increment_progress()
+                    else:
+                        err = '\nError: linear homing failed in both directions'
+                        self._append_status_text(err)
+                        return False
+                else:
+                    err = '\nUnknown Error: linear homing failed'
+                    self._append_status_text(err)
+                    return False
 
-        if not all(
-            linear_pos_comp(lin_pos[0], lin_pos[1]),
-            linear_pos_comp(lin_pos[1], lin_pos[2])
-        ):
+        # Compare the last 3 positions. Leave the others in the list for
+        # diagnostic information if we fail in both forward and backward
+        # directions.
+        if not all([
+            self._linear_pos_comp(lin_pos[-1], lin_pos[-2]),
+            self._linear_pos_comp(lin_pos[-2], lin_pos[-3])
+        ]):
             err = 'Error: linear homing positons don\'t match:'
             self._append_status_text(f'\n{err}')
             self._append_status_text(f'\n{lin_pos}')
-            return
+            return False
+        else:
+            self._append_status_text('\nLinear homing succeeded')
 
-        # for positioner in self.positioners:
-        #     val = positioner.device.user_readback.get()
-        #     txt = self.status_text.text()
+        # Now move on to the rotary stage
+        rotary.velocity.put(0.0)  # Use maximum closed loop freq
+        forward = True
+        for i in range(2):
+            if forward:
+                rotary.home_forward()
+            else:
+                rotary.home_reverse()
+            time.sleep(1)
+            while rotary.moving:  # TODO: Add timeout?
+                time.sleep(1)
+            pos = rotary.user_readback.get()
+            if rotary.homed and not self._rotary_pos_comp(pos):
+                self._append_status_text('\nRotary homing succeeded')
+                self._increment_progress()
+                break
+            elif forward:  # try homing reverse
+                txt = 'Rotary homing failed forward; trying reverse'
+                self._append_status_text(f'\n{txt}')
+                forward = False
+            else:  # already tried forward and backward, bail out
+                err = 'Error: rotary homing failed forward and reverse'
+                self._append_status_text(f'\n{err}')
+                return False
 
-        # self.progress_bar.setValue(50.0)
+        # Now move on to the goniometer stage
+        goniometer.velocity.put(0.0)  # Use maximum closed loop freq
+        goniometer.home_forward()
+        while goniometer.moving:  # TODO: Add timeout?
+            time.sleep(1)
+        if goniometer.homed:
+            self._append_status_text('\nGoniometer homing succeeded')
+            self._increment_progress()
+            return True
+        else:
+            err = 'Error: goniometer homing failed'
+            self._append_status_text(f'\n{err}')
+            return False
+
+    def _motor_error(self, motor):
+        """
+        Aggregate several checks of MSTA field bits to determine success or
+        failure.
+        """
+        error = any([motor.msta['plus_ls'], motor.msta['slip_stall'],
+                     motor.msta['minus_ls'], motor.msta['comm_error'],
+                     motor.msta['problem']])
+        return error
+
+    def _linear_pos_comp(self, pos1, pos2):
+        if 9.0 < abs(pos1-pos2) and 11.0 > abs(pos1-pos2):
+            return True
+        else:
+            return False
+
+    def _rotary_pos_comp(self, pos):
+        """
+        Check the returned position of the rotary stage. If the position is
+        close to zero, then the homing probably failed. (Is this _really_
+        needed now that we can check the MSTA field?)
+        """
+        if -0.010 < abs(pos) and 0.010 > abs(pos):
+            return False
+        else:
+            return True
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
