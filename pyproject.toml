@@ -23,7 +23,7 @@ file = "LICENSE.md"
 [project.scripts]
 
 [tool.setuptools_scm]
-write_to = "btms_ui/_version.py"
+write_to = "btms_ui/version.py"
 
 [tool.setuptools.dynamic.readme]
 file = "README.rst"
