@@ -868,8 +868,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
                     return
 
         self._camera_process = util.open_typhos_in_subprocess(
-            f"las_lhn_bay{bay}_cam_nf",
-            f"las_lhn_bay{bay}_cam_ff",
+            f"{self.device.source_pos.nf_camera_device}",
+            f"{self.device.source_pos.ff_camera_device}",
         )
 
     def show_motors(self, show: bool):
