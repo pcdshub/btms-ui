@@ -488,6 +488,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def _append_status_text(self, new_text):
         txt = self.status_text.text()
         self.status_text.setText(txt + new_text)
+        self.status_text.setText(txt + new_text)
 
     def _increment_progress(self):
         """
@@ -503,7 +504,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         #       indeterminate home times?
 
         self.progress_bar.setVisible(True)
-        self._append_status_text('\nHoming...')
+        # Clear status text on each button press
+        self.status_text.setText('Homing...')
         self.n_actions = 0
 
         # Expect a tuple of (linear, rotary, goniometer) from self.positioners
