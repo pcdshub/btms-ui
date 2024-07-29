@@ -30,7 +30,7 @@ def channel_from_signal(signal: ophyd.signal.EpicsSignalBase) -> str:
 
 def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
     return subprocess.Popen(
-        args=[sys.executable, "-m", "typhos", *devices],
+        args=[sys.executable, "-m", "typhos", "--display-type", "engineering", *devices],
     )
 
 
