@@ -12,7 +12,7 @@ recursive-include btms_ui *.qss
 recursive-exclude btms_ui *.ui *.png
 
 include versioneer.py
-include btms_ui/version.py
+include btms_ui/_version.py
 
 # If including data files in the package, add a single file/glob:
 #
