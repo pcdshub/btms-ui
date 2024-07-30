@@ -520,7 +520,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         #       indeterminate home times?
 
         # New home request, clear cancel
-        self.cancel = True
+        self.cancel = False
 
         self.progress_bar.setVisible(True)
         # Clear status text on each button press
@@ -556,7 +556,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
                 if self.cancel:
                     return False
             pos = linear.user_readback.get()
-            self._append_status_text('\nReached position {pos}')
+            self._append_status_text(f'\nReached position {pos}')
             if linear.homed:
                 loop_counter -= 1
                 lin_pos.append(pos)
@@ -566,6 +566,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
                 if self._motor_error(linear):
                     # if we fail in the forward direction, try backward
                     if forward:
+                        forward = False
                         txt = '\nHad error in forward direction, reversing...'
                         self._append_status_text(txt)
                         # Account for the additional moves we've made in the
