@@ -546,10 +546,10 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
                 return False
             if forward:
                 self._append_status_text('\nHoming linear stage forward')
-                linear.home_forward()
+                linear.home_forward.put(1)
             else:
                 self._append_status_text('\nHoming linear stage reverse')
-                linear.home_reverse()
+                linear.home_reverse.put(1)
             time.sleep(1)  # Wait a bit to allow motor to start moving
             while linear.moving:  # TODO: Add timeout here?
                 time.sleep(1)
