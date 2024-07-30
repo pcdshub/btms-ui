@@ -519,6 +519,9 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         # TODO: Make this smarter with MoveStatus (how to do this cleanly with
         #       indeterminate home times?
 
+        # New home request, clear cancel
+        self.cancel = True
+
         self.progress_bar.setVisible(True)
         # Clear status text on each button press
         self.status_text.setText('Homing...')
