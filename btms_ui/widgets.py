@@ -475,6 +475,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
         self.n_actions = 0  # progress counter for homing
         self.total_actions = 5  # total number of homing steps
+        self.cancel = False
         self.positioners = positioners
         self.status_text.setText('Ready')
         self.progress_bar.setVisible(False)
@@ -482,12 +483,27 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self.cancel_button.clicked.connect(self._cancel_button_press)
         self.home_button.clicked.connect(self._home_button_press)
 
+    def closeEvent(self, event):
+        print("Got close event!")
+        # Cancel the homing routine if it's running
+        self._cancel_button_press()
+        event.accept()
+
     def _cancel_button_press(self):
-        self.close()
+        self.cancel = True
+        self._cancel_handler()
+
+    def _cancel_handler(self):
+        self._append_status_text('\nGot cancel request!')
+        for positioner in self.positioners:
+            dev = positioner.device
+            if dev.moving:
+                self._append_status_text(f'\n{dev} is moving, stopping...')
+                dev.stop()
+        return
 
     def _append_status_text(self, new_text):
         txt = self.status_text.text()
-        self.status_text.setText(txt + new_text)
         self.status_text.setText(txt + new_text)
 
     def _increment_progress(self):
@@ -521,7 +537,11 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         loop_counter = ntries
         forward = True
         lin_pos = []
+        if self.cancel:
+            return False
         while loop_counter > 0:
+            if self.cancel:
+                return False
             linear.velocity.put(0.0)  # Use maximum closed loop freq
             if forward:
                 linear.home_forward()
@@ -530,6 +550,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             time.sleep(1)  # Wait a bit to allow motor to start moving
             while linear.moving:  # TODO: Add timeout here?
                 time.sleep(1)
+                if self.cancel:
+                    return False
             pos = linear.user_readback.get()
             if linear.homed:
                 loop_counter -= 1
@@ -575,6 +597,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
         forward = True
         for i in range(2):
+            if self.cancel:
+                return False
             if forward:
                 rotary.home_forward()
             else:
@@ -582,6 +606,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             time.sleep(1)
             while rotary.moving:  # TODO: Add timeout?
                 time.sleep(1)
+                if self.cancel:
+                    return False
             pos = rotary.user_readback.get()
             if rotary.homed and not self._rotary_pos_comp(pos):
                 self._append_status_text('\nRotary homing succeeded')
@@ -601,6 +627,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         goniometer.home_forward()
         while goniometer.moving:  # TODO: Add timeout?
             time.sleep(1)
+            if self.cancel:
+                return False
         if goniometer.homed:
             self._append_status_text('\nGoniometer homing succeeded')
             self._increment_progress()
