@@ -462,7 +462,6 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     home_button: QtWidgets.QPushButton
     cancel_button: QtWidgets.QPushButton
     progress_bar: QtWidgets.QProgressBar
-#    source: SourcePosition
 
     request_home = QtCore.Signal()
 
@@ -497,6 +496,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self._append_status_text('\nGot cancel request!')
         for positioner in self.positioners:
             dev = positioner.device
+            self._append_status_text(f'\nChecking dev {dev}')
             if dev.moving:
                 self._append_status_text(f'\n{dev} is moving, stopping...')
                 dev.stop()
@@ -526,8 +526,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
         # Expect a tuple of (linear, rotary, goniometer) from self.positioners
         linear = self.positioners[0].device
-        rotary = self.positioners[1].device
-        goniometer = self.positioners[2].device
+        # rotary = self.positioners[1].device
+        # goniometer = self.positioners[2].device
 
         # Home the linear first. The linear stages can give misleading results
         # if we happen to home on a bad spot on the encoder. We generally home
@@ -537,15 +537,15 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         loop_counter = ntries
         forward = True
         lin_pos = []
-        if self.cancel:
-            return False
+        linear.velocity.put(0.0)  # Use maximum closed loop freq
         while loop_counter > 0:
             if self.cancel:
                 return False
-            linear.velocity.put(0.0)  # Use maximum closed loop freq
             if forward:
+                self._append_status_text('\nHoming linear stage forward')
                 linear.home_forward()
             else:
+                self._append_status_text('\nHoming linear stage reverse')
                 linear.home_reverse()
             time.sleep(1)  # Wait a bit to allow motor to start moving
             while linear.moving:  # TODO: Add timeout here?
@@ -553,6 +553,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
                 if self.cancel:
                     return False
             pos = linear.user_readback.get()
+            self._append_status_text('\nReached position {pos}')
             if linear.homed:
                 loop_counter -= 1
                 lin_pos.append(pos)
@@ -594,49 +595,49 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             self._append_status_text('\nLinear homing succeeded')
 
         # Now move on to the rotary stage
-        rotary.velocity.put(0.0)  # Use maximum closed loop freq
-        forward = True
-        for i in range(2):
-            if self.cancel:
-                return False
-            if forward:
-                rotary.home_forward()
-            else:
-                rotary.home_reverse()
-            time.sleep(1)
-            while rotary.moving:  # TODO: Add timeout?
-                time.sleep(1)
-                if self.cancel:
-                    return False
-            pos = rotary.user_readback.get()
-            if rotary.homed and not self._rotary_pos_comp(pos):
-                self._append_status_text('\nRotary homing succeeded')
-                self._increment_progress()
-                break
-            elif forward:  # try homing reverse
-                txt = 'Rotary homing failed forward; trying reverse'
-                self._append_status_text(f'\n{txt}')
-                forward = False
-            else:  # already tried forward and backward, bail out
-                err = 'Error: rotary homing failed forward and reverse'
-                self._append_status_text(f'\n{err}')
-                return False
+        # rotary.velocity.put(0.0)  # Use maximum closed loop freq
+        # forward = True
+        # for i in range(2):
+        #     if self.cancel:
+        #         return False
+        #     if forward:
+        #         rotary.home_forward()
+        #     else:
+        #         rotary.home_reverse()
+        #     time.sleep(1)
+        #     while rotary.moving:  # TODO: Add timeout?
+        #         time.sleep(1)
+        #         if self.cancel:
+        #             return False
+        #     pos = rotary.user_readback.get()
+        #     if rotary.homed and not self._rotary_pos_comp(pos):
+        #         self._append_status_text('\nRotary homing succeeded')
+        #         self._increment_progress()
+        #         break
+        #     elif forward:  # try homing reverse
+        #         txt = 'Rotary homing failed forward; trying reverse'
+        #         self._append_status_text(f'\n{txt}')
+        #         forward = False
+        #     else:  # already tried forward and backward, bail out
+        #         err = 'Error: rotary homing failed forward and reverse'
+        #         self._append_status_text(f'\n{err}')
+        #         return False
 
-        # Now move on to the goniometer stage
-        goniometer.velocity.put(0.0)  # Use maximum closed loop freq
-        goniometer.home_forward()
-        while goniometer.moving:  # TODO: Add timeout?
-            time.sleep(1)
-            if self.cancel:
-                return False
-        if goniometer.homed:
-            self._append_status_text('\nGoniometer homing succeeded')
-            self._increment_progress()
-            return True
-        else:
-            err = 'Error: goniometer homing failed'
-            self._append_status_text(f'\n{err}')
-            return False
+        # # Now move on to the goniometer stage
+        # goniometer.velocity.put(0.0)  # Use maximum closed loop freq
+        # goniometer.home_forward()
+        # while goniometer.moving:  # TODO: Add timeout?
+        #     time.sleep(1)
+        #     if self.cancel:
+        #         return False
+        # if goniometer.homed:
+        #     self._append_status_text('\nGoniometer homing succeeded')
+        #     self._increment_progress()
+        #     return True
+        # else:
+        #     err = 'Error: goniometer homing failed'
+        #     self._append_status_text(f'\n{err}')
+        #     return False
 
     def _motor_error(self, motor):
         """
