@@ -562,14 +562,6 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def _update_progress(self, overall: float):
         self.progress_bar.setValue(int(100.0 * overall))
 
-    # def _increment_progress(self):
-    #     """
-    #     Increment the internal status counter and update progress widget.
-    #     """
-    #     self.n_actions += 1
-    #     progress = (self.n_actions/self.total_actions)*100.0
-    #     self.progress_bar.setValue(progress)
-
     # def _home_button_press(self):
     #     # TODO: Add homing safety checks?
     #     # TODO: Make this smarter with MoveStatus (how to do this cleanly with
@@ -584,121 +576,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     #     self.n_actions = 0
 
     #     # Expect a tuple of (linear, rotary, goniometer) from self.positioners
-    #     linear = self.positioners[0].device
     #     # rotary = self.positioners[1].device
     #     # goniometer = self.positioners[2].device
-
-    #     # Home the linear first. The linear stages can give misleading results
-    #     # if we happen to home on a bad spot on the encoder. We generally home
-    #     # three times in a row and make sure that we're internally consistent,
-    #     # and that we see ~10mm between homing marks.
-    #     ntries = 3
-    #     loop_counter = ntries
-    #     forward = True
-    #     lin_pos = []
-    #     linear.velocity.put(0.0)  # Use maximum closed loop freq
-    #     while loop_counter > 0:
-    #         if self.cancel:
-    #             return False
-    #         if forward:
-    #             direction = HomeEnum.forward
-    #             self._append_status_text('\nHoming linear stage forward')
-    #         else:
-    #             direction = HomeEnum.reverse
-    #             self._append_status_text('\nHoming linear stage reverse')
-    #         st = linear.home(direction, wait=False, timeout=10.0)
-    #         time.sleep(1)  # Wait a bit to allow motor to start moving
-    #         while not st.done:
-    #             time.sleep(1)
-    #             if self.cancel:
-    #                 return False
-    #         pos = linear.user_readback.get()
-    #         self._append_status_text(f'\nReached position {pos}')
-    #         if linear.homed:
-    #             loop_counter -= 1
-    #             lin_pos.append(pos)
-    #             self._increment_progress()
-    #             continue
-    #         else:
-    #             if self._motor_error(linear):
-    #                 # if we fail in the forward direction, try backward
-    #                 if forward:
-    #                     forward = False
-    #                     txt = '\nHad error in forward direction, reversing...'
-    #                     self._append_status_text(txt)
-    #                     # Account for the additional moves we've made in the
-    #                     # progress bar
-    #                     self.n_actions += ntries-loop_counter
-    #                     # Reset counter
-    #                     loop_counter = ntries
-    #                     self._increment_progress()
-    #                 else:
-    #                     err = '\nError: linear homing failed in both directions'
-    #                     self._append_status_text(err)
-    #                     return False
-    #             else:
-    #                 err = '\nUnknown Error: linear homing failed'
-    #                 self._append_status_text(err)
-    #                 return False
-
-    #     # Compare the last 3 positions. Leave the others in the list for
-    #     # diagnostic information if we fail in both forward and backward
-    #     # directions.
-    #     if not all([
-    #         self._linear_pos_comp(lin_pos[-1], lin_pos[-2]),
-    #         self._linear_pos_comp(lin_pos[-2], lin_pos[-3])
-    #     ]):
-    #         err = 'Error: linear homing positons don\'t match:'
-    #         self._append_status_text(f'\n{err}')
-    #         self._append_status_text(f'\n{lin_pos}')
-    #         return False
-    #     else:
-    #         self._append_status_text('\nLinear homing succeeded')
-
-        # Now move on to the rotary stage
-        # rotary.velocity.put(0.0)  # Use maximum closed loop freq
-        # forward = True
-        # for i in range(2):
-        #     if self.cancel:
-        #         return False
-        #     if forward:
-        #         rotary.home_forward()
-        #     else:
-        #         rotary.home_reverse()
-        #     time.sleep(1)
-        #     while rotary.moving:  # TODO: Add timeout?
-        #         time.sleep(1)
-        #         if self.cancel:
-        #             return False
-        #     pos = rotary.user_readback.get()
-        #     if rotary.homed and not self._rotary_pos_comp(pos):
-        #         self._append_status_text('\nRotary homing succeeded')
-        #         self._increment_progress()
-        #         break
-        #     elif forward:  # try homing reverse
-        #         txt = 'Rotary homing failed forward; trying reverse'
-        #         self._append_status_text(f'\n{txt}')
-        #         forward = False
-        #     else:  # already tried forward and backward, bail out
-        #         err = 'Error: rotary homing failed forward and reverse'
-        #         self._append_status_text(f'\n{err}')
-        #         return False
-
-        # # Now move on to the goniometer stage
-        # goniometer.velocity.put(0.0)  # Use maximum closed loop freq
-        # goniometer.home_forward()
-        # while goniometer.moving:  # TODO: Add timeout?
-        #     time.sleep(1)
-        #     if self.cancel:
-        #         return False
-        # if goniometer.homed:
-        #     self._append_status_text('\nGoniometer homing succeeded')
-        #     self._increment_progress()
-        #     return True
-        # else:
-        #     err = 'Error: goniometer homing failed'
-        #     self._append_status_text(f'\n{err}')
-        #     return False
 
     def _perform_home(self,) -> QCombinedHomeStatus | None:
         """
@@ -729,23 +608,104 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self._append_status_text(txt)
 
     def _home_linear(self, direction=HomeEnum.forward) -> MoveStatus | None:
+        # Home the linear stage. The linear stages can give misleading results
+        # if we happen to home on a bad spot on the encoder. We generally home
+        # three times in a row and make sure that we're internally consistent,
+        # and that we see ~10mm between homing marks.
         linear = self.positioners[0].device
+        loop_counter = 3
+        forward = True
+        lin_pos = []
         linear.velocity.put(0.0)  # Use maximum closed loop freq
-        self._append_status_text(f'\nHoming {linear.name}...')
-        st = linear.home(direction, wait=False)
-        st.add_callback(self._home_callback)
-        return st
+        while loop_counter > 0:
+            if self.cancel:
+                return False
+            if forward:
+                direction = HomeEnum.forward
+                self._append_status_text('\nHoming linear stage forward')
+            else:
+                direction = HomeEnum.reverse
+                self._append_status_text('\nHoming linear stage reverse')
+            st = linear.home(direction, wait=True, timeout=10.0)
+            pos = linear.user_readback.get()
+            self._append_status_text(f'\nReached position {pos}')
+            if st.done and linear.homed:
+                loop_counter -= 1
+                lin_pos.append(pos)
+                continue
+            else:
+                if self._motor_error(linear):
+                    # if we fail in the forward direction, try backward
+                    if forward:
+                        forward = False
+                        txt = '\nHad error in forward direction, reversing...'
+                        self._append_status_text(txt)
+                    else:
+                        err = '\nError: linear homing failed in both directions'
+                        self._append_status_text(err)
+                        return False
+                else:
+                    err = '\nUnknown Error: linear homing failed'
+                    self._append_status_text(err)
+                    return False
+
+        # Compare the last 3 positions. Leave the others in the list for
+        # diagnostic information if we fail in both forward and backward
+        # directions.
+        if not all([
+            self._linear_pos_comp(lin_pos[-1], lin_pos[-2]),
+            self._linear_pos_comp(lin_pos[-2], lin_pos[-3])
+        ]):
+            err = 'Error: linear homing positons don\'t match:'
+            self._append_status_text(f'\n{err}')
+            self._append_status_text(f'\n{lin_pos}')
+            return False
+        else:
+            self._append_status_text('\nLinear homing succeeded')
+            return True
 
     def _home_rotary(self, direction=HomeEnum.forward) -> MoveStatus | None:
+        # Now move on to the rotary stage
         rotary = self.positioners[1].device
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
-        self._append_status_text(f'\nHoming {rotary.name}...')
-        st = rotary.home(direction, wait=False)
-        st.add_callback(self._home_callback)
-        return st
+        forward = True
+        for i in range(2):  # Try forward, backward, then bail
+            if self.cancel:
+                return False
+            if forward:
+                self._append_status_text('\nHoming rotary stage forward')
+            else:
+                direction = HomeEnum.reverse
+                self._append_status_text('\nHoming rotary stage reverse')
+            st = rotary.home(direction, wait=True, timeout=30.0)
+            pos = rotary.user_readback.get()
+            if st.done and rotary.homed and not self._rotary_pos_comp(pos):
+                self._append_status_text('\nRotary homing succeeded')
+                break
+            elif forward:  # try homing reverse
+                txt = 'Rotary homing failed forward; trying reverse'
+                self._append_status_text(f'\n{txt}')
+                forward = False
+                continue
+            else:  # already tried forward and backward, bail out
+                err = 'Error: rotary homing failed forward and reverse'
+                self._append_status_text(f'\n{err}')
+                return False
 
     def _home_goniometer(self, direction=HomeEnum.forward) -> MoveStatus | None:
+        # Now move on to the goniometer stage
         goniometer = self.positioners[2].device
+        goniometer.velocity.put(0.0)  # Use maximum closed loop freq
+        direction = HomeEnum.forward
+        st = goniometer.home(direction, wait=True, timeout=30.0)
+        if goniometer.homed:
+            self._append_status_text('\nGoniometer homing succeeded')
+            return True
+        else:
+            err = 'Error: goniometer homing failed'
+            self._append_status_text(f'\n{err}')
+            return False
+
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         self._append_status_text(f'\nHoming {goniometer.name}...')
         st = goniometer.home(direction, wait=False)
