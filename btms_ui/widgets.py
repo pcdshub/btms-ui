@@ -730,10 +730,11 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         txt = self.status_text.text()
         self.status_text.setText(txt + new_text)
 
-    def _update_progress(self):
+    def _update_progress(self, motor):
         ndone = sum([int(thread.succeeded()) for thread in self._threads])
         overall = np.clip(ndone / len(self._threads), 0, 1)
         self.progress_bar.setValue(int(100.0 * overall))
+        self._append_status_text(f'\nComplete: {motor}')
 
     def _perform_home(self):
         """
@@ -741,17 +742,12 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         """
         self.progress_bar.setValue(0)
 
-        self._append_status_text(f'\nHoming {self.linear_thread._motor} ...')
-        self.linear_thread.start()
-        self.linear_thread._finished.connect(self._update_progress)
-
-        self._append_status_text(f'\nHoming {self.rotary_thread._motor} ...')
-        self.rotary_thread.start()
-        self.rotary_thread._finished.connect(self._update_progress)
-
-        self._append_status_text(f'\nHoming {self.goniometer_thread._motor} ...')
-        self.goniometer_thread.start()
-        self.goniometer_thread._finished.connect(self._update_progress)
+        for thread in self._threads:
+            self._append_status_text(f'\nHoming {thread._motor} ...')
+            thread.start()
+            thread._finished.connect(
+                partial(self._update_progress, thread._motor)
+            )
 
         show_progress = any(thread.isRunning() for thread in self._threads)
         self.progress_bar.setVisible(show_progress)
