@@ -207,6 +207,7 @@ class HomingThread(threading.Thread):
         self._motor = motor
         self._success = False
         self._stopper = threading.Event()
+        self._finished = QtCore.Signal()
 
     def stop(self):
         self._stopper.set()
@@ -256,19 +257,16 @@ class _linear_thread(HomingThread):
         else:
             return False
 
-    def run(self) -> MoveStatus | None:
+    def run(self) -> bool | None:
         linear = self.motor
         loop_counter = 3
         forward = True
-        st = None
         lin_pos = []
         linear.velocity.put(0.0)  # Use maximum closed loop freq
         for i in range(loop_counter):
             if self.stopped():
-                if st:
-                    ex = Exception("Linear homing stopped")
-                    st.set_exception(ex)
-                return st
+                self._finished.emit()
+                return self.succeeded()
             if forward:
                 direction = HomeEnum.forward
             else:
@@ -288,25 +286,17 @@ class _linear_thread(HomingThread):
                     if forward:
                         forward = False
                     else:
-                        ex = Exception("Linear motor had an error!")
-                        st.set_exception(ex)
-                        return st
-                else:
-                    ex = Exception("Linear homing failed")
-                    st.set_exception(ex)
-                return st
+                        self._finished.emit()
+                        return self.succeeded()
 
         if all([
             self._linear_pos_valid(lin_pos[0], lin_pos[1]),
             self._linear_pos_valid(lin_pos[1], lin_pos[2])
         ]):
             self._success()  # We did it!
+        self._finished.emit()
 
-        else:
-            err = f"Error: linear homing positons don\'t match: {lin_pos}"
-            ex = Exception(err)
-            st.set_exception(ex)
-        return st
+        return self.succeeded()
 
 
 class _rotary_thread(HomingThread):
@@ -328,14 +318,11 @@ class _rotary_thread(HomingThread):
     def run(self):
         rotary = self.motor
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
-        st = None
         forward = True
         for i in range(2):  # Try forward, then backward, then bail
             if self.stopped():
-                if st:
-                    ex = Exception("Rotary homing stopped")
-                    st.set_exception(ex)
-                return st
+                self._finished.emit()
+                return self.succeeded()
             if forward:
                 direction = HomeEnum.forward
             else:
@@ -352,10 +339,9 @@ class _rotary_thread(HomingThread):
             elif forward:  # try homing reverse
                 forward = False
                 continue
-            else:  # already tried forward and backward, error out
-                ex = Exception("Rotary homing failed")
-                st.set_exception(ex)
-        return st
+        self._finished.emit()
+
+        return self.succeeded()
 
 
 class _goniometer_thread(HomingThread):
@@ -367,16 +353,14 @@ class _goniometer_thread(HomingThread):
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         direction = HomeEnum.forward
         st = goniometer.home(direction, wait=False, timeout=30.0)
-        while not self.stopped() and not st.done:
+        while not self.stopped():
             time.sleep(0.1)
             if st.done:
                 break
         if goniometer.homed:
             self.success()
-        else:
-            ex = Exception("Goniometer homing failed")
-            st.set_exception(ex)
-        return st
+        self._finished.emit()
+        return self.succeeded()
 
 
 class QCombinedHomeStatus(QtCore.QObject):
@@ -716,10 +700,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self.progress_bar.setValue(0.0)
         self.cancel_button.clicked.connect(self._cancel_button_press)
         self.cancel_requested.connect(self._cancel_handler)
-        # self.home_button.clicked.connect(self._home_button_press)
-        # self.home_button.clicked.connect(self._perform_home)
         self.home_button.clicked.connect(self._request_home)
-        self.home_requested.connect(self.home_request)
+        self.home_requested.connect(self._perform_home)
 
     def _request_home(self):
         self.home_requested.emit()
@@ -745,56 +727,32 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             if dev.moving:
                 self._append_status_text(f'\n{dev} is moving, stopping...')
                 dev.stop()
-        return
 
     def _append_status_text(self, new_text):
         txt = self.status_text.text()
         self.status_text.setText(txt + new_text)
 
-    def _update_progress(self, overall: float):
+    def _update_progress(self):
+        ndone = sum([int(thread.succeeded()) for thread in self._threads])
+        overall = np.clip(ndone / len(self.move_statuses), 0, 1)
         self.progress_bar.setValue(int(100.0 * overall))
 
-    def _perform_home(self,) -> QCombinedHomeStatus | None:
+    def _perform_home(self):
         """
         Home the motors for this laser source.
         """
-        def finished_homing():
-            self.progress_bar.setVisible(False)
-
         self.progress_bar.setValue(0)
 
-        status = []
         for thread in self._threads:
-            st = thread.run()
-            status.append(st)
+            thread.run()
+            thread._finished.connect(self._update_progress)
+        # self._home_status = QCombinedHomeStatus(status)
+        # self._home_status.finished_homing.connect(finished_homing)
 
-        self._home_status = QCombinedHomeStatus(status)
-        self._home_status.finished_homing.connect(finished_homing)
+        # self._home_status.status_changed.connect(self._update_progress)
 
-        self._home_status.status_changed.connect(self._update_progress)
-
-        show_progress = not any(st.done for st in self._home_status.move_statuses)
+        show_progress = any(thread.is_alive() for thread in self._threads)
         self.progress_bar.setVisible(show_progress)
-
-        return self._home_status
-
-    def _home_callback(self, status):
-        txt = f'\nHoming {status._name} complete with success {status.success}'
-        self._append_status_text(txt)
-
-    def home_request(self) -> QCombinedMoveStatus | None:
-        """
-        Request homing routine of this source.
-        """
-        def finished_homing():
-            self.progress_bar.setVisible(False)
-
-        def update(overall_percent: float):
-            self.progress_bar.setValue(int(overall_percent * 100.0))
-
-        self.progress_bar.setValue(0)
-
-        return self._perform_home()
 
 
 class BtmsSourceValidWidget(QtWidgets.QFrame):
