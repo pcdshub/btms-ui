@@ -202,8 +202,9 @@ class HomingThread(threading.Thread):
     in this program is intended to be used for performing different homing
     routines simultaneously.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, motor, *args, **kwargs):
         super(HomingThread, self).__init__(*args, **kwargs)
+        self._motor = motor
         self._success = False
         self._stopper = threading.Event()
 
@@ -215,6 +216,9 @@ class HomingThread(threading.Thread):
 
     def success(self):
         self._success = True
+
+    def succeeded(self):
+        return self._success
 
     def motor_error(self, motor):
         """
@@ -230,7 +234,8 @@ class HomingThread(threading.Thread):
         """
         Overwrite this method with the code that you want to run in the thread.
         Ensure that you are checking the stopped() status and return from your
-        routine when appropriate to stop execution when requested.
+        routine when appropriate to stop execution when requested. Expected to
+        return a MoveStatus object.
         """
         pass
 
@@ -239,119 +244,126 @@ class _linear_thread(HomingThread):
     """
     Thread for managing the homing routine for the linear stage.
     """
-    def _linear_pos_comp(self, pos1, pos2):
-        if 9.0 < abs(pos1-pos2) and 11.0 > abs(pos1-pos2):
+    def _linear_pos_valid(self, pos1, pos2):
+        """
+        The linear stage homing marks are ~10mm apart. When we are on a bad
+        section of the encoder strip, we will see large differences between
+        successive homing marks. This function performs a simple check to
+        ensure two positions are internally consistent.
+        """
+        if 9.0 < abs(pos1-pos2) and abs(pos1-pos2) < 11.0:
             return True
         else:
             return False
 
-    def run(self, linear):
+    def run(self) -> MoveStatus | None:
+        linear = self.motor
         loop_counter = 3
         forward = True
+        st = None
         lin_pos = []
         linear.velocity.put(0.0)  # Use maximum closed loop freq
-        while loop_counter > 0 and not self.stopped():
+        for i in range(loop_counter):
+            if self.stopped():
+                if st:
+                    ex = Exception("Linear homing stopped")
+                    st.set_exception(ex)
+                return st
             if forward:
                 direction = HomeEnum.forward
-                self._append_status_text('\nHoming linear stage forward')
             else:
                 direction = HomeEnum.reverse
-                self._append_status_text('\nHoming linear stage reverse')
-            st = linear.home(direction, wait=False, timeout=10.0)
+            st = linear.home(direction, wait=False, timeout=20.0)
             while not self.stopped():
                 time.sleep(0.1)
                 if st.done:
                     break
             pos = linear.user_readback.get()
-            self._append_status_text(f'\nReached position {pos}')
             if st.done and linear.homed:
-                loop_counter -= 1
                 lin_pos.append(pos)
                 continue
             else:
                 if self.motor_error(linear):
                     # if we fail in the forward direction, try backward
                     if forward:
-                        txt = '\nHad error in forward direction, reversing...'
-                        self._append_status_text(txt)
+                        forward = False
                     else:
-                        err = '\nError: linear homing failed in both directions'
-                        self._append_status_text(err)
-                        return self._success
+                        ex = Exception("Linear motor had an error!")
+                        st.set_exception(ex)
+                        return st
                 else:
-                    err = '\nUnknown Error: linear homing failed'
-                    self._append_status_text(err)
-                    return self._success
+                    ex = Exception("Linear homing failed")
+                    st.set_exception(ex)
+                return st
 
-        # Compare the last 3 positions. Leave the others in the list for
-        # diagnostic information if we fail in both forward and backward
-        # directions.
         if all([
-            self._linear_pos_comp(lin_pos[-1], lin_pos[-2]),
-            self._linear_pos_comp(lin_pos[-2], lin_pos[-3])
+            self._linear_pos_valid(lin_pos[0], lin_pos[1]),
+            self._linear_pos_valid(lin_pos[1], lin_pos[2])
         ]):
             self._success()  # We did it!
-            self._append_status_text('\nLinear homing succeeded')
 
         else:
-            err = 'Error: linear homing positons don\'t match:'
-            self._append_status_text(f'\n{err}')
-            self._append_status_text(f'\n{lin_pos}')
-        return self._success
+            err = f"Error: linear homing positons don\'t match: {lin_pos}"
+            ex = Exception(err)
+            st.set_exception(ex)
+        return st
 
 
 class _rotary_thread(HomingThread):
     """
     Thread for managing the homing routine for the goniometer stage.
     """
-    def _rotary_pos_comp(self, pos):
+    def _rotary_pos_valid(self, pos):
         """
         Check the returned position of the rotary stage. If the position is
         close to zero, then the homing probably failed.
         """
         # TODO Is this _really_ needed now that we can check the MSTA field?
         # Need to check...
-        if -0.010 < abs(pos) and 0.010 > abs(pos):
+        if -0.010 < abs(pos) and abs(pos) < 0.010:
             return False
         else:
             return True
 
-    def run(self, rotary):
+    def run(self):
+        rotary = self.motor
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
+        st = None
         forward = True
-        for i in range(2):  # Try forward, backward, then bail
+        for i in range(2):  # Try forward, then backward, then bail
             if self.stopped():
-                return False
+                if st:
+                    ex = Exception("Rotary homing stopped")
+                    st.set_exception(ex)
+                return st
             if forward:
-                self._append_status_text('\nHoming rotary stage forward')
+                direction = HomeEnum.forward
             else:
                 direction = HomeEnum.reverse
-                self._append_status_text('\nHoming rotary stage reverse')
             st = rotary.home(direction, wait=False, timeout=30.0)
             while not self.stopped() and not st.done:
                 time.sleep(0.1)
                 if st.done:
                     continue
             pos = rotary.user_readback.get()
-            if rotary.homed and not self._rotary_pos_comp(pos):
-                self._append_status_text('\nRotary homing succeeded')
+            if rotary.homed and self._rotary_pos_valid(pos):
+                self.success()
                 break
             elif forward:  # try homing reverse
-                txt = 'Rotary homing failed forward; trying reverse'
-                self._append_status_text(f'\n{txt}')
                 forward = False
                 continue
-            else:  # already tried forward and backward, bail out
-                err = 'Error: rotary homing failed forward and reverse'
-                self._append_status_text(f'\n{err}')
-                return False
+            else:  # already tried forward and backward, error out
+                ex = Exception("Rotary homing failed")
+                st.set_exception(ex)
+        return st
 
 
 class _goniometer_thread(HomingThread):
     """
     Thread for managing the homing routine for the goniometer stage.
     """
-    def run(self, goniometer):
+    def run(self):
+        goniometer = self.motor
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         direction = HomeEnum.forward
         st = goniometer.home(direction, wait=False, timeout=30.0)
@@ -360,12 +372,11 @@ class _goniometer_thread(HomingThread):
             if st.done:
                 break
         if goniometer.homed:
-            self._append_status_text('\nGoniometer homing succeeded')
-            return True
+            self.success()
         else:
-            err = 'Error: goniometer homing failed'
-            self._append_status_text(f'\n{err}')
-            return False
+            ex = Exception("Goniometer homing failed")
+            st.set_exception(ex)
+        return st
 
 
 class QCombinedHomeStatus(QtCore.QObject):
@@ -690,9 +701,15 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     ):
         super().__init__(parent)
 
-        self.n_actions = 0  # progress counter for homing
-        self.total_actions = 5  # total number of homing steps
         self.cancel = False
+        self.running = False
+
+        linear_thread = _linear_thread(positioners[0])
+        rotary_thread = _rotary_thread(positioners[1])
+        goniometer_thread = _goniometer_thread(positioners[2])
+
+        self._threads = [linear_thread, rotary_thread, goniometer_thread]
+
         self.positioners = positioners
         self.status_text.setText('Ready')
         self.progress_bar.setVisible(False)
@@ -708,7 +725,6 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self.home_requested.emit()
 
     def closeEvent(self, event):
-        print("Got close event!")
         # Cancel the homing routine if it's running
         self._cancel_button_press()
         event.accept()
@@ -719,6 +735,10 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
     def _cancel_handler(self):
         self._append_status_text('\nGot cancel request!')
+        for thread in self._threads:
+            if thread.is_alive():
+                self._append_status_text(f'\nStopping thread {thread}')
+                thread.stop()
         for positioner in self.positioners:
             dev = positioner.device
             self._append_status_text(f'\nChecking dev {dev}')
@@ -736,18 +756,18 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
     def _perform_home(self,) -> QCombinedHomeStatus | None:
         """
-        Request that the motors of the source all be homed.
+        Home the motors for this laser source.
         """
         def finished_homing():
             self.progress_bar.setVisible(False)
 
         self.progress_bar.setValue(0)
 
-        linear_status = self._home_linear()
-        rotary_status = self._home_rotary()
-        goniometer_status = self._home_goniometer()
+        status = []
+        for thread in self._threads:
+            st = thread.run()
+            status.append(st)
 
-        status = [linear_status, rotary_status, goniometer_status]
         self._home_status = QCombinedHomeStatus(status)
         self._home_status.finished_homing.connect(finished_homing)
 
