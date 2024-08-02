@@ -357,50 +357,6 @@ class _goniometer_thread(HomingThread):
         self._finished.emit()
 
 
-class QCombinedHomeStatus(QtCore.QObject):
-    move_statuses: list[MoveStatus]
-    finished_homing = QtCore.Signal()
-    status_changed = QtCore.Signal(float)
-
-    def __init__(self, move_statuses: list[MoveStatus]):
-        super().__init__()
-        if not move_statuses:
-            raise ValueError("At least one MoveStatus required")
-
-        self.move_statuses = list(st for st in move_statuses)
-        self.lock = threading.Lock()
-        self._finished_count = 0
-        for idx, move_status in enumerate(self.move_statuses):
-            move_status.watch(partial(self._watch_callback, idx))
-            move_status.callbacks.append(partial(self._finished_callback, idx))
-
-    def _watch_callback(
-        self,
-        index: int,
-        /,
-        **kwargs,
-    ):
-        with self.lock:
-            if self._finished_count == len(self.move_statuses):
-                return
-        try:
-            ndone = sum([int(st.done) for st in self.move_statuses])
-            overall = np.clip(ndone / len(self.move_statuses), 0, 1)
-        except Exception:
-            overall = None
-        else:
-            self.status_changed.emit(overall)
-            if overall >= (1.0 - 1e-6):
-                self.finished_homing.emit()
-
-    def _finished_callback(self, index: int, /, fraction: float | None = None, **kwargs):
-        with self.lock:
-            self._finished_count += 1
-
-        if self._finished_count == len(self.move_statuses):
-            self.finished_homing.emit()
-
-
 class BtmsLaserDestinationChoice(QtWidgets.QFrame):
     target_dest_combo: BtmsDestinationComboBox
     _device: BtpsSourceStatus | None
