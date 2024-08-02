@@ -196,24 +196,25 @@ class QCombinedMoveStatus(QtCore.QObject):
             self.finished_moving.emit()
 
 
-class HomingThread(threading.Thread):
+class HomingThread(QtCore.QThread):
     """
     Thread class that can be stopped by external code. General purpose, but
     in this program is intended to be used for performing different homing
     routines simultaneously.
     """
+    _finished = QtCore.Signal()
+
     def __init__(self, motor, *args, **kwargs):
         super(HomingThread, self).__init__(*args, **kwargs)
         self._motor = motor
         self._success = False
-        self._stopper = threading.Event()
-        self._finished = QtCore.Signal()
+        self._stopper = False
 
     def stop(self):
-        self._stopper.set()
+        self._stopper = True
 
     def stopped(self):
-        return self._stopper.isSet()
+        return self._stopper
 
     def success(self):
         self._success = True
@@ -235,8 +236,7 @@ class HomingThread(threading.Thread):
         """
         Overwrite this method with the code that you want to run in the thread.
         Ensure that you are checking the stopped() status and return from your
-        routine when appropriate to stop execution when requested. Expected to
-        return a MoveStatus object.
+        routine when appropriate to stop execution when requested.
         """
         pass
 
@@ -245,6 +245,7 @@ class _linear_thread(HomingThread):
     """
     Thread for managing the homing routine for the linear stage.
     """
+
     def _linear_pos_valid(self, pos1, pos2):
         """
         The linear stage homing marks are ~10mm apart. When we are on a bad
@@ -257,46 +258,42 @@ class _linear_thread(HomingThread):
         else:
             return False
 
-    def run(self) -> bool | None:
-        linear = self.motor
+    def run(self):
+        linear = self._motor
         loop_counter = 3
         forward = True
         lin_pos = []
         linear.velocity.put(0.0)  # Use maximum closed loop freq
         for i in range(loop_counter):
-            if self.stopped():
-                self._finished.emit()
-                return self.succeeded()
-            if forward:
-                direction = HomeEnum.forward
-            else:
-                direction = HomeEnum.reverse
-            st = linear.home(direction, wait=False, timeout=20.0)
-            while not self.stopped():
-                time.sleep(0.1)
-                if st.done:
-                    break
-            pos = linear.user_readback.get()
-            if st.done and linear.homed:
-                lin_pos.append(pos)
-                continue
-            else:
-                if self.motor_error(linear):
+            if not self.stopped():
+                if forward:
+                    direction = HomeEnum.forward
+                else:
+                    direction = HomeEnum.reverse
+                st = linear.home(direction, wait=False, timeout=20.0)
+                while not self.stopped():
+                    time.sleep(0.1)
+                    if st.done:
+                        break
+                pos = linear.user_readback.get()
+                if st.done and linear.homed:
+                    lin_pos.append(pos)
+                    continue
+                else:
                     # if we fail in the forward direction, try backward
                     if forward:
                         forward = False
                     else:
-                        self._finished.emit()
-                        return self.succeeded()
+                        break
+            else:
+                break
 
         if all([
             self._linear_pos_valid(lin_pos[0], lin_pos[1]),
             self._linear_pos_valid(lin_pos[1], lin_pos[2])
         ]):
-            self._success()  # We did it!
+            self.success()
         self._finished.emit()
-
-        return self.succeeded()
 
 
 class _rotary_thread(HomingThread):
@@ -316,32 +313,30 @@ class _rotary_thread(HomingThread):
             return True
 
     def run(self):
-        rotary = self.motor
+        rotary = self._motor
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
         forward = True
         for i in range(2):  # Try forward, then backward, then bail
-            if self.stopped():
-                self._finished.emit()
-                return self.succeeded()
-            if forward:
-                direction = HomeEnum.forward
-            else:
-                direction = HomeEnum.reverse
-            st = rotary.home(direction, wait=False, timeout=30.0)
-            while not self.stopped() and not st.done:
-                time.sleep(0.1)
-                if st.done:
+            if not self.stopped():
+                if forward:
+                    direction = HomeEnum.forward
+                else:
+                    direction = HomeEnum.reverse
+                st = rotary.home(direction, wait=False, timeout=30.0)
+                while not self.stopped():
+                    time.sleep(0.1)
+                    if st.done:
+                        break
+                pos = rotary.user_readback.get()
+                if rotary.homed and self._rotary_pos_valid(pos):
+                    self.success()
+                    break
+                elif forward:  # try homing reverse
+                    forward = False
                     continue
-            pos = rotary.user_readback.get()
-            if rotary.homed and self._rotary_pos_valid(pos):
-                self.success()
+            else:
                 break
-            elif forward:  # try homing reverse
-                forward = False
-                continue
         self._finished.emit()
-
-        return self.succeeded()
 
 
 class _goniometer_thread(HomingThread):
@@ -349,7 +344,7 @@ class _goniometer_thread(HomingThread):
     Thread for managing the homing routine for the goniometer stage.
     """
     def run(self):
-        goniometer = self.motor
+        goniometer = self._motor
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         direction = HomeEnum.forward
         st = goniometer.home(direction, wait=False, timeout=30.0)
@@ -360,7 +355,6 @@ class _goniometer_thread(HomingThread):
         if goniometer.homed:
             self.success()
         self._finished.emit()
-        return self.succeeded()
 
 
 class QCombinedHomeStatus(QtCore.QObject):
@@ -688,11 +682,15 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self.cancel = False
         self.running = False
 
-        linear_thread = _linear_thread(positioners[0])
-        rotary_thread = _rotary_thread(positioners[1])
-        goniometer_thread = _goniometer_thread(positioners[2])
+        self.linear_thread = _linear_thread(positioners[0].device)
+        self.rotary_thread = _rotary_thread(positioners[1].device)
+        self.goniometer_thread = _goniometer_thread(positioners[2].device)
 
-        self._threads = [linear_thread, rotary_thread, goniometer_thread]
+        self._threads = [
+            self.linear_thread,
+            self.rotary_thread,
+            self.goniometer_thread
+        ]
 
         self.positioners = positioners
         self.status_text.setText('Ready')
@@ -718,7 +716,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def _cancel_handler(self):
         self._append_status_text('\nGot cancel request!')
         for thread in self._threads:
-            if thread.is_alive():
+            if thread.isRunning():
                 self._append_status_text(f'\nStopping thread {thread}')
                 thread.stop()
         for positioner in self.positioners:
@@ -734,7 +732,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
     def _update_progress(self):
         ndone = sum([int(thread.succeeded()) for thread in self._threads])
-        overall = np.clip(ndone / len(self.move_statuses), 0, 1)
+        overall = np.clip(ndone / len(self._threads), 0, 1)
         self.progress_bar.setValue(int(100.0 * overall))
 
     def _perform_home(self):
@@ -743,15 +741,19 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         """
         self.progress_bar.setValue(0)
 
-        for thread in self._threads:
-            thread.run()
-            thread._finished.connect(self._update_progress)
-        # self._home_status = QCombinedHomeStatus(status)
-        # self._home_status.finished_homing.connect(finished_homing)
+        self._append_status_text(f'\nHoming {self.linear_thread._motor} ...')
+        self.linear_thread.start()
+        self.linear_thread._finished.connect(self._update_progress)
 
-        # self._home_status.status_changed.connect(self._update_progress)
+        self._append_status_text(f'\nHoming {self.rotary_thread._motor} ...')
+        self.rotary_thread.start()
+        self.rotary_thread._finished.connect(self._update_progress)
 
-        show_progress = any(thread.is_alive() for thread in self._threads)
+        self._append_status_text(f'\nHoming {self.goniometer_thread._motor} ...')
+        self.goniometer_thread.start()
+        self.goniometer_thread._finished.connect(self._update_progress)
+
+        show_progress = any(thread.isRunning() for thread in self._threads)
         self.progress_bar.setVisible(show_progress)
 
 
