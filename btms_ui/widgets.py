@@ -288,11 +288,12 @@ class _linear_thread(HomingThread):
             else:
                 break
 
-        if all([
-            self._linear_pos_valid(lin_pos[0], lin_pos[1]),
-            self._linear_pos_valid(lin_pos[1], lin_pos[2])
-        ]):
-            self.success()
+        if not self.stopped():
+            if all([
+                self._linear_pos_valid(lin_pos[0], lin_pos[1]),
+                self._linear_pos_valid(lin_pos[1], lin_pos[2])
+            ]):
+                self.success()
         self._finished.emit()
 
 
