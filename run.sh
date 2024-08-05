@@ -6,4 +6,4 @@ source /reg/g/pcds/engineering_tools/latest-released/scripts/dev_conda ""
 
 cd $SCRIPT_DIR
 
-python -m btms_ui.main "$@"
+python -m btms_ui.main "$@" &
