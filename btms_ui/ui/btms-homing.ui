@@ -31,7 +31,7 @@
    <item row="4" column="0">
     <widget class="QPushButton" name="home_button">
      <property name="text">
-      <string>Home Stage</string>
+      <string>Home Stages</string>
      </property>
     </widget>
    </item>
