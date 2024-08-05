@@ -463,21 +463,119 @@
        </widget>
       </item>
       <item>
-       <widget class="PyDMDrawingCircle" name="home_status_circle">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
+       <widget class="PyDMByteIndicator" name="lin_home_indicator">
         <property name="toolTip">
          <string/>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="PyDMToolTip" stdset="0">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string/>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="bigEndian" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="numBits" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="shift" stdset="0">
+         <number>14</number>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Linear</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMByteIndicator" name="rot_home_indicator">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="PyDMToolTip" stdset="0">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string/>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="bigEndian" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="numBits" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="shift" stdset="0">
+         <number>14</number>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Rotary</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMByteIndicator" name="gon_home_indicator">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="PyDMToolTip" stdset="0">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string/>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="bigEndian" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="circles" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="numBits" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="shift" stdset="0">
+         <number>14</number>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Goniometer</string>
+         </stringlist>
         </property>
        </widget>
       </item>
@@ -938,9 +1036,9 @@
    <header>pydm.widgets.label</header>
   </customwidget>
   <customwidget>
-   <class>PyDMDrawingCircle</class>
+   <class>PyDMByteIndicator</class>
    <extends>QWidget</extends>
-   <header>pydm.widgets.drawing</header>
+   <header>pydm.widgets.byte</header>
   </customwidget>
   <customwidget>
    <class>TyphosPositionerWidget</class>

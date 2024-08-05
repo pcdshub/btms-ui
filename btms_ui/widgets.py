@@ -854,6 +854,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     motion_stop_button: QtWidgets.QPushButton
     motor_frame: QtWidgets.QFrame
     motion_home_button: QtWidgets.QPushButton
+    lin_home_indicator: pydm_widgets.PyDMByteIndicator
+    rot_home_indicator: pydm_widgets.PyDMByteIndicator
+    gon_home_indicator: pydm_widgets.PyDMByteIndicator
     rotary_widget: TyphosPositionerWidget
     save_nominal_button: QtWidgets.QPushButton
     save_centroid_nominal_button: QtWidgets.QPushButton
@@ -1292,6 +1295,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.linear_label.channel = channel_from_signal(device.linear.user_readback)
         self.rotary_label.channel = channel_from_signal(device.rotary.user_readback)
         self.goniometer_label.channel = channel_from_signal(device.goniometer.user_readback)
+        self.lin_home_indicator.channel = f"ca://{self.linear_widget.device.prefix}.MSTA"
+        self.rot_home_indicator.channel = f"ca://{self.rotary_widget.device.prefix}.MSTA"
+        self.gon_home_indicator.channel = f"ca://{self.goniometer_widget.device.prefix}.MSTA"
         self.near_x_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidX_RBV"
         self.near_y_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidY_RBV"
         self.far_x_label.channel = f"ca://{device.source_pos.far_field_camera_prefix}Stats2:CentroidX_RBV"
