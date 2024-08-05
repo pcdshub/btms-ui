@@ -708,11 +708,14 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         txt = self.status_text.text()
         self.status_text.setText(txt + new_text)
 
-    def _update_progress(self, motor):
-        ndone = sum([int(thread.succeeded()) for thread in self._threads])
+    def _update_progress(self, thread):
+        ndone = sum([int(th.succeeded()) for th in self._threads])
         overall = np.clip(ndone / len(self._threads), 0, 1)
         self.progress_bar.setValue(int(100.0 * overall))
-        self._append_status_text(f'\nComplete: {motor}')
+        if thread.succeeded():
+            self._append_status_text(f'\nComplete: {thread._motor}')
+        else:
+            self._append_status_text(f'\nFAILED: {thread._motor}')
 
     def _perform_home(self):
         """
@@ -724,7 +727,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             self._append_status_text(f'\nHoming {thread._motor} ...')
             thread.start()
             thread._finished.connect(
-                partial(self._update_progress, thread._motor)
+                partial(self._update_progress, thread)
             )
 
         show_progress = any(thread.isRunning() for thread in self._threads)
