@@ -14,21 +14,21 @@
    <string>Stage Stack Homing</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="1" column="0">
     <widget class="QLabel" name="status_label">
      <property name="text">
       <string>Status</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="4" column="1">
     <widget class="QPushButton" name="cancel_button">
      <property name="text">
       <string>Cancel</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QPushButton" name="home_button">
      <property name="text">
       <string>Home Stage</string>
@@ -36,13 +36,6 @@
     </widget>
    </item>
    <item row="2" column="0" colspan="2">
-    <widget class="QProgressBar" name="progress_bar">
-     <property name="value">
-      <number>24</number>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
@@ -53,7 +46,7 @@
         <x>0</x>
         <y>0</y>
         <width>462</width>
-        <height>202</height>
+        <height>181</height>
        </rect>
       </property>
       <widget class="QLabel" name="status_text">
@@ -97,6 +90,27 @@
        </property>
       </widget>
      </widget>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QProgressBar" name="progress_bar">
+     <property name="value">
+      <number>24</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="window_label">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+       <underline>true</underline>
+      </font>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
     </widget>
    </item>
   </layout>

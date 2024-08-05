@@ -620,6 +620,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     filename: ClassVar[str] = "btms-homing.ui"
 
+    window_label: QtWidgets.QLabel
     status_label: QtWidgets.QLabel
     status_text: QtWidgets.QListWidget
     home_button: QtWidgets.QPushButton
@@ -632,7 +633,8 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     def __init__(
         self,
         parent: QtWidgets.QWidget | None,
-        positioners: tuple[TyphosPositionerWidget, ...]
+        positioners: tuple[TyphosPositionerWidget, ...],
+        ls_name: str
     ):
         super().__init__(parent)
 
@@ -649,6 +651,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
             self.goniometer_thread
         ]
 
+        self.window_label.setText(ls_name)
         self.positioners = positioners
         self.status_text.setText('Ready')
         self.progress_bar.setVisible(False)
@@ -1146,7 +1149,8 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     def show_home(self):
         self._homing = BtmsHomingScreen(
             parent=None,
-            positioners=self.positioner_widgets
+            positioners=self.positioner_widgets,
+            ls_name=self.device.source_pos.name_and_desc
         )
         self._homing.show()
 
