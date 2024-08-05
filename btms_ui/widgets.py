@@ -222,6 +222,18 @@ class HomingThread(QtCore.QThread):
     def succeeded(self):
         return self._success
 
+    def needs_calib(self):
+        return self._motor.needs_calib.get()
+
+    def calibrate(self):
+        self._motor.do_calib.put(1)
+        n = 0
+        while self.needs_calib():
+            time.sleep(1)
+            n += 1
+            if n >= 10:
+                break
+
     def motor_error(self, motor):
         """
         Aggregate several checks of MSTA field bits to determine success or
@@ -263,6 +275,8 @@ class _linear_thread(HomingThread):
         loop_counter = 3
         forward = True
         lin_pos = []
+        if self.needs_calib:
+            self.calibrate()
         linear.velocity.put(0.0)  # Use maximum closed loop freq
         for i in range(loop_counter):
             if not self.stopped():
@@ -315,6 +329,8 @@ class _rotary_thread(HomingThread):
 
     def run(self):
         rotary = self._motor
+        if self.needs_calib:
+            self.calibrate()
         rotary.velocity.put(0.0)  # Use maximum closed loop freq
         forward = True
         for i in range(2):  # Try forward, then backward, then bail
@@ -346,6 +362,8 @@ class _goniometer_thread(HomingThread):
     """
     def run(self):
         goniometer = self._motor
+        if self.needs_calib:
+            self.calibrate()
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         direction = HomeEnum.forward
         st = goniometer.home(direction, wait=False, timeout=30.0)
