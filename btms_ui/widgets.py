@@ -339,7 +339,7 @@ class _rotary_thread(HomingThread):
                     direction = HomeEnum.forward
                 else:
                     direction = HomeEnum.reverse
-                st = rotary.home(direction, wait=False, timeout=30.0)
+                st = rotary.home(direction, wait=False, timeout=60.0)
                 while not self.stopped():
                     time.sleep(0.1)
                     if st.done:
