@@ -232,7 +232,7 @@ class HomingThread(QtCore.QThread):
 
     def calibrate(self):
         self._motor.do_calib.put(1)
-        _wait_for_value(self._motor.needs_calib, timeout=10.0)
+        _wait_for_value(self._motor.needs_calib, 0, timeout=10.0)
 
     def motor_error(self, motor):
         """
