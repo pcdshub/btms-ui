@@ -1265,7 +1265,6 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         if not self._expert_mode:
             self.show_motors(False)
             self.save_centroid_nominal_button.setVisible(self._expert_mode)
-            self.motion_home_button.setVisible(self._expert_mode)
             self.toggle_control_button.setChecked(False)
 
     @QtCore.Property(str)
