@@ -9,6 +9,7 @@ from typing import ClassVar
 import numpy as np
 from ophyd.epics_motor import HomeEnum
 from ophyd.status import MoveStatus
+from ophyd.utils.epics_pvs import _wait_for_value
 from pcdsdevices.lasers import btms_config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import (BtpsSourceStatus, BtpsState,
@@ -231,12 +232,7 @@ class HomingThread(QtCore.QThread):
 
     def calibrate(self):
         self._motor.do_calib.put(1)
-        n = 0
-        while self.needs_calib():
-            time.sleep(1)
-            n += 1
-            if n >= 10:
-                break
+        _wait_for_value(self._motor.needs_calib, timeout=10.0)
 
     def motor_error(self, motor):
         """
