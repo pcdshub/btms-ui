@@ -710,7 +710,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         Home the motors for this laser source.
         """
         self.progress_bar.setValue(0)
-
+        self._append_status_text('\n----------------------')
         for thread in self._threads:
             self._append_status_text(f'\nHoming {thread._motor} ...')
             thread.start()
