@@ -647,7 +647,6 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
     ):
         super().__init__(parent)
 
-        self.cancel = False
         self.running = False
 
         self.linear_thread = _linear_thread(positioners[0].device)
@@ -679,7 +678,6 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         event.accept()
 
     def _cancel_button_press(self):
-        self.cancel = True
         self.cancel_requested.emit()
 
     def _cancel_handler(self):
