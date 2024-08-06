@@ -203,6 +203,7 @@ class HomingThread(QtCore.QThread):
     routines simultaneously.
     """
     _finished = QtCore.Signal()
+    _st: MoveStatus = None
 
     def __init__(self, motor, *args, **kwargs):
         super(HomingThread, self).__init__(*args, **kwargs)
@@ -211,6 +212,9 @@ class HomingThread(QtCore.QThread):
         self._stopper = False
 
     def stop(self):
+        if self._st is not None:
+            exc = Exception(f"Got the stop signal for {self._motor}")
+            self._st.set_exception(exc)
         self._stopper = True
 
     def stopped(self):
@@ -284,13 +288,10 @@ class _linear_thread(HomingThread):
                     direction = HomeEnum.forward
                 else:
                     direction = HomeEnum.reverse
-                st = linear.home(direction, wait=False, timeout=20.0)
-                while not self.stopped():
-                    time.sleep(0.1)
-                    if st.done:
-                        break
+                self._st = linear.home(direction, wait=False, timeout=20.0)
+                self._st.wait()
                 pos = linear.user_readback.get()
-                if st.done and linear.homed:
+                if self._st.done and linear.homed:
                     lin_pos.append(pos)
                     continue
                 else:
@@ -339,11 +340,8 @@ class _rotary_thread(HomingThread):
                     direction = HomeEnum.forward
                 else:
                     direction = HomeEnum.reverse
-                st = rotary.home(direction, wait=False, timeout=60.0)
-                while not self.stopped():
-                    time.sleep(0.1)
-                    if st.done:
-                        break
+                self._st = rotary.home(direction, wait=False, timeout=60.0)
+                self._st.wait()
                 pos = rotary.user_readback.get()
                 if rotary.homed and self._rotary_pos_valid(pos):
                     self.success()
@@ -366,11 +364,8 @@ class _goniometer_thread(HomingThread):
             self.calibrate()
         goniometer.velocity.put(0.0)  # Use maximum closed loop freq
         direction = HomeEnum.forward
-        st = goniometer.home(direction, wait=False, timeout=30.0)
-        while not self.stopped():
-            time.sleep(0.1)
-            if st.done:
-                break
+        self._st = goniometer.home(direction, wait=False, timeout=30.0)
+        self._st.wait()
         if goniometer.homed:
             self.success()
         self._finished.emit()
