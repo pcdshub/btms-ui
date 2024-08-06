@@ -631,7 +631,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
 
     window_label: QtWidgets.QLabel
     status_label: QtWidgets.QLabel
-    status_text: QtWidgets.QListWidget
+    status_text: QtWidgets.QTextEdit
     home_button: QtWidgets.QPushButton
     cancel_button: QtWidgets.QPushButton
     progress_bar: QtWidgets.QProgressBar
@@ -696,8 +696,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
                 dev.stop()
 
     def _append_status_text(self, new_text):
-        txt = self.status_text.text()
-        self.status_text.setText(txt + new_text)
+        self.status_text.append(new_text)
 
     def _update_progress(self, thread):
         ndone = sum([int(th.succeeded()) for th in self._threads])
