@@ -336,7 +336,12 @@ class _rotary_thread(HomingThread):
                     direction = HomeEnum.forward
                 else:
                     direction = HomeEnum.reverse
-                self._st = rotary.home(direction, wait=False, timeout=60.0)
+                # Some of the rotary stages can only move at ~1.5 deg/sec when
+                # homing. Their range is ~270degrees, meaning that if the
+                # stage will need to move a max of ~540 degrees to guarantee
+                # the home mark is found. This comes out to a timeout value of
+                # 360 seconds. :(
+                self._st = rotary.home(direction, wait=False, timeout=360.0)
                 self._st.wait()
                 pos = rotary.user_readback.get()
                 if rotary.homed and self._rotary_pos_valid(pos):
