@@ -7,7 +7,9 @@ from functools import partial
 from typing import ClassVar
 
 import numpy as np
+from ophyd.epics_motor import HomeEnum
 from ophyd.status import MoveStatus
+from ophyd.utils.epics_pvs import _wait_for_value
 from pcdsdevices.lasers import btms_config
 from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
 from pcdsdevices.lasers.btps import (BtpsSourceStatus, BtpsState,
@@ -193,6 +195,179 @@ class QCombinedMoveStatus(QtCore.QObject):
         if self._finished_count == len(self.move_statuses):
             self.status_changed.emit(1.0, current_deltas, initial_deltas)
             self.finished_moving.emit()
+
+
+class HomingThread(QtCore.QThread):
+    """
+    Thread class that can be stopped by external code. General purpose, but
+    in this program is intended to be used for performing different homing
+    routines simultaneously.
+    """
+    _finished = QtCore.Signal()
+    _st: MoveStatus = None
+
+    def __init__(self, motor, *args, **kwargs):
+        super(HomingThread, self).__init__(*args, **kwargs)
+        self._motor = motor
+        self._success = False
+        self._stopper = False
+
+    def stop(self):
+        if self._st is not None:
+            exc = Exception(f"Got the stop signal for {self._motor}")
+            self._st.set_exception(exc)
+        self._stopper = True
+
+    def stopped(self):
+        return self._stopper
+
+    def success(self):
+        self._success = True
+
+    def succeeded(self):
+        return self._success
+
+    def needs_calib(self):
+        return self._motor.needs_calib.get()
+
+    def calibrate(self):
+        self._motor.do_calib.put(1)
+        _wait_for_value(self._motor.needs_calib, 0, timeout=10.0)
+
+    def motor_error(self, motor):
+        """
+        Aggregate several checks of MSTA field bits to determine success or
+        failure.
+        """
+        error = any([motor.msta['plus_ls'], motor.msta['slip_stall'],
+                     motor.msta['minus_ls'], motor.msta['comm_error'],
+                     motor.msta['problem']])
+        return error
+
+    def run(self):
+        """
+        Overwrite this method with the code that you want to run in the thread.
+        Ensure that you are checking the stopped() status and return from your
+        routine when appropriate to stop execution when requested.
+        """
+        pass
+
+
+class _linear_thread(HomingThread):
+    """
+    Thread for managing the homing routine for the linear stage.
+    """
+
+    def _linear_pos_valid(self, pos1, pos2):
+        """
+        The linear stage homing marks are ~10mm apart. When we are on a bad
+        section of the encoder strip, we will see large differences between
+        successive homing marks. This function performs a simple check to
+        ensure two positions are internally consistent.
+        """
+        if 7.0 < abs(pos1-pos2) and abs(pos1-pos2) < 13.0:
+            return True
+        else:
+            return False
+
+    def run(self):
+        linear = self._motor
+        loop_counter = 3
+        if self.needs_calib:
+            self.calibrate()
+        linear.velocity.put(0.0)  # Use maximum closed loop freq
+        # Try forward first; if this fails, restart in reverse direction
+        for direction in HomeEnum:
+            lin_pos = []
+            for i in range(loop_counter):
+                if self.stopped():
+                    break
+                self._st = linear.home(direction, wait=False, timeout=20.0)
+                self._st.wait()
+                # If homing appears to succeed, save the position and keep
+                # going.
+                if self._st.done and linear.homed:
+                    pos = linear.user_readback.get()
+                    lin_pos.append(pos)
+                    continue
+                # Otherwise, break this loop. If we've exhausted HomeEnum,
+                # then we've failed both directions.
+                break
+            # If we've succeeded "loop_counter" times, then we're done, and we
+            # check positions. If all positions are good, then we break the
+            # outer loop. If not, we try again if HomeEnum is not exhausted.
+            else:
+                if all([
+                    self._linear_pos_valid(lin_pos[0], lin_pos[1]),
+                    self._linear_pos_valid(lin_pos[1], lin_pos[2])
+                ]):
+                    self.success()
+                    break
+        self._finished.emit()
+
+
+class _rotary_thread(HomingThread):
+    """
+    Thread for managing the homing routine for the goniometer stage.
+    """
+    def _rotary_pos_valid(self, pos):
+        """
+        Check the returned position of the rotary stage. If the position is
+        close to zero, then the homing probably failed.
+        """
+        # TODO Is this _really_ needed now that we can check the MSTA field?
+        # Need to check...
+        if -0.010 < abs(pos) and abs(pos) < 0.010:
+            return False
+        else:
+            return True
+
+    def run(self):
+        rotary = self._motor
+        if self.needs_calib:
+            self.calibrate()
+        rotary.velocity.put(0.0)  # Use maximum closed loop freq
+        forward = True
+        for i in range(2):  # Try forward, then backward, then bail
+            if not self.stopped():
+                if forward:
+                    direction = HomeEnum.forward
+                else:
+                    direction = HomeEnum.reverse
+                # Some of the rotary stages can only move at ~1.5 deg/sec when
+                # homing. Their range is ~270degrees, meaning that if the
+                # stage will need to move a max of ~540 degrees to guarantee
+                # the home mark is found. This comes out to a timeout value of
+                # 360 seconds. :(
+                self._st = rotary.home(direction, wait=False, timeout=360.0)
+                self._st.wait()
+                pos = rotary.user_readback.get()
+                if rotary.homed and self._rotary_pos_valid(pos):
+                    self.success()
+                    break
+                elif forward:  # try homing reverse
+                    forward = False
+                    continue
+            else:
+                break
+        self._finished.emit()
+
+
+class _goniometer_thread(HomingThread):
+    """
+    Thread for managing the homing routine for the goniometer stage.
+    """
+    def run(self):
+        goniometer = self._motor
+        if self.needs_calib:
+            self.calibrate()
+        goniometer.velocity.put(0.0)  # Use maximum closed loop freq
+        direction = HomeEnum.forward
+        self._st = goniometer.home(direction, wait=False, timeout=30.0)
+        self._st.wait()
+        if goniometer.homed:
+            self.success()
+        self._finished.emit()
 
 
 class BtmsLaserDestinationChoice(QtWidgets.QFrame):
@@ -454,6 +629,102 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
         return None
 
 
+class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
+    filename: ClassVar[str] = "btms-homing.ui"
+
+    window_label: QtWidgets.QLabel
+    status_label: QtWidgets.QLabel
+    status_text: QtWidgets.QTextEdit
+    home_button: QtWidgets.QPushButton
+    cancel_button: QtWidgets.QPushButton
+    progress_bar: QtWidgets.QProgressBar
+
+    home_requested = QtCore.Signal()
+    cancel_requested = QtCore.Signal()
+
+    def __init__(
+        self,
+        parent: QtWidgets.QWidget | None,
+        positioners: tuple[TyphosPositionerWidget, ...],
+        ls_name: str
+    ):
+        super().__init__(parent)
+
+        self.running = False
+
+        self.linear_thread = _linear_thread(positioners[0].device)
+        self.rotary_thread = _rotary_thread(positioners[1].device)
+        self.goniometer_thread = _goniometer_thread(positioners[2].device)
+
+        self._threads = [
+            self.linear_thread,
+            self.rotary_thread,
+            self.goniometer_thread
+        ]
+
+        self.window_label.setText(ls_name)
+        self.positioners = positioners
+        self.status_text.setText('Ready')
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setValue(0.0)
+        self.cancel_button.clicked.connect(self._cancel_button_press)
+        self.cancel_requested.connect(self._cancel_handler)
+        self.home_button.clicked.connect(self._request_home)
+        self.home_requested.connect(self._perform_home)
+
+    def _request_home(self):
+        self.home_requested.emit()
+
+    def closeEvent(self, event):
+        # Cancel the homing routine if it's running
+        self._cancel_button_press()
+        event.accept()
+
+    def _cancel_button_press(self):
+        self.cancel_requested.emit()
+
+    def _cancel_handler(self):
+        self._append_status_text('\nGot cancel request!')
+        for thread in self._threads:
+            if thread.isRunning():
+                self._append_status_text(f'\nStopping thread {thread}')
+                thread.stop()
+        for positioner in self.positioners:
+            dev = positioner.device
+            self._append_status_text(f'\nChecking dev {dev}')
+            if dev.moving:
+                self._append_status_text(f'\n{dev} is moving, stopping...')
+                dev.stop()
+
+    def _append_status_text(self, new_text):
+        self.status_text.append(new_text)
+
+    def _update_progress(self, thread):
+        ndone = sum([int(th.succeeded()) for th in self._threads])
+        overall = np.clip(ndone / len(self._threads), 0, 1)
+        self.progress_bar.setValue(int(100.0 * overall))
+        if thread.succeeded():
+            self._append_status_text(f'\nComplete: {thread._motor}')
+        else:
+            self._append_status_text(f'\nFAILED: {thread._motor}')
+
+    def _perform_home(self):
+        """
+        Home the motors for this laser source.
+        """
+        self.progress_bar.setValue(0)
+        self._append_status_text('\n----------------------')
+        for thread in self._threads:
+            self._append_status_text(f'\nHoming {thread._motor} ...')
+            thread.start()
+            thread._finished.connect(
+                partial(self._update_progress, thread)
+            )
+
+        show_progress = any(thread.isRunning() for thread in self._threads)
+        self.progress_bar.setVisible(show_progress)
+
+
 class BtmsSourceValidWidget(QtWidgets.QFrame):
     indicators: dict[DestinationPosition, list[pydm_widgets.PyDMByteIndicator]]
 
@@ -597,6 +868,10 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
     motion_progress_widget: QtWidgets.QProgressBar
     motion_stop_button: QtWidgets.QPushButton
     motor_frame: QtWidgets.QFrame
+    motion_home_button: QtWidgets.QPushButton
+    lin_home_indicator: pydm_widgets.PyDMByteIndicator
+    rot_home_indicator: pydm_widgets.PyDMByteIndicator
+    gon_home_indicator: pydm_widgets.PyDMByteIndicator
     rotary_widget: TyphosPositionerWidget
     save_nominal_button: QtWidgets.QPushButton
     save_centroid_nominal_button: QtWidgets.QPushButton
@@ -658,6 +933,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.toggle_control_button.clicked.connect(self.show_motors)
         self.save_nominal_button.clicked.connect(self.save_motor_nominal)
         self.save_centroid_nominal_button.clicked.connect(self.save_centroid_nominal)
+        self.motion_home_button.clicked.connect(self.show_home)
         self._camera_process = None
         self._expert_mode = None
         self.expert_mode = expert_mode
@@ -882,6 +1158,14 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.rotary_label.setVisible(show_position_labels)
         self.save_nominal_button.setVisible(show)
 
+    def show_home(self):
+        self._homing = BtmsHomingScreen(
+            parent=None,
+            positioners=self.positioner_widgets,
+            ls_name=self.device.source_pos.name_and_desc
+        )
+        self._homing.show()
+
     def _perform_move(
         self, target: DestinationPosition
     ) -> QCombinedMoveStatus | None:
@@ -968,6 +1252,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self._expert_mode = bool(expert_mode)
         self.toggle_control_button.setVisible(self._expert_mode)
         self.save_centroid_nominal_button.setVisible(self._expert_mode)
+        self.motion_home_button.setVisible(self._expert_mode)
         if not self._expert_mode:
             self.show_motors(False)
             self.save_centroid_nominal_button.setVisible(self._expert_mode)
@@ -1025,6 +1310,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
         self.linear_label.channel = channel_from_signal(device.linear.user_readback)
         self.rotary_label.channel = channel_from_signal(device.rotary.user_readback)
         self.goniometer_label.channel = channel_from_signal(device.goniometer.user_readback)
+        self.lin_home_indicator.channel = f"ca://{self.linear_widget.device.prefix}.MSTA"
+        self.rot_home_indicator.channel = f"ca://{self.rotary_widget.device.prefix}.MSTA"
+        self.gon_home_indicator.channel = f"ca://{self.goniometer_widget.device.prefix}.MSTA"
         self.near_x_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidX_RBV"
         self.near_y_label.channel = f"ca://{device.source_pos.near_field_camera_prefix}Stats2:CentroidY_RBV"
         self.far_x_label.channel = f"ca://{device.source_pos.far_field_camera_prefix}Stats2:CentroidX_RBV"
