@@ -265,7 +265,7 @@ class _linear_thread(HomingThread):
         successive homing marks. This function performs a simple check to
         ensure two positions are internally consistent.
         """
-        if 9.0 < abs(pos1-pos2) and abs(pos1-pos2) < 11.0:
+        if 7.0 < abs(pos1-pos2) and abs(pos1-pos2) < 13.0:
             return True
         else:
             return False
@@ -273,38 +273,36 @@ class _linear_thread(HomingThread):
     def run(self):
         linear = self._motor
         loop_counter = 3
-        forward = True
-        lin_pos = []
         if self.needs_calib:
             self.calibrate()
         linear.velocity.put(0.0)  # Use maximum closed loop freq
-        for i in range(loop_counter):
-            if not self.stopped():
-                if forward:
-                    direction = HomeEnum.forward
-                else:
-                    direction = HomeEnum.reverse
+        # Try forward first; if this fails, restart in reverse direction
+        for direction in HomeEnum:
+            lin_pos = []
+            for i in range(loop_counter):
+                if self.stopped():
+                    break
                 self._st = linear.home(direction, wait=False, timeout=20.0)
                 self._st.wait()
-                pos = linear.user_readback.get()
+                # If homing appears to succeed, save the position and keep
+                # going.
                 if self._st.done and linear.homed:
+                    pos = linear.user_readback.get()
                     lin_pos.append(pos)
                     continue
-                else:
-                    # if we fail in the forward direction, try backward
-                    if forward:
-                        forward = False
-                    else:
-                        break
-            else:
+                # Otherwise, break this loop. If we've exhausted HomeEnum,
+                # then we've failed both directions.
                 break
-
-        if not self.stopped():
-            if all([
-                self._linear_pos_valid(lin_pos[0], lin_pos[1]),
-                self._linear_pos_valid(lin_pos[1], lin_pos[2])
-            ]):
-                self.success()
+            # If we've succeeded "loop_counter" times, then we're done, and we
+            # check positions. If all positions are good, then we break the
+            # outer loop. If not, we try again if HomeEnum is not exhausted.
+            else:
+                if all([
+                    self._linear_pos_valid(lin_pos[0], lin_pos[1]),
+                    self._linear_pos_valid(lin_pos[1], lin_pos[2])
+                ]):
+                    self.success()
+                    break
         self._finished.emit()
 
 
