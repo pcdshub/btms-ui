@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1282</width>
+    <width>1288</width>
     <height>500</height>
    </rect>
   </property>
@@ -108,7 +108,7 @@
             <string>IOC Reboot</string>
            </property>
            <property name="channel" stdset="0">
-            <string>IOC:LAS:BTS:MCS2:01:SYSRESET</string>
+            <string>ca://IOC:LAS:BTS:MCS2:01:SYSRESET</string>
            </property>
            <property name="showConfirmDialog" stdset="0">
             <bool>true</bool>
