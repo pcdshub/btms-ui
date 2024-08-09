@@ -1431,8 +1431,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
             )
         )
 
-        # TODO: hiding the BTPS screen for now as a workaround
-        self.open_btps_overview_button.setVisible(False)
+        self.open_btps_overview_button.setVisible(True)
         self.open_btps_overview_button.clicked.connect(self.open_btps_overview)
         self.open_hutch_overview_button.clicked.connect(self.open_hutch_overview)
         self._btps_overview = None
