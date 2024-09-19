@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1282</width>
+    <width>1288</width>
     <height>500</height>
    </rect>
   </property>
@@ -93,6 +93,28 @@
           <widget class="QPushButton" name="open_hutch_overview_button">
            <property name="text">
             <string>Hutch Screen</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="PyDMPushButton" name="ioc_reboot_button">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>IOC Reboot</string>
+           </property>
+           <property name="channel" stdset="0">
+            <string>ca://IOC:LAS:BTS:MCS2:01:SYSRESET</string>
+           </property>
+           <property name="showConfirmDialog" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="pressValue" stdset="0">
+            <string>1</string>
            </property>
           </widget>
          </item>
@@ -253,8 +275,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>518</width>
-            <height>386</height>
+            <width>572</width>
+            <height>400</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -400,6 +422,11 @@
    <class>PyDMLabel</class>
    <extends>QLabel</extends>
    <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
   </customwidget>
   <customwidget>
    <class>BtmsDiagramWidget</class>
