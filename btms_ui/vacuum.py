@@ -155,7 +155,7 @@ class LaserShutter(
         self.setAttribute(QtCore.Qt.WA_NoSystemBackground)
 
     def minimumSizeHint(self):
-        return QtCore.QSize(self.iconSize / 4, self.iconSize)
+        return QtCore.QSize(int(self.iconSize / 4), self.iconSize)
 
     def sizeHint(self):
         return self.minimumSizeHint()
