@@ -666,7 +666,7 @@ class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
         self.positioners = positioners
         self.status_text.setText('Ready')
         self.progress_bar.setVisible(False)
-        self.progress_bar.setValue(0.0)
+        self.progress_bar.setValue(0)
         self.cancel_button.clicked.connect(self._cancel_button_press)
         self.cancel_requested.connect(self._cancel_handler)
         self.home_button.clicked.connect(self._request_home)
