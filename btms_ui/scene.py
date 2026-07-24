@@ -284,7 +284,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
             pos_x, _ = self.base.positions[pos]
             if pos.is_top:
-                pos_y = self.base.sceneBoundingRect().top() - dest.sceneBoundingRect().height()
+                pos_y = self.base.sceneBoundingRect().top() - 1.1*dest.sceneBoundingRect().height()
             else:
                 pos_y = self.base.sceneBoundingRect().bottom()
 
