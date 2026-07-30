@@ -4,7 +4,7 @@ import logging
 from typing import ClassVar
 
 import ophyd
-from pcdsdevices.lasers.btps import VGC, LssShutterStatus
+from btms_ui.config.btps import VGC, LssShutterStatus
 from pcdswidgets.symbols.valves import BaseSymbolIcon
 from pcdswidgets.vacuum.base import PCDSSymbolBase
 from pcdswidgets.vacuum.mixins import InterlockMixin, OpenCloseStateMixin

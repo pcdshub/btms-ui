@@ -1,6 +1,6 @@
 import os
 
-from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
+from btms_ui.config.btms_config import DestinationPosition, SourcePosition
 
 #: The scale for the entire BTMS status view.
 VIEW_SCALE = float(os.environ.get("BTMS_VIEW_SCALE", 0.25))
