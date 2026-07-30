@@ -1,2 +1,4 @@
 qtpy
 pcdsdevices
+pcdswidgets
+typhos
