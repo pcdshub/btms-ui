@@ -1,0 +1,1844 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>474</width>
+    <height>474</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <widget class="PyDMSymbol" name="PyDMSymbol">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="imageFiles">
+      <string>{&quot;0&quot;: &quot;../icons/bts_mirror_stack.svg&quot;}</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>225</width>
+       <height>225</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Rotary</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6">
+      <item row="3" column="1">
+       <widget class="PyDMLabel" name="PyDMLabel_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 85, 255);
+color: rgb(255, 255, 255);</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="1" column="0">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_7">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_9">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_8">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="1">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit_5">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QGridLayout" name="gridLayout_10">
+        <item row="0" column="0">
+         <widget class="PyDMPushButton" name="PyDMPushButton_13">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>ruler-horizontal</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="PyDMPushButton" name="PyDMPushButton_14">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>wrench</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="PyDMPushButton" name="PyDMPushButton_15">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>home</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="2">
+       <widget class="PyDMPushButton" name="PyDMPushButton_12">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/right-rotate-plus.svg</normaloff>../icons/right-rotate-plus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="PyDMShellCommand" name="PyDMShellCommand_2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit_6">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="PyDMPushButton" name="PyDMPushButton_11">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/left-rotate-minus.svg</normaloff>../icons/left-rotate-minus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="SvgMultiStateLED" name="SvgMultiStateLED_3">
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Position:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>225</width>
+       <height>225</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Linear</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="2">
+       <layout class="QGridLayout" name="gridLayout_9">
+        <item row="0" column="0">
+         <widget class="PyDMPushButton" name="PyDMPushButton_3">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>ruler-horizontal</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="PyDMPushButton" name="PyDMPushButton_4">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>wrench</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="PyDMPushButton" name="PyDMPushButton_5">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>home</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="2">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="PyDMPushButton" name="PyDMPushButton">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/left-arrow-minus.svg</normaloff>../icons/left-arrow-minus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_3">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_2">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="3">
+       <widget class="SvgMultiStateLED" name="SvgMultiStateLED_2">
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="PyDMPushButton" name="PyDMPushButton_2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/right-arrow-plus.svg</normaloff>../icons/right-arrow-plus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="PyDMShellCommand" name="PyDMShellCommand_3">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="PyDMLabel" name="PyDMLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 85, 255);
+color: rgb(255, 255, 255);</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Position:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>225</width>
+       <height>225</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Gonio</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="1">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="1">
+         <widget class="PyDMPushButton" name="PyDMPushButton_9">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>wrench</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="PyDMPushButton" name="PyDMPushButton_8">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>ruler-horizontal</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="PyDMPushButton" name="PyDMPushButton_10">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: transparent;
+border: none;</string>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>false</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="monitorDisp">
+           <bool>false</bool>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="PyDMIcon">
+           <string>home</string>
+          </property>
+          <property name="PyDMIconColor">
+           <color>
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </property>
+          <property name="passwordProtected">
+           <bool>false</bool>
+          </property>
+          <property name="password">
+           <string/>
+          </property>
+          <property name="protectedPassword">
+           <string/>
+          </property>
+          <property name="showConfirmDialog">
+           <bool>false</bool>
+          </property>
+          <property name="confirmMessage">
+           <string>Are you sure you want to proceed?</string>
+          </property>
+          <property name="pressValue">
+           <string>None</string>
+          </property>
+          <property name="releaseValue">
+           <string>None</string>
+          </property>
+          <property name="relativeChange">
+           <bool>false</bool>
+          </property>
+          <property name="writeWhenRelease">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="1">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit_3">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="SvgMultiStateLED" name="SvgMultiStateLED">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>64</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="1" column="0">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_4">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_5">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_6">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="alarmSensitiveContent">
+           <bool>false</bool>
+          </property>
+          <property name="alarmSensitiveBorder">
+           <bool>true</bool>
+          </property>
+          <property name="PyDMToolTip">
+           <string/>
+          </property>
+          <property name="channel">
+           <string/>
+          </property>
+          <property name="blinkOnChange">
+           <bool>false</bool>
+          </property>
+          <property name="toggleMode">
+           <bool>false</bool>
+          </property>
+          <property name="blinkInterval">
+           <number>99</number>
+          </property>
+          <property name="showLabels">
+           <bool>false</bool>
+          </property>
+          <property name="bigEndian">
+           <bool>false</bool>
+          </property>
+          <property name="circles">
+           <bool>true</bool>
+          </property>
+          <property name="numBits">
+           <number>1</number>
+          </property>
+          <property name="shift">
+           <number>0</number>
+          </property>
+          <property name="labels">
+           <stringlist>
+            <string>Bit 0</string>
+           </stringlist>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="1">
+       <widget class="PyDMLineEdit" name="PyDMLineEdit_4">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="PyDMPushButton" name="PyDMPushButton_7">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/right-tilt-plus.svg</normaloff>../icons/right-tilt-plus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PyDMLabel" name="PyDMLabel_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 85, 255);
+color: rgb(255, 255, 255);</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="PyDMPushButton" name="PyDMPushButton_6">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: transparent;
+border: none;</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../icons/left-tilt-minus.svg</normaloff>../icons/left-tilt-minus.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="alarmSensitiveContent">
+         <bool>false</bool>
+        </property>
+        <property name="alarmSensitiveBorder">
+         <bool>false</bool>
+        </property>
+        <property name="PyDMToolTip">
+         <string/>
+        </property>
+        <property name="monitorDisp">
+         <bool>false</bool>
+        </property>
+        <property name="channel">
+         <string/>
+        </property>
+        <property name="PyDMIcon">
+         <string/>
+        </property>
+        <property name="PyDMIconColor">
+         <color>
+          <red>0</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="passwordProtected">
+         <bool>false</bool>
+        </property>
+        <property name="password">
+         <string/>
+        </property>
+        <property name="protectedPassword">
+         <string/>
+        </property>
+        <property name="showConfirmDialog">
+         <bool>false</bool>
+        </property>
+        <property name="confirmMessage">
+         <string>Are you sure you want to proceed?</string>
+        </property>
+        <property name="pressValue">
+         <string>None</string>
+        </property>
+        <property name="releaseValue">
+         <string>None</string>
+        </property>
+        <property name="relativeChange">
+         <bool>false</bool>
+        </property>
+        <property name="writeWhenRelease">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="PyDMShellCommand" name="PyDMShellCommand">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Position:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMByteIndicator</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.byte</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>pydm.widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMShellCommand</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.shell_command</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMSymbol</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.symbol</header>
+  </customwidget>
+  <customwidget>
+   <class>SvgMultiStateLED</class>
+   <extends>PyDMSymbol</extends>
+   <header>pcdswidgets.motion.common.svg_multi_state_led</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

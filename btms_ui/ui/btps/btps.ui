@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BTPS</class>
+ <widget class="QWidget" name="BTPS">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>885</width>
+    <height>1000</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Laser Beam Transport Protection System</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>BTPS - Beam Transport Protection System Overview</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMEmbeddedDisplay" name="PyDMEmbeddedDisplay_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="macros">
+      <string>{}</string>
+     </property>
+     <property name="filename">
+      <string>btps-overview.ui</string>
+     </property>
+     <property name="recursiveDisplaySearch">
+      <bool>false</bool>
+     </property>
+     <property name="loadWhenShown">
+      <bool>true</bool>
+     </property>
+     <property name="disconnectWhenHidden">
+      <bool>true</bool>
+     </property>
+     <property name="followSymlinks">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="PyDMRelatedDisplayButton" name="PyDMRelatedDisplayButton_2">
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="text">
+        <string>Configuration Editor...</string>
+       </property>
+       <property name="filenames">
+        <stringlist>
+         <string>btps-config.ui</string>
+        </stringlist>
+       </property>
+       <property name="titles">
+        <stringlist>
+         <string>&amp;Configuration editor...</string>
+        </stringlist>
+       </property>
+       <property name="showIcon">
+        <bool>true</bool>
+       </property>
+       <property name="macros">
+        <stringlist>
+         <string>{}</string>
+        </stringlist>
+       </property>
+       <property name="openInNewWindow">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="PyDMTabWidget" name="source_dest_tabwidget">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="whatsThis">
+      <string/>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <property name="alarmChannels">
+      <stringlist>
+       <string></string>
+       <string></string>
+       <string></string>
+       <string></string>
+       <string></string>
+       <string></string>
+       <string></string>
+       <string></string>
+      </stringlist>
+     </property>
+     <widget class="QWidget" name="ld8_tmo_ip1_tab">
+      <attribute name="title">
+       <string>TMO IP1</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld8_tmo_ip1_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD8:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld10_tmo_ip2_tab">
+      <attribute name="title">
+       <string>TMO IP2</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld10_tmo_ip2_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD10:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld2_rix_ip3_tab">
+      <attribute name="title">
+       <string>RIX IP3</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld2_rix_ip3_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD2:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld6_qrixs_tab">
+      <attribute name="title">
+       <string>qRIXS</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_16">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld6_qrixs_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD6:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld4_chemrixs_tab">
+      <attribute name="title">
+       <string>ChemRIXS</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_20">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld4_chemrixs_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD4:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld14_xpp_tab">
+      <attribute name="title">
+       <string>XPP</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_24">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld14_xpp_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD14:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld9_laser_lab_tab">
+      <attribute name="title">
+       <string>Laser Lab</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_28">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld9_laser_lab_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD9:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="ld1_diagnostics_tab">
+      <attribute name="title">
+       <string>Diagnostics</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="PyDMEmbeddedDisplay" name="ld1_diagnostics_embed">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="macros">
+          <string>{&quot;DEST&quot;: &quot;LTLHN:LD1:&quot;}</string>
+         </property>
+         <property name="filename">
+          <string>btps-source-tabs.ui</string>
+         </property>
+         <property name="loadWhenShown">
+          <bool>true</bool>
+         </property>
+         <property name="disconnectWhenHidden">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMTabWidget</class>
+   <extends>QTabWidget</extends>
+   <header>pydm.widgets.tab_bar</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PyDMEmbeddedDisplay</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.embedded_display</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PyDMRelatedDisplayButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.related_display_button</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
