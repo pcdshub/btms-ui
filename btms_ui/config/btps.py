@@ -12,7 +12,7 @@ from pcdsdevices.valve import VGC
 from pcdsdevices.device import UnrelatedComponent as UCpt
 from pcdsdevices.epics_motor import SmarAct
 from pcdsdevices.interface import BaseInterface
-from signal import PytmcSignal
+from pcdsdevices.signal import PytmcSignal
 from btms_ui.config import btms_config as btms
 from btms_ui.config.btms_config import (BtmsSourceState, BtmsState, DestinationPosition,
                           MoveError, SourcePosition, valid_destinations,

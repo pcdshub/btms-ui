@@ -499,7 +499,7 @@ class BtmsStateDetails(QtWidgets.QFrame):
 
 
 class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-move-request.ui"
+    filename: ClassVar[str] = "btms/btms-move-request.ui"
 
     conflicts_label: QtWidgets.QLabel
     conflicts_list_widget: QtWidgets.QListWidget
@@ -630,7 +630,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
 
 class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-homing.ui"
+    filename: ClassVar[str] = "btms/btms-homing.ui"
 
     window_label: QtWidgets.QLabel
     status_label: QtWidgets.QLabel
@@ -857,7 +857,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 
 
 class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-source.ui"
+    filename: ClassVar[str] = "btms/btms-source.ui"
 
     positioner_widgets: tuple[TyphosPositionerWidget, ...]
 
@@ -1320,7 +1320,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
 
 class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):
-    filename: ClassVar[str] = "btms-diagram.ui"
+    filename: ClassVar[str] = "btms/btms-diagram.ui"
     view: BtmsStatusView
 
     def __init__(self, *args, prefix: str = "", **kwargs):
@@ -1352,14 +1352,14 @@ class HutchOverviewDisplay(DesignerDisplay, QtWidgets.QWidget):
     Hutch information display, including maintenance mode status and hutch
     control state.
     """
-    filename: ClassVar[str] = "btms-hutch.ui"
+    filename: ClassVar[str] = "btms/btms-hutch.ui"
 
 
 class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     """
     Main display, including diagram and source information.
     """
-    filename: ClassVar[str] = "btms.ui"
+    filename: ClassVar[str] = "btms/btms.ui"
     diagram_widget: BtmsDiagramWidget
     ls1_widget: BtmsSourceOverviewWidget
     ls3_widget: BtmsSourceOverviewWidget
