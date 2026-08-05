@@ -21,6 +21,7 @@ name = "SLAC National Accelerator Laboratory"
 file = "LICENSE.md"
 
 [project.scripts]
+btms = "btms_ui.main"
 
 [tool.setuptools_scm]
 write_to = "btms_ui/_version.py"
