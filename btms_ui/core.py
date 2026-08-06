@@ -5,7 +5,7 @@ from typing import ClassVar
 
 from qtpy.uic import loadUiType
 
-from . import util
+from btms_ui import util
 
 
 class DesignerDisplay:

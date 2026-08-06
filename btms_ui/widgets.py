@@ -10,16 +10,15 @@ import numpy as np
 from ophyd.epics_motor import HomeEnum
 from ophyd.status import MoveStatus
 from ophyd.utils.epics_pvs import _wait_for_value
-from pcdsdevices.lasers import btms_config
-from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
-from pcdsdevices.lasers.btps import (BtpsSourceStatus, BtpsState,
-                                     RangeComparison)
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
 from typhos.suite import TyphosSuite
 
+from btms_ui.config import btms_config
+from btms_ui.config.btms_config import DestinationPosition, SourcePosition
+from btms_ui.config.btps import BtpsSourceStatus, BtpsState, RangeComparison
 from btms_ui.util import channel_from_signal
 
 from . import util
@@ -69,7 +68,7 @@ class BtmsDestinationComboBox(QtWidgets.QComboBox):
 
         for dest in sorted(DestinationPosition, key=lambda dest: dest.index):
             if dest in btms_config.valid_destinations:
-                self.addItem(f"{dest.description} ({dest.value})", dest)
+                self.addItem(f"{dest.description.replace('\n', ' ')} ({dest.value})", dest)
 
 
 class QMoveStatus(QtCore.QObject):
