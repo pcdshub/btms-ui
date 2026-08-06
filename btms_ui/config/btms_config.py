@@ -208,9 +208,9 @@ class SourcePosition(str, enum.Enum):
         return {
             SourcePosition.ls1: "las_lhn_bay1_cam_nf",
             SourcePosition.ls3: "las_lhn_bay2_ls3_nf",
-            SourcePosition.ls4: "las_lhn_bay2_ls4_nf",
+            SourcePosition.ls4: "las_lhn_bay2_ls4_bts_nf",
             SourcePosition.ls5: "las_lhn_bay3_ls5_nf",
-            SourcePosition.ls6: "las_lhn_bay3_ls6_nf",
+            SourcePosition.ls6: "las_lhn_bay3_ls6_bts_nf",
             SourcePosition.ls8: "las_lhn_bay4_cam_nf",
         }.get(self, None)
 
@@ -222,9 +222,9 @@ class SourcePosition(str, enum.Enum):
         return {
             SourcePosition.ls1: "las_lhn_bay1_cam_ff",
             SourcePosition.ls3: "las_lhn_bay2_ls3_ff",
-            SourcePosition.ls4: "las_lhn_bay2_ls4_ff",
+            SourcePosition.ls4: "las_lhn_bay2_ls4_bts_ff",
             SourcePosition.ls5: "las_lhn_bay3_ls5_ff",
-            SourcePosition.ls6: "las_lhn_bay3_ls6_ff",
+            SourcePosition.ls6: "las_lhn_bay3_ls6_bts_ff",
             SourcePosition.ls8: "las_lhn_bay4_cam_ff",
         }.get(self, None)
 
