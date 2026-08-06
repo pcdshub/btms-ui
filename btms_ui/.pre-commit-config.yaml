@@ -1,31 +1,30 @@
-repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v2.5.0
-    hooks:
-    -   id: no-commit-to-branch
-    -   id: trailing-whitespace
-        files: \.(TcPOU|TcDUT|TcGVL)$
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: |
+  (?x)^(
+    pcdswidgets/_version.py|
+  )$
 
--   repo: https://github.com/pcdshub/pre-commit-hooks.git
-    rev: v1.7.1
-    hooks:
-    -   id: twincat-leading-tabs-remover
-    -   id: twincat-lineids-remover
-    -   id: twincat-xml-format
-    -   id: check-fixed-library-versions
-    -   id: no-product-version
-    -   id: twincat-st-newline
-    # Check if minimize id changes is selected in the plc project file.
-    # See https://www.youtube.com/watch?v=KKpBtaYjfWo&t=935s why to do this.
-    -   id: minimize-id-changes
-    # Checks if TwinCAT versions match in different tsproj files, or if it matches the targeted one.
-    -   id: check-twincat-versions
-        # Possible optional arguments
-        # --target-version: Set a version that you want the tsproj file to have
-        # --fix: Fix the version numbers if a target version is set
-        # --reason: Add a reason to the error message in case of a non-matching version.
-        # --pinned: Require the TwinCAT version to be pinned. Apply pinning if combined with --fix.
-        # --no-pinned: Require the TwinCAT version to not be pinned. Remove pinning if combined with --fix.
-        args: [--target-version=3.1.4024.20, --pinned, --fix, --reason="This version has a crucial new feature"]
-    # Optional, if you use pytmc to generate EPICS IOCs:
-    # -   id: pytmc-pragma-linter
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+  -   id: no-commit-to-branch
+  -   id: trailing-whitespace
+  -   id: end-of-file-fixer
+  -   id: check-ast
+  -   id: check-case-conflict
+  -   id: check-json
+  -   id: check-merge-conflict
+  -   id: check-symlinks
+  -   id: check-xml
+  -   id: check-yaml
+      exclude: '^(conda-recipe/meta.yaml)$'
+  -   id: debug-statements
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.6
+  hooks:
+  - id: ruff-check  # run the linter
+    args: [ --fix ]  # and the safe fixes
+  - id: ruff-format  # run the formatter
