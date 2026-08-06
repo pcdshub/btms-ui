@@ -6,14 +6,15 @@ import math
 import pathlib
 from typing import Any, ClassVar
 
+from qtpy import QtCore, QtGui, QtWidgets
+
 import btms_ui.config.btms_config as config
+from btms_ui.config import scene_config
 from btms_ui.config.btms_config import DestinationPosition, SourcePosition
 from btms_ui.config.btps import BtpsSourceStatus
 from btms_ui.config.btps import BtpsState as BtpsStateDevice
-from btms_ui.config.btps import (DestinationConfig, SourceToDestinationConfig)
-from qtpy import QtCore, QtGui, QtWidgets
+from btms_ui.config.btps import DestinationConfig, SourceToDestinationConfig
 
-from btms_ui.config import scene_config
 from . import helpers, primitives, util
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 

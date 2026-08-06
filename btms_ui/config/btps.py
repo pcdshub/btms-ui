@@ -6,17 +6,17 @@ from ophyd.device import Component as Cpt
 from ophyd.device import Device
 from ophyd.signal import EpicsSignalRO
 from ophyd.status import AndStatus, MoveStatus
-
-from pcdsdevices.valve import VGC
-
 from pcdsdevices.device import UnrelatedComponent as UCpt
 from pcdsdevices.epics_motor import SmarAct
 from pcdsdevices.interface import BaseInterface
 from pcdsdevices.signal import PytmcSignal
+from pcdsdevices.valve import VGC
+
 from btms_ui.config import btms_config as btms
-from btms_ui.config.btms_config import (BtmsSourceState, BtmsState, DestinationPosition,
-                          MoveError, SourcePosition, valid_destinations,
-                          valid_sources)
+from btms_ui.config.btms_config import (BtmsSourceState, BtmsState,
+                                        DestinationPosition, MoveError,
+                                        SourcePosition, valid_destinations,
+                                        valid_sources)
 
 
 class BtpsVGC(VGC):
