@@ -10,16 +10,15 @@ import numpy as np
 from ophyd.epics_motor import HomeEnum
 from ophyd.status import MoveStatus
 from ophyd.utils.epics_pvs import _wait_for_value
-from pcdsdevices.lasers import btms_config
-from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
-from pcdsdevices.lasers.btps import (BtpsSourceStatus, BtpsState,
-                                     RangeComparison)
 from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
 from typhos.suite import TyphosSuite
 
+from btms_ui.config import btms_config
+from btms_ui.config.btms_config import DestinationPosition, SourcePosition
+from btms_ui.config.btps import BtpsSourceStatus, BtpsState, RangeComparison
 from btms_ui.util import channel_from_signal
 
 from . import util
@@ -69,7 +68,7 @@ class BtmsDestinationComboBox(QtWidgets.QComboBox):
 
         for dest in sorted(DestinationPosition, key=lambda dest: dest.index):
             if dest in btms_config.valid_destinations:
-                self.addItem(f"{dest.description} ({dest.value})", dest)
+                self.addItem(f"{dest.description.replace('\n', ' ')} ({dest.value})", dest)
 
 
 class QMoveStatus(QtCore.QObject):
@@ -499,7 +498,7 @@ class BtmsStateDetails(QtWidgets.QFrame):
 
 
 class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-move-request.ui"
+    filename: ClassVar[str] = "btms/btms-move-request.ui"
 
     conflicts_label: QtWidgets.QLabel
     conflicts_list_widget: QtWidgets.QListWidget
@@ -630,7 +629,7 @@ class BtmsMoveConflictWidget(DesignerDisplay, QtWidgets.QFrame):
 
 
 class BtmsHomingScreen(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-homing.ui"
+    filename: ClassVar[str] = "btms/btms-homing.ui"
 
     window_label: QtWidgets.QLabel
     status_label: QtWidgets.QLabel
@@ -857,7 +856,7 @@ class BtmsSourceValidWidget(QtWidgets.QFrame):
 
 
 class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
-    filename: ClassVar[str] = "btms-source.ui"
+    filename: ClassVar[str] = "btms/btms-source.ui"
 
     positioner_widgets: tuple[TyphosPositionerWidget, ...]
 
@@ -1320,7 +1319,7 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
 
 
 class BtmsDiagramWidget(DesignerDisplay, QtWidgets.QWidget):
-    filename: ClassVar[str] = "btms-diagram.ui"
+    filename: ClassVar[str] = "btms/btms-diagram.ui"
     view: BtmsStatusView
 
     def __init__(self, *args, prefix: str = "", **kwargs):
@@ -1352,14 +1351,14 @@ class HutchOverviewDisplay(DesignerDisplay, QtWidgets.QWidget):
     Hutch information display, including maintenance mode status and hutch
     control state.
     """
-    filename: ClassVar[str] = "btms-hutch.ui"
+    filename: ClassVar[str] = "btms/btms-hutch.ui"
 
 
 class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
     """
     Main display, including diagram and source information.
     """
-    filename: ClassVar[str] = "btms.ui"
+    filename: ClassVar[str] = "btms/btms.ui"
     diagram_widget: BtmsDiagramWidget
     ls1_widget: BtmsSourceOverviewWidget
     ls3_widget: BtmsSourceOverviewWidget

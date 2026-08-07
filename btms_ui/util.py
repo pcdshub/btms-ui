@@ -5,9 +5,10 @@ import sys
 from typing import Callable
 
 import ophyd
-from pcdsdevices.lasers import btms_config
-from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
 from qtpy import QtCore
+
+from btms_ui.config import btms_config
+from btms_ui.config.btps import BtpsState as BtpsStateDevice
 
 #: The source path of the btms-ui package.
 BTMS_SOURCE_PATH = pathlib.Path(__file__).resolve().parent

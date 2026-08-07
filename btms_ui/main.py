@@ -7,8 +7,8 @@ import typhos
 from pydm.exception import install as install_exception_handler
 from qtpy import QtWidgets
 
-from . import util
-from .widgets import BtmsMain, HutchOverviewDisplay
+from btms_ui import util
+from btms_ui.widgets import BtmsMain, HutchOverviewDisplay
 
 logger = logging.getLogger(__name__)
 

@@ -6,15 +6,15 @@ import math
 import pathlib
 from typing import Any, ClassVar
 
-import pcdsdevices.lasers.btms_config as config
-from pcdsdevices.lasers.btms_config import DestinationPosition, SourcePosition
-from pcdsdevices.lasers.btps import BtpsSourceStatus
-from pcdsdevices.lasers.btps import BtpsState as BtpsStateDevice
-from pcdsdevices.lasers.btps import (DestinationConfig,
-                                     SourceToDestinationConfig)
 from qtpy import QtCore, QtGui, QtWidgets
 
-from . import config as btms_config
+import btms_ui.config.btms_config as config
+from btms_ui.config import scene_config
+from btms_ui.config.btms_config import DestinationPosition, SourcePosition
+from btms_ui.config.btps import BtpsSourceStatus
+from btms_ui.config.btps import BtpsState as BtpsStateDevice
+from btms_ui.config.btps import DestinationConfig, SourceToDestinationConfig
+
 from . import helpers, primitives, util
 from .vacuum import EntryGateValve, ExitGateValve, LaserShutter
 
@@ -284,7 +284,7 @@ class SwitchBox(QtWidgets.QGraphicsItemGroup):
 
             pos_x, _ = self.base.positions[pos]
             if pos.is_top:
-                pos_y = self.base.sceneBoundingRect().top() - dest.sceneBoundingRect().height()
+                pos_y = self.base.sceneBoundingRect().top() - 1.1*dest.sceneBoundingRect().height()
             else:
                 pos_y = self.base.sceneBoundingRect().bottom()
 
@@ -542,7 +542,7 @@ class PackagedPixmap(ScaledPixmapItem):
         self,
         filename: str,
     ):
-        info = dict(btms_config.PACKAGED_IMAGES[filename])
+        info = dict(scene_config.PACKAGED_IMAGES[filename])
         self.positions = dict(info.pop("positions", {}))
         super().__init__(filename=filename, **info)
 
@@ -691,7 +691,7 @@ class LaserSource(QtWidgets.QGraphicsItemGroup):
 
         self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
         self.name_label_proxy.setWidget(self.name_label)
-        self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
+        self.name_label_proxy.setScale(scene_config.LABEL_SCALE)
         self.addToGroup(self.name_label_proxy)
 
         if ls_position.is_left:
@@ -752,7 +752,7 @@ class Destination(QtWidgets.QGraphicsItemGroup):
 
         self.name_label_proxy = QtWidgets.QGraphicsProxyWidget()
         self.name_label_proxy.setWidget(self.name_label)
-        self.name_label_proxy.setScale(btms_config.LABEL_SCALE)
+        self.name_label_proxy.setScale(scene_config.LABEL_SCALE)
         self.addToGroup(self.name_label_proxy)
 
         if self.ld_position.is_top:
@@ -916,7 +916,7 @@ class BtmsStatusView(QtWidgets.QGraphicsView):
 
         super().__init__(scene, parent=parent)
 
-        self.scale(btms_config.VIEW_SCALE, btms_config.VIEW_SCALE)
+        self.scale(scene_config.VIEW_SCALE, scene_config.VIEW_SCALE)
 
         self.switch_box = SwitchBox()
         # self.switch_box.setFlag(QtWidgets.QGraphicsItem.ItemClipsChildrenToShape, True)

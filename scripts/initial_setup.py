@@ -100,7 +100,7 @@ full_config = {
     # LS1 - bay 1
     SourcePosition.ls1: {
         DestinationPosition.ld2: Config(
-            # "TMO IP3",
+            # "RIX 3RIX",
             linear=None,
             rotary=None,
         ),
@@ -122,7 +122,7 @@ full_config = {
             goniometer=-0.4666,
         ),
         DestinationPosition.ld9: Config(
-            # "Laser Lab",
+            # "Laser Lab 1",
             linear=None,
             rotary=None,
         ),

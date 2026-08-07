@@ -21,6 +21,7 @@ name = "SLAC National Accelerator Laboratory"
 file = "LICENSE.md"
 
 [project.scripts]
+btms = "btms_ui.main:main"
 
 [tool.setuptools_scm]
 write_to = "btms_ui/_version.py"
@@ -36,3 +37,18 @@ file = "dev-requirements.txt"
 
 [tool.setuptools.dynamic.optional-dependencies.doc]
 file = "docs-requirements.txt"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.pypi-dependencies]
+btms_ui = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+pcdswidgets = ">=1.4.0,<2"
+pyqt = "==5.15.11,<6"
+pcdsdevices = ">=10.5.0,<11"
+typhos = ">=4.3.0,<5"
