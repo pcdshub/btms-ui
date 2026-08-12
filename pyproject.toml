@@ -22,6 +22,7 @@ file = "LICENSE.md"
 
 [project.scripts]
 btms = "btms_ui.main:main"
+btps = "btms_ui.launch_btps:main"
 
 [tool.setuptools_scm]
 write_to = "btms_ui/_version.py"

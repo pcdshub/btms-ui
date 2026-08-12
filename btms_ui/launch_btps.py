@@ -1,6 +1,6 @@
 from qtpy import QtWidgets
 
-from btms_ui.ui.btps_prototype import BtpsPrototype
+from btms_ui.ui.btps_stacked_screen import BtpsPrototype
 
 
 def main():
