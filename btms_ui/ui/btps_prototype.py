@@ -85,7 +85,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         dest : int
             Laser destination identifier. 1 < dest < 14
         """
-        temp_widget = PyDMEmbeddedDisplay(parent=self.stackedWidget)
+        temp_widget = PyDMEmbeddedDisplay(parent=self.stacked_widget)
         macros = {"SOURCE": f"LTLHN:{dest}:{source}:",
                   "DEST": f"LTLHN:{dest}:",
                   "SHUTTER": f"LTLHN:{source}:BTPS:",
@@ -97,7 +97,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
 
         temp_widget.setObjectName(f"{source}_{dest}_widget")
         # Add it to the stacked widget
-        idx = self.stackedWidget.addWidget(temp_widget)
+        idx = self.stacked_widget.addWidget(temp_widget)
         logger.debug(f"Adding {source}_{dest} widget to stacked index {idx}")
         # Add it to the stacked widget dict
         self.stack_widget_dict[f"{source}_{dest}"] = idx
@@ -109,27 +109,32 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         """
         logger.debug("Initializing navigator buttons")
 
-        invalid_sources = [src for src in [f"LS{i}" for i in range(1, 9)]
-                           if src not in self.sources]
-        invalid_dest = [dest for dest in [f"LD{j}" for j in range(1, 15)]
-                        if dest not in self.destinations]
+        button: QPushButton
 
-        for source in self.sources:
-            self.configure_button(name=f"{source}_button")
+        source_dest_buttons = self.findChildren(QPushButton, QRegularExpression("LS|LD"))
 
-        for dest in self.destinations:
-            self.configure_button(name=f"{dest}_button")
+        # First, hide everything
+        for button in source_dest_buttons:
+            self.configure_button(button)
+            button.setEnabled(False)
+            # Make sure buttons occupy the same space when hidden to preserve layout
+            size_policy = button.sizePolicy()
+            size_policy.setRetainSizeWhenHidden(True)
+            button.setSizePolicy(size_policy)
+            # Now hide the button
+            button.hide()
 
-        for bad_btn in invalid_sources + invalid_dest:
-            logger.debug(f"{bad_btn} is unused, hiding it.")
-            self.hide_button(bad_btn)
+        # Then only show what is valid
+        for name in (self.sources + self.destinations):
+            button = getattr(self, f"{name}_button")
+            button.setEnabled(True)
+            button.show()
 
-    def configure_button(self, name: str) -> None:
+    def configure_button(self, button: QPushButton) -> None:
         """
         Configure the stylesheet and make the button checkable
         """
-        button: QPushButton
-        logger.debug(f"Configuring button: {name}")
+        logger.debug(f"Configuring button: {button.objectName()}")
 
         stylesheet = """
         QPushButton {
@@ -151,31 +156,10 @@ class BtpsPrototype(DesignerDisplay, QWidget):
             background-color: #3dcb0a;
         }
         """
-        button = getattr(self, name)
         button.setStyleSheet("")
         button.setCheckable(True)
         button.toggled.connect(partial(self.toggle_button, button))
         button.setStyleSheet(stylesheet)
-
-    def hide_button(self, name: str) -> None:
-        """
-        Disable and hide a QPushButton for a source/dest that doesn't exist yet
-
-        Parameters
-        ----------
-        name : str
-            Name of the QPushbutton obj
-        """
-        button: QPushButton
-
-        button = getattr(self, f"{name}_button")
-        button.setEnabled(False)
-        # Paradoxically, you set the size policy for hidden objects this way
-        size_policy = button.sizePolicy()
-        size_policy.setRetainSizeWhenHidden(True)
-        button.setSizePolicy(size_policy)
-        # Then hide it without rearranging your layouts
-        button.hide()
 
     def toggle_button(self, button: QPushButton) -> None:
         temp: QPushButton
