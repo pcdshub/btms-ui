@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class BtpsPrototype(DesignerDisplay, QWidget):
     filename: ClassVar[str] = "btps/btps_stacked_screen.ui"
-    stackedWidget: QStackedWidget
+    stacked_widget: QStackedWidget
     btps_overview_widget: PyDMEmbeddedDisplay
     editor_button: QPushButton
 
@@ -46,7 +46,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
 
     def __init__(self, parent: QWidget | None = None,):
         super().__init__(parent)
-        self.stackWidget_dict = {}
+        self.stack_widget_dict = {}
         self.current_view = {"source": "LS0", "dest": "LD0"}
         self.sources = [str(source) for source in btms_config.valid_sources]
         self.destinations = [str(dest) for dest in btms_config.valid_destinations]
@@ -68,7 +68,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         """
         logger.debug("Building stacked widget")
         # Gotta initialize and hardcode the landing page
-        self.stackWidget_dict["LS0_LD0"] = 0
+        self.stack_widget_dict["LS0_LD0"] = 0
 
         for source in self.sources:
             for dest in self.destinations:
@@ -100,7 +100,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         idx = self.stackedWidget.addWidget(temp_widget)
         logger.debug(f"Adding {source}_{dest} widget to stacked index {idx}")
         # Add it to the stacked widget dict
-        self.stackWidget_dict[f"{source}_{dest}"] = idx
+        self.stack_widget_dict[f"{source}_{dest}"] = idx
         self._embedded_displays.append(temp_widget)
 
     def init_buttons(self) -> None:
@@ -234,7 +234,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         key = f"{source}_{dest}"
         logger.debug(f"Received update to view {key}")
 
-        idx = self.stackWidget_dict[key] if key in self.stackWidget_dict else 0
+        idx = self.stack_widget_dict[key] if key in self.stack_widget_dict else 0
         logger.debug(f"Stacked view set to index: {idx}")
 
         self.stackedWidget.setCurrentIndex(idx)
