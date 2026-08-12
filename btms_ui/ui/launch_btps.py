@@ -4,9 +4,7 @@ from btms_ui.ui.btps_prototype import BtpsPrototype
 
 
 def main():
-    app = QtWidgets.QApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication([])
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
     widget = BtpsPrototype()
 
