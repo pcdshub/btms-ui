@@ -237,9 +237,9 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         idx = self.stack_widget_dict[key] if key in self.stack_widget_dict else 0
         logger.debug(f"Stacked view set to index: {idx}")
 
-        self.stackedWidget.setCurrentIndex(idx)
+        self.stacked_widget.setCurrentIndex(idx)
         self.toggle_edit_widgets(enabled=self.editor_button.isChecked(),
-                                 page=self.stackedWidget.currentWidget())
+                                 page=self.stacked_widget.currentWidget())
 
     def toggle_edit_button(self) -> None:
         """
@@ -266,7 +266,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
         current_page = page
 
         if not page:
-            current_page = self.stackedWidget.currentWidget()
+            current_page = self.stacked_widget.currentWidget()
             logger.debug("No page detected. "
                          f"Setting to current widget: {current_page.objectName}")
 
