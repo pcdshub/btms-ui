@@ -206,8 +206,6 @@ class BtpsPrototype(DesignerDisplay, QWidget):
             # Then just deactivate it
             self.uncheck_quietly(button)
             self.current_view = {"source": "LS0", "dest": "LD0"}
-            self.update_view()
-            return
 
         # Then we should update our view
         self.update_view()
