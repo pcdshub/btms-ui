@@ -92,6 +92,7 @@ class BtpsPrototype(DesignerDisplay, QWidget):
                   "RANGE_SCREEN": str(util.BTMS_SOURCE_PATH / "ui/btps/btps-range-config.ui")}
         temp_widget.setMacros(json.dumps(macros))
         temp_widget.loadWhenShown = True
+        temp_widget.disconnectWhenHidden = False
         temp_widget.setFilename(
             str(util.BTMS_SOURCE_PATH / "ui/btps/btps-source-dest.ui"))
 
