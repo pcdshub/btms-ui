@@ -81,9 +81,9 @@ class BtpsStackedScreen(DesignerDisplay, QWidget):
         Parameters
         ----------
         source : int
-            Laser source identifier.  1 < source < 8.
+            Laser source identifier.  1 <= source <= 8.
         dest : int
-            Laser destination identifier. 1 < dest < 14
+            Laser destination identifier. 1 <= dest <= 14
         """
         temp_widget = PyDMEmbeddedDisplay(parent=self.stacked_widget)
         macros = {"SOURCE": f"LTLHN:{dest}:{source}:",
