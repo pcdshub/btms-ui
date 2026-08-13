@@ -2,7 +2,7 @@ import sys
 
 from qtpy.QtWidgets import QApplication
 
-from btms_ui.ui.btps_stacked_screen import BtpsPrototype
+from btms_ui.ui.btps_stacked_screen import BtpsStackedScreen
 
 
 def ignore_rules_engine_errors(exc_type, exc_value, exc_traceback):
@@ -21,7 +21,7 @@ def main():
     app = QApplication.instance() or QApplication([])
     sys.excepthook = ignore_rules_engine_errors
 
-    widget = BtpsPrototype()
+    widget = BtpsStackedScreen()
     widget.show()
     app.exec_()
 

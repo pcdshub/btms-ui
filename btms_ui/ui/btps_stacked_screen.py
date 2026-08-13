@@ -14,7 +14,7 @@ from btms_ui.core import DesignerDisplay
 logger = logging.getLogger(__name__)
 
 
-class BtpsPrototype(DesignerDisplay, QWidget):
+class BtpsStackedScreen(DesignerDisplay, QWidget):
     filename: ClassVar[str] = "btps/btps_stacked_screen.ui"
     stacked_widget: QStackedWidget
     btps_overview_widget: PyDMEmbeddedDisplay
