@@ -53,3 +53,7 @@ pcdswidgets = ">=1.4.0,<2"
 pyqt = "==5.15.11,<6"
 pcdsdevices = ">=10.5.0,<11"
 typhos = ">=4.3.0,<5"
+
+[tool.pixi.system-requirements]
+linux = "3.10"
+libc = "2.17"
