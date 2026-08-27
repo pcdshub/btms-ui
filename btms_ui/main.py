@@ -8,6 +8,7 @@ from pydm.exception import install as install_exception_handler
 from qtpy import QtWidgets
 
 from btms_ui import util
+from btms_ui.ui.btps_stacked_screen import BtpsStackedScreen
 from btms_ui.widgets import BtmsMain, HutchOverviewDisplay
 
 logger = logging.getLogger(__name__)
@@ -90,10 +91,7 @@ def main(
             widget = BtmsMain()
             widget.prefix = prefix
         elif screen == "btps":
-            # Convenience (?) method: typhos las_btps
-            widget = typhos.suite.TyphosSuite.from_device(
-                util.get_btps_device(prefix=prefix)
-            )
+            widget = BtpsStackedScreen()
         else:
             raise ValueError(f"Unexpected screen type: {screen}")
         widget.show()
