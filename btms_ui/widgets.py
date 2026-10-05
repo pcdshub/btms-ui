@@ -14,11 +14,11 @@ from pydm import widgets as pydm_widgets
 from pydm.data_plugins import establish_connection
 from qtpy import QtCore, QtWidgets
 from typhos.positioner import TyphosPositionerWidget
-from typhos.suite import TyphosSuite
 
 from btms_ui.config import btms_config
 from btms_ui.config.btms_config import DestinationPosition, SourcePosition
 from btms_ui.config.btps import BtpsSourceStatus, BtpsState, RangeComparison
+from btms_ui.ui.btps_stacked_screen import BtpsStackedScreen
 from btms_ui.util import channel_from_signal
 
 from . import util
@@ -1491,7 +1491,7 @@ class BtmsMain(DesignerDisplay, QtWidgets.QWidget):
         if self.device is None:
             return
 
-        self._btps_overview = TyphosSuite.from_device(self.device)
+        self._btps_overview = BtpsStackedScreen()
         self._btps_overview.show()
 
     def open_hutch_overview(self):
