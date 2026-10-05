@@ -36,10 +36,10 @@ def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
 
 
 def open_nf_ff_alignment(near_field_cam: str, far_field_cam: str):
-    if near_field_cam and near_field_cam[-1] == ':':
-        near_field_cam = near_field_cam[:-1]
-    if far_field_cam and far_field_cam[-1] == ':':
-        far_field_cam = far_field_cam[:-1]
+    if near_field_cam:
+        near_field_cam = near_field_cam.removesuffix(':')
+    if far_field_cam:
+        far_field_cam = near_field_cam.removesuffix(':')
 
     return subprocess.Popen(
         args=["pixi", "run", "nf-ff-alignment", '--cam-prefix-1', near_field_cam,
