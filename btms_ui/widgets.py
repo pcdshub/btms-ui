@@ -1142,9 +1142,9 @@ class BtmsSourceOverviewWidget(DesignerDisplay, QtWidgets.QFrame):
                 if self._confirmation.exec_() != QtWidgets.QMessageBox.Yes:
                     return
 
-        self._camera_process = util.open_typhos_in_subprocess(
-            f"{self.device.source_pos.nf_camera_device}",
-            f"{self.device.source_pos.ff_camera_device}",
+        self._camera_process = util.open_nf_ff_alignment(
+            f"{self.device.source_pos.near_field_camera_prefix}",
+            f"{self.device.source_pos.far_field_camera_prefix}",
         )
 
     def show_motors(self, show: bool):
