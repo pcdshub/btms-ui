@@ -39,7 +39,7 @@ def open_nf_ff_alignment(near_field_cam: str, far_field_cam: str):
     if near_field_cam:
         near_field_cam = near_field_cam.removesuffix(":")
     if far_field_cam:
-        far_field_cam = near_field_cam.removesuffix(":")
+        far_field_cam = far_field_cam.removesuffix(":")
 
     script_path = str(BTMS_SOURCE_PATH.parent / ".pixi/envs/default/bin/nf-ff-alignment")
 
