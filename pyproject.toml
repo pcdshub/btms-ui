@@ -48,8 +48,6 @@ preview = ["pixi-build"]
 btms_ui = { path = ".", editable = true }
 nf-ff-alignment = { git = "ssh://git@github.com/pcdshub/nf_ff_alignment.git", tag = "v1.0.0" }
 
-[tool.pixi.tasks]
-
 [tool.pixi.dependencies]
 pcdswidgets = ">=2.3.0,<3"
 pyqt = "==5.15.11,<6"
