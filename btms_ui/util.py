@@ -35,6 +35,20 @@ def open_typhos_in_subprocess(*devices: str) -> subprocess.Popen:
     )
 
 
+def open_nf_ff_alignment(near_field_cam: str, far_field_cam: str):
+    if near_field_cam:
+        near_field_cam = near_field_cam.removesuffix(":")
+    if far_field_cam:
+        far_field_cam = far_field_cam.removesuffix(":")
+
+    script_path = str(BTMS_SOURCE_PATH.parent / ".pixi/envs/default/bin/nf-ff-alignment")
+
+    return subprocess.Popen(
+        args=[script_path, "--cam-prefix-1", near_field_cam,
+              "--cam-prefix-2", far_field_cam, "--hide-motors"]
+    )
+
+
 def prune_expert_issues(issues: list[btms_config.MoveError]) -> list[btms_config.MoveError]:
     """
     Remove issues that experts can safely ignore.

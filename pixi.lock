@@ -216,7 +216,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pcdscalc-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pcdsdevices-10.5.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pcdsutils-0.14.2-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pcdswidgets-1.4.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pcdswidgets-2.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/periodictable-1.7.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pint-0.25.3-pyhc364b38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.11.0-pyhcf101f3_0.conda
@@ -265,6 +265,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/zict-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
       - pypi: .
+      - pypi: git+ssh://github.com/pcdshub/nf_ff_alignment?tag=v1.0.0#c4a2dc7f1808ce6b75b616bb309f9ba27f3b8d2a
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
   build_number: 20
@@ -3554,21 +3555,21 @@ packages:
   run_exports: {}
   size: 52123
   timestamp: 1755810674441
-- conda: https://conda.anaconda.org/conda-forge/noarch/pcdswidgets-1.4.0-pyhd8ed1ab_0.conda
-  sha256: a23de969b312f7bf476bea2abdb7e6f32e7c9b964e084f938504c64e8d84e065
-  md5: b356754635f325cc713c18ff97328d0f
+- conda: https://conda.anaconda.org/conda-forge/noarch/pcdswidgets-2.3.0-pyhd8ed1ab_0.conda
+  sha256: e65406d7b4a97064f7b23e5ba4676efc158e41473100caaa03cd4966be1acf99
+  md5: 7518a06b3cdb5d125fd0d9ddce486df6
   depends:
   - pydm >=1.9.0
-  - pyqt >=5
   - python >=3.12
-  - qtpy
+  - pyyaml >=6.0.3
+  - qtpy >=2.4.3
   license: LicenseRef-BSD-3-Clause-SLAC
   license_family: BSD
   purls:
-  - pkg:pypi/pcdswidgets?source=hash-mapping
+  - pkg:pypi/pcdswidgets?source=compressed-mapping
   run_exports: {}
-  size: 172982
-  timestamp: 1784569220050
+  size: 225833
+  timestamp: 1790354194639
 - conda: https://conda.anaconda.org/conda-forge/noarch/periodictable-1.7.1-pyhd8ed1ab_0.conda
   sha256: 54130c4f681d6623caee5e8d82a9aaf06b161463bf4c32e277e7fa843ba0312c
   md5: 51a1fedd85d2fbc36e79a95c3006e834
@@ -4263,3 +4264,7 @@ packages:
   - sphinx-rtd-theme ; extra == 'test'
   - sphinxcontrib-jquery ; extra == 'test'
   requires_python: '>=3.9'
+- pypi: git+ssh://github.com/pcdshub/nf_ff_alignment?tag=v1.0.0#c4a2dc7f1808ce6b75b616bb309f9ba27f3b8d2a
+  name: nf-ff-alignment
+  version: 1.0.0
+  requires_python: '>=3.12'
